@@ -11,7 +11,11 @@ type AuditEntry = {
   details: Record<string, string | number | boolean | null>;
 };
 
-/** Écrit une ligne dans le journal d'audit (ne bloque jamais l'action). */
+/**
+ * Écrit une ligne dans le journal d'audit (ne bloque jamais l'action).
+ * Client admin assumé : le journal doit aussi enregistrer les actions du
+ * système (webhook, sans utilisateur connecté). Il reste en ajout seul.
+ */
 export async function writeAudit({
   actorId,
   action,

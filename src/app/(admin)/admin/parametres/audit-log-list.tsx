@@ -3,9 +3,9 @@ import "server-only";
 import { parseRole, ROLE_LABELS } from "@/lib/auth/roles";
 import { formatDateTime } from "@/lib/dates";
 import {
-  createAdminSupabase,
-  isAdminSupabaseConfigured,
-} from "@/lib/supabase/admin";
+  createServerSupabase,
+  isSupabaseConfigured,
+} from "@/lib/supabase/server";
 import type { Json } from "@/types/database";
 
 const LIMIT = 50;
@@ -42,14 +42,15 @@ function describe(action: string, details: Json): string | null {
 
 /** Les dernières actions sensibles (lecture réservée au Super-Admin). */
 export async function AuditLogList() {
-  if (!isAdminSupabaseConfigured()) {
+  if (!isSupabaseConfigured()) {
     return (
       <p className="bg-warning-soft text-warning rounded-lg p-3 text-sm">
         Journal indisponible tant que la configuration Supabase est incomplète.
       </p>
     );
   }
-  const supabase = createAdminSupabase();
+  // Client avec le jeton de l'utilisateur : la RLS réserve la lecture au Super-Admin.
+  const supabase = await createServerSupabase();
   const { data: entries, error } = await supabase
     .from("audit_log")
     .select(

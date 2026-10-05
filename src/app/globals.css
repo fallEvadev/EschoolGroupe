@@ -42,6 +42,12 @@
   --sidebar-foreground: #c9d3f0;
   --sidebar-accent: #2952d9;
   --sidebar-accent-foreground: #ffffff;
+  --sidebar-strong: #ffffff; /* texte mis en avant */
+  --sidebar-hover: rgb(255 255 255 / 0.1); /* survol d'un lien */
+  --sidebar-surface: rgb(255 255 255 / 0.05); /* carte sur fond marine */
+
+  /* Voile derrière le menu coulissant sur téléphone */
+  --overlay: rgb(11 20 55 / 0.5);
 
   /* Statuts */
   --success: #15803d;
@@ -80,6 +86,10 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-strong: var(--sidebar-strong);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-surface: var(--sidebar-surface);
+  --color-overlay: var(--overlay);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);

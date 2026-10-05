@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,50 +15,56 @@ import {
 
 import { updateOrganizationSettings } from "./actions";
 
+/** Message d'erreur sous un champ. */
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={id} className="text-destructive text-sm">
+      {message}
+    </p>
+  );
+}
+
 /** Formulaire des paramètres de l'organisation (Super-Admin). */
 export function OrganizationForm({
   initial,
 }: {
   initial: OrganizationSettingsInput;
 }) {
-  const [values, setValues] = useState(initial);
   const [result, setResult] = useState<SettingsResult | null>(null);
-  const [pending, startTransition] = useTransition();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<OrganizationSettingsInput>({
+    // Contrôle côté client avec le même schéma Zod que le serveur.
+    resolver: zodResolver(organizationSettingsSchema),
+    defaultValues: initial,
+  });
 
-  function update<K extends keyof OrganizationSettingsInput>(
-    key: K,
-    value: OrganizationSettingsInput[K],
-  ) {
-    setValues((current) => ({ ...current, [key]: value }));
-    setResult(null);
-  }
-
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    // Contrôle côté client (le serveur revérifie de toute façon).
-    const parsed = organizationSettingsSchema.safeParse(values);
-    if (!parsed.success) {
-      setResult({
-        ok: false,
-        message: parsed.error.issues[0]?.message ?? "Données invalides.",
-      });
-      return;
-    }
-    startTransition(async () => {
-      setResult(await updateOrganizationSettings(parsed.data));
-    });
+  async function onSubmit(values: OrganizationSettingsInput) {
+    setResult(await updateOrganizationSettings(values));
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      onChange={() => setResult(null)}
+      className="flex flex-col gap-4"
+      noValidate
+    >
       <div className="flex flex-col gap-2">
         <Label htmlFor="organizationName">Nom de l&apos;organisation</Label>
         <Input
           id="organizationName"
-          value={values.organizationName}
-          onChange={(event) => update("organizationName", event.target.value)}
-          disabled={pending}
-          required
+          disabled={isSubmitting}
+          aria-invalid={!!errors.organizationName}
+          aria-describedby="organizationName-error"
+          {...register("organizationName")}
+        />
+        <FieldError
+          id="organizationName-error"
+          message={errors.organizationName?.message}
         />
       </div>
 
@@ -65,12 +73,16 @@ export function OrganizationForm({
           <Label htmlFor="academicYear">Année scolaire</Label>
           <Input
             id="academicYear"
-            value={values.academicYear}
-            onChange={(event) => update("academicYear", event.target.value)}
             placeholder="2025-2026"
             inputMode="numeric"
-            disabled={pending}
-            required
+            disabled={isSubmitting}
+            aria-invalid={!!errors.academicYear}
+            aria-describedby="academicYear-error"
+            {...register("academicYear")}
+          />
+          <FieldError
+            id="academicYear-error"
+            message={errors.academicYear?.message}
           />
         </div>
 
@@ -78,22 +90,19 @@ export function OrganizationForm({
           <Label htmlFor="currentSemester">Semestre en cours</Label>
           <select
             id="currentSemester"
-            value={String(values.currentSemester)}
-            onChange={(event) =>
-              update("currentSemester", Number(event.target.value))
-            }
-            disabled={pending}
+            disabled={isSubmitting}
             className="border-input bg-card focus-visible:ring-ring h-11 rounded-lg border px-3 text-base focus-visible:ring-2 focus-visible:outline-none md:text-sm"
+            {...register("currentSemester", { valueAsNumber: true })}
           >
-            <option value="1">Semestre 1</option>
-            <option value="2">Semestre 2</option>
+            <option value={1}>Semestre 1</option>
+            <option value={2}>Semestre 2</option>
           </select>
         </div>
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Button type="submit" disabled={pending}>
-          {pending ? "Enregistrement…" : "Enregistrer"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Enregistrement…" : "Enregistrer"}
         </Button>
         <p
           role="status"

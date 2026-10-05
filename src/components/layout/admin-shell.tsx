@@ -70,7 +70,7 @@ export function AdminShell({
             <X />
           </Button>
         </div>
-        <p className="px-1 text-sm font-medium text-white/85">
+        <p className="text-sidebar-strong/85 px-1 text-sm font-medium">
           {organizationName} · Administration
         </p>
       </div>
@@ -81,9 +81,9 @@ export function AdminShell({
         onNavigate={() => setMenuOpen(false)}
       />
 
-      <div className="mt-auto flex items-center gap-3 rounded-xl bg-white/5 px-3 py-3">
+      <div className="bg-sidebar-surface mt-auto flex items-center gap-3 rounded-xl px-3 py-3">
         <span className="bg-success size-2 shrink-0 rounded-full" aria-hidden />
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
+        <span className="text-sidebar-strong min-w-0 flex-1 truncate text-sm font-medium">
           {ROLE_LABELS[role]}
         </span>
         <span className="text-success-soft text-xs font-semibold">
@@ -103,7 +103,7 @@ export function AdminShell({
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-black/50"
+            className="bg-overlay absolute inset-0"
             aria-label="Fermer le menu"
             onClick={() => setMenuOpen(false)}
           />

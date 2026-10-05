@@ -41,7 +41,7 @@ export function SidebarNav({ sections, role, onNavigate }: SidebarNavProps) {
                 >
                   <Icon className="size-5 shrink-0" aria-hidden />
                   <span className="flex-1">{item.label}</span>
-                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold">
+                  <span className="bg-sidebar-hover rounded-full px-2 py-0.5 text-[10px] font-semibold">
                     Bientôt
                   </span>
                 </span>
@@ -58,7 +58,7 @@ export function SidebarNav({ sections, role, onNavigate }: SidebarNavProps) {
                   "flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-medium transition-colors",
                   active
                     ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-                    : "hover:bg-white/10 hover:text-white",
+                    : "hover:bg-sidebar-hover hover:text-sidebar-strong",
                 )}
               >
                 <Icon className="size-5 shrink-0" aria-hidden />

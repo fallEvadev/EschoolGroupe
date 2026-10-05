@@ -15,12 +15,12 @@ export const organizationSettingsSchema = z.object({
       const [start, end] = value.split("-").map(Number);
       return end === start + 1;
     }, "La seconde année doit suivre la première (ex. 2025-2026)."),
-  currentSemester: z.coerce
-    .number()
-    .refine((value) => value === 1 || value === 2, "Semestre invalide."),
+  currentSemester: z
+    .number({ message: "Semestre invalide." })
+    .refine((value) => [1, 2].includes(value), "Semestre invalide."),
 });
 
-export type OrganizationSettingsInput = z.input<
+export type OrganizationSettingsInput = z.infer<
   typeof organizationSettingsSchema
 >;
 

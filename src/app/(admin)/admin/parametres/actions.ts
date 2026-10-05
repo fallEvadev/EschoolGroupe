@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { writeAudit } from "@/lib/audit";
 import { requireSuperAdmin } from "@/lib/auth/super-admin";
-import { createAdminSupabase } from "@/lib/supabase/admin";
+import { createServerSupabase } from "@/lib/supabase/server";
 import {
   organizationSettingsSchema,
   type SettingsResult,
@@ -26,7 +26,9 @@ export async function updateOrganizationSettings(
   const { organizationName, academicYear, currentSemester } = parsed.data;
 
   try {
-    const { error } = await createAdminSupabase()
+    // Client avec le jeton de l'utilisateur : la RLS revérifie le rôle.
+    const supabase = await createServerSupabase();
+    const { data, error } = await supabase
       .from("organization_settings")
       .update({
         organization_name: organizationName,
@@ -34,13 +36,22 @@ export async function updateOrganizationSettings(
         current_semester: currentSemester,
         updated_by: caller.actorId,
       })
-      .eq("id", true);
+      .eq("id", true)
+      .select("id");
 
     if (error) {
       console.error("organization_settings :", error.message);
       return {
         ok: false,
         message: "Enregistrement impossible. Réessayez dans un instant.",
+      };
+    }
+    // Refus de la RLS : aucune erreur, mais aucune ligne modifiée.
+    if (data.length === 0) {
+      return {
+        ok: false,
+        message:
+          "Modification refusée par la base : vérifiez la liaison Clerk ↔ Supabase.",
       };
     }
 
