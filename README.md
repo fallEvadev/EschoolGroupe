@@ -77,6 +77,7 @@ L'application est disponible sur [http://localhost:3000](http://localhost:3000).
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/connexion
+CLERK_WEBHOOK_SIGNING_SECRET=     # webhook /api/webhooks/clerk (serveur uniquement)
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=
@@ -93,6 +94,12 @@ WHATSAPP_PHONE_NUMBER_ID=
 # Suivi des erreurs
 SENTRY_DSN=
 ```
+
+### Synchronisation Clerk → Supabase
+
+Le webhook `/api/webhooks/clerk` tient la table `profiles` à jour : création ou mise à jour du profil quand un compte a un rôle (`user.created`, `user.updated`), archivage quand un compte est supprimé (`user.deleted`, jamais de suppression physique).
+
+Dans le tableau de bord Clerk → **Webhooks** → **Add Endpoint** : URL `https://<domaine>/api/webhooks/clerk`, événements `user.created`, `user.updated`, `user.deleted`. Copier le **Signing Secret** dans `CLERK_WEBHOOK_SIGNING_SECRET`. En local, exposer le port 3000 avec un tunnel (ex. ngrok).
 
 Seules les variables préfixées `NEXT_PUBLIC_` sont exposées au navigateur. La clé `SUPABASE_SERVICE_ROLE_KEY` contourne la RLS : elle ne doit être utilisée que côté serveur.
 
