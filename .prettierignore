@@ -1,0 +1,10 @@
+.next
+node_modules
+maquette
+package-lock.json
+*.pdf
+*.png
+README.md
+CLAUDE.md
+CAHIER_DES_CHARGES.md
+database.ts
