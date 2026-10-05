@@ -19,11 +19,11 @@ export function SidebarNav({ sections, role, onNavigate }: SidebarNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Navigation principale" className="flex flex-col gap-6">
+    <nav aria-label="Navigation principale" className="flex flex-col gap-7">
       {sectionsForRole(sections, role).map((section) => (
         <div key={section.title ?? "principal"} className="flex flex-col gap-1">
           {section.title && (
-            <p className="px-3 pb-1 text-xs font-semibold tracking-widest uppercase opacity-60">
+            <p className="px-3 pb-2 text-xs font-semibold tracking-[0.12em] uppercase opacity-60">
               {section.title}
             </p>
           )}
@@ -37,7 +37,7 @@ export function SidebarNav({ sections, role, onNavigate }: SidebarNavProps) {
                   key={item.href}
                   aria-disabled="true"
                   title={`Disponible au lot ${item.lot}`}
-                  className="flex h-11 cursor-not-allowed items-center gap-3 rounded-lg px-3 text-sm font-medium opacity-45"
+                  className="flex h-11 cursor-not-allowed items-center gap-3 rounded-xl px-3 text-[15px] font-medium opacity-45"
                 >
                   <Icon className="size-5 shrink-0" aria-hidden />
                   <span className="flex-1">{item.label}</span>
@@ -55,10 +55,10 @@ export function SidebarNav({ sections, role, onNavigate }: SidebarNavProps) {
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
+                  "flex h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-medium transition-colors",
                   active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "hover:bg-white/10",
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                    : "hover:bg-white/10 hover:text-white",
                 )}
               >
                 <Icon className="size-5 shrink-0" aria-hidden />

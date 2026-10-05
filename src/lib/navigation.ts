@@ -133,7 +133,7 @@ export const ADMIN_NAV: NavSection[] = [
         href: "/admin/parametres",
         icon: Settings,
         lot: 1,
-        available: false,
+        available: true,
         roles: ["super_admin"],
       },
     ],

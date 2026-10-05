@@ -2,6 +2,7 @@ import type { UserJSON } from "@clerk/nextjs/server";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import type { NextRequest } from "next/server";
 
+import { writeAudit } from "@/lib/audit";
 import { parseRole } from "@/lib/auth/roles";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 
@@ -78,12 +79,11 @@ async function archiveProfile(clerkUserId: string) {
     .eq("clerk_user_id", clerkUserId);
   if (error) throw new Error(error.message);
 
-  const { error: auditError } = await supabase.from("audit_log").insert({
-    actor_clerk_id: null, // action du système (webhook)
+  await writeAudit({
+    actorId: null, // action du système (webhook)
     action: "account_archived",
     entity: "profiles",
-    entity_id: clerkUserId,
+    entityId: clerkUserId,
     details: { source: "clerk_webhook" },
   });
-  if (auditError) console.error("audit_log :", auditError.message);
 }

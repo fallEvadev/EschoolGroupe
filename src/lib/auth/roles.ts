@@ -71,6 +71,7 @@ export function canAccess(role: Role | null, space: SpaceKey): boolean {
 /** Pages réservées à certains rôles, plus strictes que l'espace qui les contient. */
 const RESTRICTED_PATHS: { prefix: string; roles: readonly Role[] }[] = [
   { prefix: "/admin/acces", roles: ["super_admin"] },
+  { prefix: "/admin/parametres", roles: ["super_admin"] },
 ];
 
 /** Vrai si le rôle peut ouvrir ce chemin précis (en plus du contrôle de l'espace). */

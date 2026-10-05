@@ -1,9 +1,11 @@
 "use server";
 
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
+import { writeAudit } from "@/lib/audit";
 import { parseRole } from "@/lib/auth/roles";
+import { requireSuperAdmin } from "@/lib/auth/super-admin";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import {
   setActiveSchema,
@@ -16,45 +18,9 @@ const ERREUR_GENERIQUE: AccessResult = {
   message: "Une erreur est survenue. Réessayez dans un instant.",
 };
 
-/**
- * Vérifie que l'appelant est bien Super-Admin. Sans cela, n'importe quel
- * utilisateur connecté pourrait appeler cette action : le contrôle de la page
- * ne suffit pas (règle du double contrôle).
- */
-async function requireSuperAdmin(): Promise<
-  { ok: true; actorId: string } | { ok: false; result: AccessResult }
-> {
-  const { userId, sessionClaims } = await auth();
-  const role = parseRole(sessionClaims?.user_role);
-  if (!userId || role !== "super_admin") {
-    return {
-      ok: false,
-      result: { ok: false, message: "Action réservée au Super-Admin." },
-    };
-  }
-  return { ok: true, actorId: userId };
-}
-
-/** Écrit une ligne dans le journal d'audit (ne bloque jamais l'action). */
-async function writeAudit(
-  actorId: string,
-  action: string,
-  targetId: string,
-  details: Record<string, string | boolean | null>,
-) {
-  const { error } = await createAdminSupabase().from("audit_log").insert({
-    actor_clerk_id: actorId,
-    action,
-    entity: "profiles",
-    entity_id: targetId,
-    details,
-  });
-  if (error) console.error("audit_log :", error.message);
-}
-
 export async function updateUserRole(input: unknown): Promise<AccessResult> {
   const caller = await requireSuperAdmin();
-  if (!caller.ok) return caller.result;
+  if (!caller.ok) return { ok: false, message: caller.message };
 
   const parsed = updateRoleSchema.safeParse(input);
   if (!parsed.success) {
@@ -95,9 +61,12 @@ export async function updateUserRole(input: unknown): Promise<AccessResult> {
       { onConflict: "clerk_user_id" },
     );
 
-    await writeAudit(caller.actorId, "role_changed", userId, {
-      from: previousRole,
-      to: role,
+    await writeAudit({
+      actorId: caller.actorId,
+      action: "role_changed",
+      entity: "profiles",
+      entityId: userId,
+      details: { from: previousRole, to: role },
     });
 
     revalidatePath("/admin/acces");
@@ -123,7 +92,7 @@ export async function updateUserRole(input: unknown): Promise<AccessResult> {
 
 export async function setUserActive(input: unknown): Promise<AccessResult> {
   const caller = await requireSuperAdmin();
-  if (!caller.ok) return caller.result;
+  if (!caller.ok) return { ok: false, message: caller.message };
 
   const parsed = setActiveSchema.safeParse(input);
   if (!parsed.success) {
@@ -152,12 +121,13 @@ export async function setUserActive(input: unknown): Promise<AccessResult> {
       .update({ status: active ? "actif" : "inactif" })
       .eq("clerk_user_id", userId);
 
-    await writeAudit(
-      caller.actorId,
-      active ? "account_reactivated" : "account_deactivated",
-      userId,
-      { active },
-    );
+    await writeAudit({
+      actorId: caller.actorId,
+      action: active ? "account_reactivated" : "account_deactivated",
+      entity: "profiles",
+      entityId: userId,
+      details: { active },
+    });
 
     revalidatePath("/admin/acces");
 

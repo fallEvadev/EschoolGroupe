@@ -1,6 +1,7 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { requireSpace } from "@/lib/auth/guards";
 import { parseRole } from "@/lib/auth/roles";
@@ -34,15 +35,12 @@ export default async function AccesPage() {
   });
 
   return (
-    <main className="flex w-full flex-col gap-4 p-4 sm:p-8">
-      <header>
-        <h1 className="text-2xl font-bold">Accès &amp; rôles</h1>
-        <p className="text-muted-foreground">
-          Attribuez un rôle aux comptes existants et désactivez les accès. Un
-          compte désactivé n&apos;est jamais supprimé : son historique est
-          conservé.
-        </p>
-      </header>
+    <main className="flex w-full flex-col gap-6 p-4 sm:p-8">
+      <PageHeader
+        eyebrow="Organisation · Super-Admin"
+        title="Accès & rôles"
+        description="Attribuez un rôle aux comptes existants et désactivez les accès. Un compte désactivé n'est jamais supprimé : son historique est conservé."
+      />
 
       <Card>
         {users.length === 0 ? (

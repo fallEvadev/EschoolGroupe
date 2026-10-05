@@ -69,6 +69,36 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_settings: {
+        Row: {
+          academic_year: string
+          created_at: string
+          current_semester: number
+          id: boolean
+          organization_name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          academic_year: string
+          created_at?: string
+          current_semester?: number
+          id?: boolean
+          organization_name: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          current_semester?: number
+          id?: boolean
+          organization_name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           clerk_user_id: string
