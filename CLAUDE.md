@@ -85,6 +85,9 @@ Rôles : `formateur`, `maintenancier`, `directeur_partenaire`, `admin_pedagogie`
 
 ## Avancement
 
-Lot en cours : **Lot 1 — Socle** (mettre à jour cette ligne à chaque changement de lot).
+Lot en cours : **Lot 2 — RH** (mettre à jour cette ligne à chaque changement de lot).
+
+- Lot 1 — Socle : terminé côté code (rôles, double contrôle, RLS, paramètres, accès). Reste à confirmer : liaison Clerk ↔ Supabase dans `supabase/config.toml` et déploiement Vercel.
+- Lot 2 — RH, fait : invitations, fiches du personnel, note de suivi, dossier administratif (bucket privé), webhook Clerk. Reste : archivage depuis « Personnel », validation des documents, règlement intérieur (`document_acceptances`).
 
 Ordre des lots : 1 Socle → 2 RH → 3 Pointage → 4 Rapports journaliers → 5 Maintenance → 6 Bilans et partenaires. Ne pas implémenter une fonctionnalité d'un lot futur sans demande explicite.

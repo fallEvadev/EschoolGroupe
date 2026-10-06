@@ -114,7 +114,7 @@ Seules les variables préfixées `NEXT_PUBLIC_` sont exposées au navigateur. La
 | `npm run lint` | Vérification ESLint |
 | `npm run format` | Formatage Prettier |
 | `npm run test` | Tests unitaires (Vitest) |
-| `npm run test:e2e` | Tests de parcours (Playwright) |
+| `npm run test:e2e` | Tests de parcours (Playwright) : pas encore en place |
 
 ## Structure du projet
 
@@ -138,7 +138,7 @@ eschool-plateforme/
 │   │   └── offline/             # Dexie et synchronisation
 │   ├── types/
 │   │   └── database.ts          # Types générés par Supabase
-│   └── middleware.ts            # Protection des routes par rôle (Clerk)
+│   └── proxy.ts                 # Protection des routes par rôle (Clerk, ex-middleware)
 ├── supabase/
 │   ├── migrations/              # Schéma SQL et politiques RLS
 │   ├── functions/               # Edge Functions (codes quotidiens, rappels)
@@ -165,8 +165,8 @@ Le rôle est stocké dans les métadonnées publiques Clerk (`publicMetadata.rol
 
 ## Feuille de route
 
-- [ ] **Lot 1 — Socle** : Next.js, Clerk ↔ Supabase, rôles, RLS, charte, déploiement Vercel
-- [ ] **Lot 2 — RH** : recrues, invitations, activation, archivage
+- [ ] **Lot 1 — Socle** : Next.js, Clerk ↔ Supabase, rôles, RLS, charte, déploiement Vercel (code terminé ; liaison Clerk et Vercel à confirmer)
+- [ ] **Lot 2 — RH** *(en cours)* : recrues, invitations, activation, archivage (invitations, fiches et documents faits ; archivage, validation des documents et règlement à faire)
 - [ ] **Lot 3 — Pointage** : écoles, planning, codes quotidiens, QR, géolocalisation
 - [ ] **Lot 4 — Rapports journaliers** : formulaire hors ligne, validation, notifications
 - [ ] **Lot 5 — Maintenance** : inventaire, tickets, statistiques
