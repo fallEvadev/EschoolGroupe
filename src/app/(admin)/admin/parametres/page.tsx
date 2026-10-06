@@ -13,27 +13,19 @@ import {
   createServerSupabase,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
+import {
+  describeSupabaseError,
+  SUPABASE_ISSUE_MESSAGES,
+} from "@/lib/supabase/errors";
 
 import { AuditLogList } from "./audit-log-list";
 import { OrganizationForm } from "./organization-form";
 
 export const metadata = { title: "Paramètres · E-School Groupe" };
 
-/** Codes renvoyés quand la table n'existe pas encore (migration non appliquée). */
-const TABLE_MISSING_CODES = new Set(["PGRST205", "42P01"]);
-
-/** Codes PostgREST « PGRST3xx » : jeton refusé (liaison Clerk ↔ Supabase absente). */
-const isAuthError = (code: string) => code.startsWith("PGRST3");
-
-/** Message affiché à la place du formulaire quand il ne peut pas être chargé. */
-const UNAVAILABLE_MESSAGES = {
-  config:
-    "Configuration Supabase incomplète : vérifiez NEXT_PUBLIC_SUPABASE_URL (doit commencer par https://) et NEXT_PUBLIC_SUPABASE_ANON_KEY dans .env.local.",
-  auth: "Supabase refuse le jeton Clerk : activer Clerk dans Supabase (Authentication → Third-party Auth) et ajouter le claim « user_role » au jeton de session Clerk.",
-  migration:
-    "La table « organization_settings » n'existe pas encore : la migration doit être appliquée sur Supabase (npx supabase db push).",
-  error: "Paramètres indisponibles pour le moment. Réessayez dans un instant.",
-};
+/** Configuration Supabase absente (variables d'environnement). */
+const CONFIG_MESSAGE =
+  "Configuration Supabase incomplète : vérifiez NEXT_PUBLIC_SUPABASE_URL (doit commencer par https://) et NEXT_PUBLIC_SUPABASE_ANON_KEY dans .env.local.";
 
 type SettingsLoad =
   | {
@@ -43,11 +35,11 @@ type SettingsLoad =
         current_semester: number;
       };
     }
-  | { unavailable: keyof typeof UNAVAILABLE_MESSAGES };
+  | { unavailable: string };
 
 async function loadSettings(): Promise<SettingsLoad> {
   // Configuration invalide : message à l'écran, sans erreur dans la console.
-  if (!isSupabaseConfigured()) return { unavailable: "config" };
+  if (!isSupabaseConfigured()) return { unavailable: CONFIG_MESSAGE };
 
   // Client avec le jeton de l'utilisateur : la RLS s'applique.
   const supabase = await createServerSupabase();
@@ -57,14 +49,12 @@ async function loadSettings(): Promise<SettingsLoad> {
     .maybeSingle();
 
   if (error) {
-    if (TABLE_MISSING_CODES.has(error.code)) {
-      return { unavailable: "migration" };
-    }
-    if (isAuthError(error.code)) return { unavailable: "auth" };
-    console.error("organization_settings :", error.message);
-    return { unavailable: "error" };
+    return {
+      unavailable: describeSupabaseError("organization_settings", error)
+        .message,
+    };
   }
-  if (!data) return { unavailable: "migration" };
+  if (!data) return { unavailable: SUPABASE_ISSUE_MESSAGES.migration };
   return { settings: data };
 }
 
@@ -101,7 +91,7 @@ export default async function ParametresPage() {
             />
           ) : (
             <p className="bg-warning-soft text-warning rounded-lg p-3 text-sm">
-              {UNAVAILABLE_MESSAGES[result.unavailable]}
+              {result.unavailable}
             </p>
           )}
         </CardContent>

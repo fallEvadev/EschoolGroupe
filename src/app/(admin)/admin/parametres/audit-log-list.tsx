@@ -7,6 +7,7 @@ import {
   createServerSupabase,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
+import { describeSupabaseError } from "@/lib/supabase/errors";
 import type { Json } from "@/types/database";
 
 const LIMIT = 50;
@@ -82,10 +83,9 @@ export async function AuditLogList() {
     .limit(LIMIT);
 
   if (error) {
-    console.error("audit_log :", error.message);
     return (
-      <p className="text-destructive text-sm">
-        Impossible de charger le journal d&apos;audit.
+      <p className="bg-warning-soft text-warning rounded-lg p-3 text-sm">
+        {describeSupabaseError("audit_log", error).message}
       </p>
     );
   }

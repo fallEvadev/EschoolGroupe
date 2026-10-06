@@ -23,6 +23,7 @@ import {
   createServerSupabase,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
+import { describeSupabaseError } from "@/lib/supabase/errors";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 
@@ -92,13 +93,7 @@ async function loadProfiles(): Promise<
     .select("*")
     .order("full_name")
     .limit(500);
-  if (error) {
-    console.error("profiles :", error.message);
-    return {
-      error:
-        "Impossible de charger le personnel. Si le problème continue, vérifiez que la migration du lot 2 est appliquée sur Supabase.",
-    };
-  }
+  if (error) return { error: describeSupabaseError("profiles", error).message };
   return { profiles: data };
 }
 

@@ -10,6 +10,7 @@ import {
   createServerSupabase,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
+import { describeSupabaseError } from "@/lib/supabase/errors";
 
 import { GrantAccessForm } from "./grant-access-form";
 import {
@@ -19,8 +20,11 @@ import {
 import { UserAccessRow, type AccessUser } from "./user-access-row";
 
 /** Personnes invitées qui n'ont pas encore activé leur compte. */
-async function loadPendingInvitations(): Promise<PendingInvitation[]> {
-  if (!isSupabaseConfigured()) return [];
+async function loadPendingInvitations(): Promise<{
+  invitations: PendingInvitation[];
+  notice: string | null;
+}> {
+  if (!isSupabaseConfigured()) return { invitations: [], notice: null };
   // Client avec le jeton de l'utilisateur : la RLS s'applique.
   const supabase = await createServerSupabase();
   const { data, error } = await supabase
@@ -29,16 +33,21 @@ async function loadPendingInvitations(): Promise<PendingInvitation[]> {
     .eq("status", "invite")
     .order("invited_at", { ascending: false });
   if (error) {
-    console.error("profiles :", error.message);
-    return [];
+    return {
+      invitations: [],
+      notice: describeSupabaseError("profiles", error).message,
+    };
   }
-  return data.map((profile) => ({
-    profileId: profile.id,
-    name: profile.full_name,
-    email: profile.email,
-    role: profile.role,
-    invitedAt: profile.invited_at ? formatDate(profile.invited_at) : null,
-  }));
+  return {
+    notice: null,
+    invitations: data.map((profile) => ({
+      profileId: profile.id,
+      name: profile.full_name,
+      email: profile.email,
+      role: profile.role,
+      invitedAt: profile.invited_at ? formatDate(profile.invited_at) : null,
+    })),
+  };
 }
 
 export const metadata = { title: "Accès & rôles · E-School Groupe" };
@@ -50,7 +59,7 @@ export default async function AccesPage() {
 
   const { userId } = await auth();
   const client = await clerkClient();
-  const [{ data, totalCount }, pendingInvitations] = await Promise.all([
+  const [{ data, totalCount }, pending] = await Promise.all([
     client.users.getUserList({ limit: 100, orderBy: "-created_at" }),
     loadPendingInvitations(),
   ]);
@@ -75,16 +84,22 @@ export default async function AccesPage() {
         description="Donnez un accès aux nouvelles personnes, attribuez un rôle aux comptes existants et désactivez les accès. Un compte désactivé n'est jamais supprimé : son historique est conservé."
       />
 
+      {pending.notice && (
+        <p className="bg-warning-soft text-warning rounded-lg p-3 text-sm">
+          {pending.notice}
+        </p>
+      )}
+
       <GrantAccessForm />
 
-      {pendingInvitations.length > 0 && (
+      {pending.invitations.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="text-lg font-semibold">
-            Invitations en attente ({pendingInvitations.length})
+            Invitations en attente ({pending.invitations.length})
           </h2>
           <Card>
             <ul className="divide-border divide-y">
-              {pendingInvitations.map((invitation) => (
+              {pending.invitations.map((invitation) => (
                 <PendingInvitationRow
                   key={invitation.profileId}
                   invitation={invitation}
