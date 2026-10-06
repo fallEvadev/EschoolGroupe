@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import {
   organizationSettingsSchema,
   type OrganizationSettingsInput,
-  type SettingsResult,
 } from "@/lib/validations/settings";
 
 import { updateOrganizationSettings } from "./actions";
@@ -31,7 +30,6 @@ export function OrganizationForm({
 }: {
   initial: OrganizationSettingsInput;
 }) {
-  const [result, setResult] = useState<SettingsResult | null>(null);
   const {
     register,
     handleSubmit,
@@ -43,13 +41,14 @@ export function OrganizationForm({
   });
 
   async function onSubmit(values: OrganizationSettingsInput) {
-    setResult(await updateOrganizationSettings(values));
+    const result = await updateOrganizationSettings(values);
+    if (result.ok) toast.success(result.message);
+    else toast.error(result.message);
   }
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      onChange={() => setResult(null)}
       className="flex flex-col gap-4"
       noValidate
     >
@@ -104,15 +103,6 @@ export function OrganizationForm({
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Enregistrement…" : "Enregistrer"}
         </Button>
-        <p
-          role="status"
-          aria-live="polite"
-          className={
-            result?.ok ? "text-success text-sm" : "text-destructive text-sm"
-          }
-        >
-          {result?.message}
-        </p>
       </div>
     </form>
   );

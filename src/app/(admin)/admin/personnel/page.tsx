@@ -2,6 +2,7 @@ import { ArrowLeft, Mail, Phone, Plus, Search } from "lucide-react";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -189,19 +190,22 @@ async function PersonnelContent({
 
   return (
     <>
-      <section
-        aria-label="Chiffres clés"
-        className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4"
-      >
-        {stats.map((stat) => (
-          <Card key={stat.label} className="flex flex-col gap-1 p-4 lg:p-5">
-            <p className="text-muted-foreground text-sm">{stat.label}</p>
-            <p className="font-heading text-3xl font-extrabold">{stat.value}</p>
-            {stat.hint && (
-              <p className="text-muted-foreground text-xs">{stat.hint}</p>
-            )}
-          </Card>
-        ))}
+      <section aria-label="Chiffres clés">
+        <Stagger className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+          {stats.map((stat) => (
+            <StaggerItem key={stat.label}>
+              <Card className="flex h-full flex-col gap-1 p-4 lg:p-5">
+                <p className="text-muted-foreground text-sm">{stat.label}</p>
+                <p className="font-heading text-3xl font-extrabold tabular-nums">
+                  {stat.value}
+                </p>
+                {stat.hint && (
+                  <p className="text-muted-foreground text-xs">{stat.hint}</p>
+                )}
+              </Card>
+            </StaggerItem>
+          ))}
+        </Stagger>
       </section>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:items-start">
@@ -263,12 +267,12 @@ async function PersonnelContent({
                 : "Aucune personne ne correspond à cette recherche."}
             </p>
           ) : (
-            <ul className="-mx-1 flex flex-col gap-1">
+            <Stagger as="ul" className="-mx-1 flex flex-col gap-1">
               {visible.map((profile) => {
                 const status = statusOf(profile);
                 const active = profile.id === selected?.id;
                 return (
-                  <li key={profile.id}>
+                  <StaggerItem as="li" key={profile.id}>
                     <Link
                       href={personnelHref({ q, filtre, fiche: profile.id })}
                       aria-current={active ? "true" : undefined}
@@ -302,10 +306,10 @@ async function PersonnelContent({
                         {status === "invite" ? "Invité" : STATUS_LABELS[status]}
                       </Badge>
                     </Link>
-                  </li>
+                  </StaggerItem>
                 );
               })}
-            </ul>
+            </Stagger>
           )}
         </Card>
 

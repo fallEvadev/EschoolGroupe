@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/auth/roles";
@@ -21,21 +33,26 @@ export type AccessUser = {
 /** Une ligne de la liste : choix du rôle et activation du compte. */
 export function UserAccessRow({ user }: { user: AccessUser }) {
   const [selected, setSelected] = useState<Role | "">(user.role ?? "");
-  const [result, setResult] = useState<AccessResult | null>(null);
   const [pending, startTransition] = useTransition();
 
   const changed = selected !== "" && selected !== user.role;
 
+  /** Résultat d'une action, affiché en notification. */
+  function notify(result: AccessResult) {
+    if (result.ok) toast.success(result.message);
+    else toast.error(result.message);
+  }
+
   function saveRole() {
     if (!selected) return;
     startTransition(async () => {
-      setResult(await updateUserRole({ userId: user.id, role: selected }));
+      notify(await updateUserRole({ userId: user.id, role: selected }));
     });
   }
 
   function toggleActive() {
     startTransition(async () => {
-      setResult(await setUserActive({ userId: user.id, active: user.banned }));
+      notify(await setUserActive({ userId: user.id, active: user.banned }));
     });
   }
 
@@ -78,7 +95,6 @@ export function UserAccessRow({ user }: { user: AccessUser }) {
             disabled={pending}
             onChange={(event) => {
               setSelected(event.target.value as Role | "");
-              setResult(null);
             }}
             className="border-input bg-card focus-visible:ring-ring h-11 rounded-lg border px-3 text-base focus-visible:ring-2 focus-visible:outline-none sm:w-60 md:text-sm"
           >
@@ -94,25 +110,40 @@ export function UserAccessRow({ user }: { user: AccessUser }) {
           <Button onClick={saveRole} disabled={!changed || pending}>
             Enregistrer le rôle
           </Button>
-          <Button
-            variant={user.banned ? "outline" : "destructive"}
-            onClick={toggleActive}
-            disabled={pending}
-          >
-            {user.banned ? "Réactiver" : "Désactiver"}
-          </Button>
+          {user.banned ? (
+            <Button variant="outline" onClick={toggleActive} disabled={pending}>
+              Réactiver
+            </Button>
+          ) : (
+            // Action risquée : confirmation avant de couper l'accès.
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={pending}>
+                  Désactiver
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Désactiver ce compte ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {user.name} ne pourra plus se connecter. Son historique est
+                    conservé et le compte peut être réactivé à tout moment.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction
+                    variant="destructive"
+                    onClick={toggleActive}
+                  >
+                    Désactiver le compte
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       )}
-
-      <p
-        role="status"
-        aria-live="polite"
-        className={
-          result?.ok ? "text-success text-sm" : "text-destructive text-sm"
-        }
-      >
-        {result?.message}
-      </p>
     </li>
   );
 }

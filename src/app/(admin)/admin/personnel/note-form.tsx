@@ -1,12 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { staffNoteSchema, type StaffResult } from "@/lib/validations/staff";
+import { Textarea } from "@/components/ui/textarea";
+import { staffNoteSchema } from "@/lib/validations/staff";
 
 import { saveStaffNote } from "./actions";
 
@@ -21,7 +22,6 @@ export function NoteForm({
   profileId: string;
   initial: string;
 }) {
-  const [result, setResult] = useState<StaffResult | null>(null);
   const {
     register,
     handleSubmit,
@@ -34,14 +34,14 @@ export function NoteForm({
 
   async function onSubmit(values: NoteValues) {
     const response = await saveStaffNote({ profileId, ...values });
-    setResult(response);
+    if (response.ok) toast.success(response.message);
+    else toast.error(response.message);
     if (response.ok) reset(values);
   }
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      onChange={() => setResult(null)}
       className="flex flex-col gap-3"
       noValidate
     >
@@ -51,28 +51,18 @@ export function NoteForm({
           (visible par la direction uniquement)
         </span>
       </Label>
-      <textarea
+      <Textarea
         id="content"
         rows={4}
         placeholder="Entretien, évaluation pédagogique, besoins en formation…"
         disabled={isSubmitting}
         aria-invalid={!!errors.content}
-        className="border-input bg-card placeholder:text-muted-foreground focus-visible:ring-ring w-full rounded-lg border px-3 py-2 text-base focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50 md:text-sm"
         {...register("content")}
       />
       {errors.content && (
         <p className="text-destructive text-sm">{errors.content.message}</p>
       )}
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
-        <p
-          role="status"
-          aria-live="polite"
-          className={
-            result?.ok ? "text-success text-sm" : "text-destructive text-sm"
-          }
-        >
-          {result?.message}
-        </p>
         <Button type="submit" disabled={isSubmitting || !isDirty}>
           {isSubmitting ? "Enregistrement…" : "Enregistrer la note"}
         </Button>

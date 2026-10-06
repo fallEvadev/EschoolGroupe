@@ -1,12 +1,18 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { Menu, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Menu } from "lucide-react";
+import { useState } from "react";
 
 import { BrandCard } from "@/components/layout/brand";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { ROLE_LABELS, type Role } from "@/lib/auth/roles";
 import { ADMIN_NAV } from "@/lib/navigation";
 import { initials } from "@/lib/staff";
@@ -36,31 +42,10 @@ export function AdminShell({
 }: AdminShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Échap ferme le menu sur téléphone.
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [menuOpen]);
-
   const sidebar = (
     <div className="bg-sidebar text-sidebar-foreground flex h-full w-64 flex-col gap-6 overflow-y-auto p-4">
       <div className="flex flex-col gap-3">
-        <div className="relative">
-          <BrandCard />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:bg-muted absolute top-1 right-1 lg:hidden"
-            onClick={() => setMenuOpen(false)}
-            aria-label="Fermer le menu"
-          >
-            <X />
-          </Button>
-        </div>
+        <BrandCard />
         <p className="text-sidebar-strong/85 px-1 text-sm font-medium">
           {organizationName} · Administration
         </p>
@@ -89,18 +74,19 @@ export function AdminShell({
       {/* Grand écran : barre fixe */}
       <aside className="sticky top-0 hidden h-screen lg:block">{sidebar}</aside>
 
-      {/* Téléphone : menu coulissant */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            className="bg-overlay absolute inset-0"
-            aria-label="Fermer le menu"
-            onClick={() => setMenuOpen(false)}
-          />
-          <div className="relative h-full w-64">{sidebar}</div>
-        </div>
-      )}
+      {/* Téléphone : menu coulissant (focus gardé dans le menu, Échap ferme) */}
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent
+          side="left"
+          className="[&>button]:text-foreground w-64 border-none p-0 sm:max-w-64 [&>button]:top-6 [&>button]:right-6"
+        >
+          <SheetTitle className="sr-only">Menu</SheetTitle>
+          <SheetDescription className="sr-only">
+            Navigation de l&apos;espace administration
+          </SheetDescription>
+          {sidebar}
+        </SheetContent>
+      </Sheet>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="bg-card sticky top-0 z-40 flex h-16 items-center gap-3 border-b px-4 sm:px-8 lg:h-20">
