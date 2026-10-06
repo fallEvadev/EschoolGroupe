@@ -9,6 +9,7 @@ import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Button } from "@/components/ui/button";
 import { ROLE_LABELS, type Role } from "@/lib/auth/roles";
 import { ADMIN_NAV } from "@/lib/navigation";
+import { initials } from "@/lib/staff";
 
 export type AdminShellProps = {
   role: Role;
@@ -20,16 +21,6 @@ export type AdminShellProps = {
   today: string;
   children: React.ReactNode;
 };
-
-/** Initiales affichées dans la pastille (ex. « Mamadou Diop » → « MD »). */
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
 
 /**
  * Cadre de l'espace admin (maquette « Direction pédagogique ») :

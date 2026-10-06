@@ -11,6 +11,7 @@ import {
 /** Routes accessibles sans connexion. */
 const isPublicRoute = createRouteMatcher([
   "/connexion(.*)",
+  "/activation(.*)", // activation du compte après invitation RH
   "/non-autorise",
   "/charte", // aperçu temporaire de la charte graphique
   "/api/webhooks(.*)", // webhooks signés (Clerk, WhatsApp)

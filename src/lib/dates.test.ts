@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDateTime, formatLongDate } from "./dates";
+import { formatDate, formatDateTime, formatLongDate } from "./dates";
 
 describe("formatDateTime", () => {
   it("affiche jj/mm/aaaa hh:mm à l'heure de Dakar (UTC+0)", () => {
@@ -18,5 +18,11 @@ describe("formatDateTime", () => {
 describe("formatLongDate", () => {
   it("écrit la date en toutes lettres, en français", () => {
     expect(formatLongDate("2026-10-05T12:00:00Z")).toBe("lundi 5 octobre");
+  });
+});
+
+describe("formatDate", () => {
+  it("affiche une date seule au format jj/mm/aaaa", () => {
+    expect(formatDate("2026-09-01")).toBe("01/09/2026");
   });
 });

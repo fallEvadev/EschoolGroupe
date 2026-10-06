@@ -41,32 +41,62 @@ export async function POST(req: NextRequest) {
 
 /** Crée ou met à jour le profil. Sans rôle valide, on ne crée rien. */
 async function syncProfile(user: UserJSON) {
-  const email =
+  const email = (
     user.email_addresses.find((e) => e.id === user.primary_email_address_id)
-      ?.email_address ?? "";
+      ?.email_address ?? ""
+  ).toLowerCase();
   const fullName =
     [user.first_name, user.last_name].filter(Boolean).join(" ") || email;
   const role = parseRole(user.public_metadata?.role);
   const supabase = createAdminSupabase();
 
+  // Recrue invitée par les RH : on relie sa fiche (même e-mail, pas encore
+  // de compte) au compte qu'elle vient d'activer. La fiche RH fait foi.
+  if (email) {
+    const { data: linked, error } = await supabase
+      .from("profiles")
+      .update({ clerk_user_id: user.id, status: "actif", invitation_id: null })
+      .eq("email", email)
+      .is("clerk_user_id", null)
+      .eq("status", "invite")
+      .select("id");
+    if (error) throw new Error(error.message);
+    if (linked.length > 0) {
+      await writeAudit({
+        actorId: null, // action du système (webhook)
+        action: "account_activated",
+        entity: "profiles",
+        entityId: linked[0].id,
+        details: { email },
+      });
+      return;
+    }
+  }
+
   if (!role) {
     // Compte encore sans rôle : le profil sera créé quand le Super-Admin
-    // attribuera un rôle. S'il existe déjà, on rafraîchit nom et email.
+    // attribuera un rôle. S'il existe déjà, on rafraîchit l'e-mail.
     const { error } = await supabase
       .from("profiles")
-      .update({ email, full_name: fullName })
+      .update({ email })
       .eq("clerk_user_id", user.id);
     if (error) throw new Error(error.message);
     return;
   }
 
-  const { error } = await supabase
+  // Fiche existante : e-mail et rôle suivent Clerk, le nom reste celui des RH.
+  const { data: updated, error } = await supabase
     .from("profiles")
-    .upsert(
-      { clerk_user_id: user.id, email, full_name: fullName, role },
-      { onConflict: "clerk_user_id" },
-    );
+    .update({ email, role })
+    .eq("clerk_user_id", user.id)
+    .select("id");
   if (error) throw new Error(error.message);
+  if (updated.length > 0) return;
+
+  const { error: insertError } = await supabase
+    .from("profiles")
+    .insert({ clerk_user_id: user.id, email, full_name: fullName, role });
+  if (insertError) throw new Error(insertError.message);
 }
 
 /** Compte supprimé dans Clerk : aucune suppression physique, on archive. */

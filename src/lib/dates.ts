@@ -16,3 +16,8 @@ export function formatDateTime(value: string | Date): string {
 export function formatLongDate(value: string | Date): string {
   return format(value, "EEEE d MMMM", options);
 }
+
+/** Date seule au format jj/mm/aaaa (ex. date d'arrivée). */
+export function formatDate(value: string | Date): string {
+  return format(value, "dd/MM/yyyy", options);
+}

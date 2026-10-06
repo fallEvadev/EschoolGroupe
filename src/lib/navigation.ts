@@ -93,7 +93,7 @@ export const ADMIN_NAV: NavSection[] = [
         href: "/admin/personnel",
         icon: Users,
         lot: 2,
-        available: false,
+        available: true,
         roles: ["admin_rh", "super_admin"],
       },
       {

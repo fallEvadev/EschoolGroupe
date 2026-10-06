@@ -10,6 +10,10 @@ import type { Json } from "@/types/database";
 
 const LIMIT = 50;
 
+/** Identifiant de fiche (uuid), par opposition à un identifiant Clerk. */
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** Libellés lisibles des actions enregistrées. */
 const ACTION_LABELS: Record<string, string> = {
   role_changed: "Rôle modifié",
@@ -17,6 +21,10 @@ const ACTION_LABELS: Record<string, string> = {
   account_reactivated: "Compte réactivé",
   account_archived: "Compte archivé",
   settings_updated: "Paramètres modifiés",
+  staff_created: "Fiche créée",
+  staff_updated: "Fiche modifiée",
+  invitation_resent: "Invitation renvoyée",
+  account_activated: "Compte activé",
 };
 
 function roleLabel(value: Json | undefined): string {
@@ -33,6 +41,12 @@ function describe(action: string, details: Json): string | null {
   }
   if (action === "settings_updated") {
     return `${details.organization_name} · ${details.academic_year} · semestre ${details.current_semester}`;
+  }
+  if (action === "staff_created") {
+    return `${details.email} · ${roleLabel(details.role)} · invitation envoyée`;
+  }
+  if (action === "invitation_resent" || action === "account_activated") {
+    return `${details.email}`;
   }
   if (action === "account_archived" && details.source === "clerk_webhook") {
     return "Compte supprimé dans Clerk";
@@ -75,20 +89,32 @@ export async function AuditLogList() {
     );
   }
 
-  // Noms des personnes citées (auteurs et comptes concernés).
+  // Noms des personnes citées : auteurs (identifiant Clerk) et fiches
+  // concernées (identifiant Clerk, ou identifiant de fiche pour les recrues).
   const clerkIds = new Set<string>();
+  const profileIds = new Set<string>();
   for (const entry of entries) {
     if (entry.actor_clerk_id) clerkIds.add(entry.actor_clerk_id);
-    if (entry.entity === "profiles" && entry.entity_id)
-      clerkIds.add(entry.entity_id);
+    if (entry.entity === "profiles" && entry.entity_id) {
+      if (UUID_PATTERN.test(entry.entity_id)) profileIds.add(entry.entity_id);
+      else clerkIds.add(entry.entity_id);
+    }
   }
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("clerk_user_id, full_name")
-    .in("clerk_user_id", [...clerkIds]);
-  const names = new Map(
-    (profiles ?? []).map((p) => [p.clerk_user_id, p.full_name]),
-  );
+  const [byClerkId, byProfileId] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("clerk_user_id, full_name")
+      .in("clerk_user_id", [...clerkIds]),
+    supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", [...profileIds]),
+  ]);
+  const names = new Map<string, string>();
+  for (const p of byClerkId.data ?? []) {
+    if (p.clerk_user_id) names.set(p.clerk_user_id, p.full_name);
+  }
+  for (const p of byProfileId.data ?? []) names.set(p.id, p.full_name);
   const nameOf = (id: string) => names.get(id) ?? "Compte inconnu";
 
   return (

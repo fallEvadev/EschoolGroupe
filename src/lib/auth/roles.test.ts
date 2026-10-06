@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  assignableRoles,
   canAccess,
   canAccessPath,
   homeForRole,
@@ -75,6 +76,14 @@ describe("canAccessPath", () => {
     });
   }
 
+  it("réserve /admin/personnel à l'Admin RH et au Super-Admin", () => {
+    for (const role of ROLES) {
+      expect(canAccessPath(role, "/admin/personnel/nouveau")).toBe(
+        role === "admin_rh" || role === "super_admin",
+      );
+    }
+  });
+
   it("laisse passer les pages sans restriction particulière", () => {
     expect(canAccessPath("admin_rh", "/admin")).toBe(true);
   });
@@ -87,5 +96,24 @@ describe("homeForRole", () => {
       expect(space).not.toBeNull();
       expect(canAccess(role, space as SpaceKey)).toBe(true);
     }
+  });
+});
+
+describe("assignableRoles", () => {
+  it("donne tous les rôles au Super-Admin", () => {
+    expect(assignableRoles("super_admin")).toEqual(ROLES);
+  });
+
+  it("limite l'Admin RH aux rôles non administrateurs", () => {
+    expect(assignableRoles("admin_rh")).toEqual([
+      "formateur",
+      "maintenancier",
+      "directeur_partenaire",
+    ]);
+  });
+
+  it("ne donne rien aux autres rôles", () => {
+    expect(assignableRoles("admin_pedagogie")).toEqual([]);
+    expect(assignableRoles(null)).toEqual([]);
   });
 });

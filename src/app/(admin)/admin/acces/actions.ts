@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { writeAudit } from "@/lib/audit";
 import { parseRole } from "@/lib/auth/roles";
-import { requireSuperAdmin } from "@/lib/auth/super-admin";
+import { requireSuperAdmin } from "@/lib/auth/action-guard";
 import { createServerSupabase } from "@/lib/supabase/server";
 import {
   setActiveSchema,

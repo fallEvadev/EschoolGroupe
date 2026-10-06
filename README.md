@@ -77,6 +77,7 @@ L'application est disponible sur [http://localhost:3000](http://localhost:3000).
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/connexion
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/activation   # activation après invitation RH
 CLERK_WEBHOOK_SIGNING_SECRET=     # webhook /api/webhooks/clerk (serveur uniquement)
 
 # Supabase

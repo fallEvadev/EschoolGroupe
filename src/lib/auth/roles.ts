@@ -72,6 +72,7 @@ export function canAccess(role: Role | null, space: SpaceKey): boolean {
 const RESTRICTED_PATHS: { prefix: string; roles: readonly Role[] }[] = [
   { prefix: "/admin/acces", roles: ["super_admin"] },
   { prefix: "/admin/parametres", roles: ["super_admin"] },
+  { prefix: "/admin/personnel", roles: ["admin_rh", "super_admin"] },
 ];
 
 /** Vrai si le rôle peut ouvrir ce chemin précis (en plus du contrôle de l'espace). */
@@ -81,6 +82,24 @@ export function canAccessPath(role: Role | null, pathname: string): boolean {
   );
   if (!rule) return true;
   return role !== null && rule.roles.includes(role);
+}
+
+/**
+ * Rôles qu'un Admin RH peut attribuer (même règle que la fonction SQL
+ * `is_rh_manageable_role`). Les comptes administrateurs restent gérés
+ * par le Super-Admin.
+ */
+export const RH_MANAGEABLE_ROLES = [
+  "formateur",
+  "maintenancier",
+  "directeur_partenaire",
+] as const satisfies readonly Role[];
+
+/** Rôles que `actor` peut attribuer à une fiche du personnel. */
+export function assignableRoles(actor: Role | null): readonly Role[] {
+  if (actor === "super_admin") return ROLES;
+  if (actor === "admin_rh") return RH_MANAGEABLE_ROLES;
+  return [];
 }
 
 /** Page d'accueil de chaque rôle après connexion. */

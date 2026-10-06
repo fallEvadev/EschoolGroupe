@@ -101,36 +101,89 @@ export type Database = {
       }
       profiles: {
         Row: {
-          clerk_user_id: string
+          clerk_user_id: string | null
+          contract_type: string | null
           created_at: string
+          created_by: string | null
           email: string
           full_name: string
+          hire_date: string | null
           id: string
+          invitation_id: string | null
+          invited_at: string | null
+          job_title: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           status: string
           updated_at: string
         }
         Insert: {
-          clerk_user_id: string
+          clerk_user_id?: string | null
+          contract_type?: string | null
           created_at?: string
+          created_by?: string | null
           email: string
           full_name: string
+          hire_date?: string | null
           id?: string
+          invitation_id?: string | null
+          invited_at?: string | null
+          job_title?: string | null
+          phone?: string | null
           role: Database["public"]["Enums"]["user_role"]
           status?: string
           updated_at?: string
         }
         Update: {
-          clerk_user_id?: string
+          clerk_user_id?: string | null
+          contract_type?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string
           full_name?: string
+          hire_date?: string | null
           id?: string
+          invitation_id?: string | null
+          invited_at?: string | null
+          job_title?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           status?: string
           updated_at?: string
         }
         Relationships: []
+      }
+      staff_notes: {
+        Row: {
+          content: string
+          created_at: string
+          profile_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          profile_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          profile_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_notes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -139,6 +192,10 @@ export type Database = {
     Functions: {
       current_clerk_id: { Args: never; Returns: string }
       current_user_role: { Args: never; Returns: string }
+      is_rh_manageable_role: {
+        Args: { value: Database["public"]["Enums"]["user_role"] }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role:
