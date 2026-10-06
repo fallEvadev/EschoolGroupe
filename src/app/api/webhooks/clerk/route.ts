@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 
 import { writeAudit } from "@/lib/audit";
 import { parseRole } from "@/lib/auth/roles";
+import { primaryEmail } from "@/lib/clerk-email";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 
 /**
@@ -41,10 +42,13 @@ export async function POST(req: NextRequest) {
 
 /** Crée ou met à jour le profil. Sans rôle valide, on ne crée rien. */
 async function syncProfile(user: UserJSON) {
-  const email = (
-    user.email_addresses.find((e) => e.id === user.primary_email_address_id)
-      ?.email_address ?? ""
-  ).toLowerCase();
+  const { address: email, verified } = primaryEmail(user);
+  // Adresse non vérifiée : n'importe qui peut saisir celle d'une recrue à
+  // l'inscription et lui « prendre » sa fiche. On ne synchronise rien : Clerk
+  // enverra `user.updated` quand l'adresse sera vérifiée (ce qui est déjà le
+  // cas pour une invitation acceptée).
+  if (!verified) return;
+
   const fullName =
     [user.first_name, user.last_name].filter(Boolean).join(" ") || email;
   const role = parseRole(user.public_metadata?.role);
