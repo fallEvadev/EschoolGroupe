@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { ROLES } from "@/lib/auth/roles";
-import { CONTRACT_TYPES } from "@/lib/staff";
+import { CONTRACT_TYPES, needsReason, STATUS_ACTIONS } from "@/lib/staff";
 
 /** Champ facultatif : une chaîne vide devient `null`. */
 const optionalText = (max: number, message: string) =>
@@ -76,6 +76,21 @@ export const staffNoteSchema = z.object({
 export const profileIdSchema = z.object({
   profileId: z.uuid("Fiche invalide."),
 });
+
+/** Désactivation, réactivation ou archivage d'une fiche (motif exigé pour couper l'accès). */
+export const staffStatusSchema = z
+  .object({
+    profileId: z.uuid("Fiche invalide."),
+    action: z.enum(STATUS_ACTIONS, { message: "Action invalide." }),
+    reason: z
+      .string()
+      .trim()
+      .max(500, "Le motif ne doit pas dépasser 500 caractères."),
+  })
+  .refine((value) => !needsReason(value.action) || value.reason.length >= 3, {
+    message: "Le motif est obligatoire (3 caractères minimum).",
+    path: ["reason"],
+  });
 
 /** Lien d'activation à partager (WhatsApp ou copier-coller). */
 export type ShareInfo = {

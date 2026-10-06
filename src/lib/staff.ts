@@ -44,6 +44,53 @@ export const STATUS_BADGE: Record<
   archive: "neutral",
 };
 
+/** Actions de l'Admin RH sur le statut d'une fiche. */
+export const STATUS_ACTIONS = ["deactivate", "reactivate", "archive"] as const;
+
+export type StatusAction = (typeof STATUS_ACTIONS)[number];
+
+export const STATUS_ACTION_LABELS: Record<StatusAction, string> = {
+  deactivate: "Désactiver",
+  reactivate: "Réactiver",
+  archive: "Archiver",
+};
+
+/** Désactiver et archiver coupent l'accès : un motif est exigé. */
+export function needsReason(action: StatusAction): boolean {
+  return action !== "reactivate";
+}
+
+/**
+ * Statut obtenu après une action, ou `null` si elle n'est pas permise.
+ * `hasAccount` : la personne a-t-elle déjà activé son compte ? Sans compte,
+ * réactiver ramène la fiche à « invite » (il faudra renvoyer l'invitation).
+ */
+export function nextStatus(
+  current: StaffStatus,
+  action: StatusAction,
+  hasAccount: boolean,
+): StaffStatus | null {
+  switch (action) {
+    case "deactivate":
+      return current === "actif" ? "inactif" : null;
+    case "reactivate":
+      if (current !== "inactif" && current !== "archive") return null;
+      return hasAccount ? "actif" : "invite";
+    case "archive":
+      return current === "archive" ? null : "archive";
+  }
+}
+
+/** Actions proposées pour une fiche selon son statut. */
+export function availableStatusActions(
+  current: StaffStatus,
+  hasAccount: boolean,
+): StatusAction[] {
+  return STATUS_ACTIONS.filter(
+    (action) => nextStatus(current, action, hasAccount) !== null,
+  );
+}
+
 export function isStaffStatus(value: string): value is StaffStatus {
   return (STAFF_STATUSES as readonly string[]).includes(value);
 }

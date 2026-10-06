@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { ArrowLeft, Mail, Phone, Plus, Search } from "lucide-react";
 import Link from "next/link";
 
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { assignableRoles, ROLE_LABELS, type Role } from "@/lib/auth/roles";
 import { formatDate, formatDateTime } from "@/lib/dates";
 import {
+  availableStatusActions,
   CONTRACT_LABELS,
   formatPhone,
   initials,
@@ -32,6 +34,7 @@ import { requireStaffManager } from "./access";
 import { DocumentsPanel, type CurrentDocument } from "./documents-panel";
 import { NoteForm } from "./note-form";
 import { ResendInvitationButton } from "./resend-invitation-button";
+import { StatusActions } from "./status-actions";
 
 export const metadata = { title: "Personnel · E-School Groupe" };
 
@@ -107,6 +110,7 @@ export default async function PersonnelPage({
   const filtre: FilterKey =
     FILTERS.find((f) => f.key === params.filtre)?.key ?? "tous";
   const ficheId = typeof params.fiche === "string" ? params.fiche : undefined;
+  const { userId } = await auth();
 
   const loaded = await loadProfiles();
 
@@ -137,6 +141,7 @@ export default async function PersonnelPage({
           q={q}
           filtre={filtre}
           ficheId={ficheId}
+          currentUserId={userId}
         />
       )}
     </main>
@@ -149,12 +154,14 @@ async function PersonnelContent({
   q,
   filtre,
   ficheId,
+  currentUserId,
 }: {
   profiles: Profile[];
   role: Role;
   q: string;
   filtre: FilterKey;
   ficheId?: string;
+  currentUserId: string | null;
 }) {
   const count = (statuses: readonly StaffStatus[]) =>
     profiles.filter((p) => statuses.includes(statusOf(p))).length;
@@ -317,6 +324,7 @@ async function PersonnelContent({
           <StaffDetail
             profile={selected}
             canManage={assignableRoles(role).includes(selected.role)}
+            isSelf={selected.clerk_user_id === currentUserId}
             backHref={personnelHref({ q, filtre })}
           />
         ) : (
@@ -335,10 +343,12 @@ async function PersonnelContent({
 async function StaffDetail({
   profile,
   canManage,
+  isSelf,
   backHref,
 }: {
   profile: Profile;
   canManage: boolean;
+  isSelf: boolean;
   backHref: string;
 }) {
   const status = statusOf(profile);
@@ -487,6 +497,31 @@ async function StaffDetail({
             </p>
             {canManage && <ResendInvitationButton profileId={profile.id} />}
           </section>
+        )}
+
+        {(status === "inactif" || status === "archive") &&
+          profile.status_reason && (
+            <section className="bg-muted flex flex-col gap-1 rounded-xl p-4">
+              <p className="text-sm font-medium">
+                {status === "archive" ? "Fiche archivée" : "Compte désactivé"}
+                {profile.status_changed_at &&
+                  ` le ${formatDateTime(profile.status_changed_at)}`}
+              </p>
+              <p className="text-muted-foreground text-sm">
+                Motif : {profile.status_reason}
+              </p>
+            </section>
+          )}
+
+        {canManage && !isSelf && (
+          <StatusActions
+            profileId={profile.id}
+            fullName={profile.full_name}
+            actions={availableStatusActions(
+              status,
+              profile.clerk_user_id !== null,
+            )}
+          />
         )}
 
         <section className="flex flex-col gap-3">

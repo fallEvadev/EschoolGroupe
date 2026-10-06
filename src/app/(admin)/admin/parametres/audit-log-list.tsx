@@ -60,6 +60,9 @@ function describe(action: string, details: Json): string | null {
   if (action === "account_archived" && details.source === "clerk_webhook") {
     return "Compte supprimé dans Clerk";
   }
+  if (typeof details.reason === "string" && details.reason) {
+    return `Motif : ${details.reason}`;
+  }
   return null;
 }
 

@@ -130,7 +130,13 @@ export async function setUserActive(input: unknown): Promise<AccessResult> {
     const supabase = await createServerSupabase();
     const { error } = await supabase
       .from("profiles")
-      .update({ status: active ? "actif" : "inactif" })
+      .update({
+        status: active ? "actif" : "inactif",
+        // Pas de motif ici : on efface l'ancien pour ne pas afficher un motif périmé.
+        status_reason: null,
+        status_changed_at: new Date().toISOString(),
+        status_changed_by: caller.actorId,
+      })
       .eq("clerk_user_id", userId);
 
     await writeAudit({
