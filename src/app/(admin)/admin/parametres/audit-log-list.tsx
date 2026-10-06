@@ -29,6 +29,8 @@ const ACTION_LABELS: Record<string, string> = {
   account_activated: "Compte activé",
   document_uploaded: "Document ajouté",
   document_viewed: "Document consulté",
+  rules_published: "Règlement publié",
+  rules_accepted: "Règlement accepté",
 };
 
 function roleLabel(value: Json | undefined): string {
@@ -54,6 +56,10 @@ function describe(action: string, details: Json): string | null {
     const label = isDocumentKind(kind) ? DOCUMENT_LABELS[kind] : "Document";
     return `${label} · ${details.file_name}`;
   }
+  if (action === "rules_published") {
+    return `Version ${details.version} · ${details.title}`;
+  }
+  if (action === "rules_accepted") return `Version ${details.version}`;
   if (action === "invitation_resent" || action === "account_activated") {
     return `${details.email}`;
   }
