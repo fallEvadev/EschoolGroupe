@@ -5,8 +5,41 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { requireSpace } from "@/lib/auth/guards";
 import { parseRole } from "@/lib/auth/roles";
+import { formatDate } from "@/lib/dates";
+import {
+  createServerSupabase,
+  isSupabaseConfigured,
+} from "@/lib/supabase/server";
 
+import { GrantAccessForm } from "./grant-access-form";
+import {
+  PendingInvitationRow,
+  type PendingInvitation,
+} from "./pending-invitation-row";
 import { UserAccessRow, type AccessUser } from "./user-access-row";
+
+/** Personnes invitées qui n'ont pas encore activé leur compte. */
+async function loadPendingInvitations(): Promise<PendingInvitation[]> {
+  if (!isSupabaseConfigured()) return [];
+  // Client avec le jeton de l'utilisateur : la RLS s'applique.
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, email, role, invited_at")
+    .eq("status", "invite")
+    .order("invited_at", { ascending: false });
+  if (error) {
+    console.error("profiles :", error.message);
+    return [];
+  }
+  return data.map((profile) => ({
+    profileId: profile.id,
+    name: profile.full_name,
+    email: profile.email,
+    role: profile.role,
+    invitedAt: profile.invited_at ? formatDate(profile.invited_at) : null,
+  }));
+}
 
 export const metadata = { title: "Accès & rôles · E-School Groupe" };
 
@@ -17,10 +50,10 @@ export default async function AccesPage() {
 
   const { userId } = await auth();
   const client = await clerkClient();
-  const { data, totalCount } = await client.users.getUserList({
-    limit: 100,
-    orderBy: "-created_at",
-  });
+  const [{ data, totalCount }, pendingInvitations] = await Promise.all([
+    client.users.getUserList({ limit: 100, orderBy: "-created_at" }),
+    loadPendingInvitations(),
+  ]);
 
   const users: AccessUser[] = data.map((user) => {
     const email = user.primaryEmailAddress?.emailAddress ?? "";
@@ -39,9 +72,30 @@ export default async function AccesPage() {
       <PageHeader
         eyebrow="Organisation · Super-Admin"
         title="Accès & rôles"
-        description="Attribuez un rôle aux comptes existants et désactivez les accès. Un compte désactivé n'est jamais supprimé : son historique est conservé."
+        description="Donnez un accès aux nouvelles personnes, attribuez un rôle aux comptes existants et désactivez les accès. Un compte désactivé n'est jamais supprimé : son historique est conservé."
       />
 
+      <GrantAccessForm />
+
+      {pendingInvitations.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">
+            Invitations en attente ({pendingInvitations.length})
+          </h2>
+          <Card>
+            <ul className="divide-border divide-y">
+              {pendingInvitations.map((invitation) => (
+                <PendingInvitationRow
+                  key={invitation.profileId}
+                  invitation={invitation}
+                />
+              ))}
+            </ul>
+          </Card>
+        </section>
+      )}
+
+      <h2 className="text-lg font-semibold">Comptes actifs et désactivés</h2>
       <Card>
         {users.length === 0 ? (
           <p className="text-muted-foreground p-4">

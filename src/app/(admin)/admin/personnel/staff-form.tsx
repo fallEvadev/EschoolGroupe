@@ -1,10 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { InvitationShare } from "@/components/invitation-share";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,8 +87,38 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
       ? await updateStaffMember(profileId, values)
       : await createStaffMember(values);
     setResult(response);
-    // Fiche créée (même si l'invitation a échoué) : on l'ouvre.
+    // Nouvelle recrue avec lien : on reste ici pour l'envoyer par WhatsApp.
+    if (response.share) return;
+    // Sinon (modification, ou invitation en échec), on ouvre la fiche.
     if (response.id) router.push(`/admin/personnel?fiche=${response.id}`);
+  }
+
+  if (result?.share && result.id) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-start gap-3">
+          <CheckCircle2
+            className="text-success mt-0.5 size-6 shrink-0"
+            aria-hidden
+          />
+          <div className="flex flex-col gap-1">
+            <p className="font-semibold">{result.message}</p>
+            <p className="text-muted-foreground text-sm">
+              Envoyez aussi le lien par WhatsApp : la personne choisira son mot
+              de passe en l&apos;ouvrant.
+            </p>
+          </div>
+        </div>
+        <InvitationShare share={result.share} />
+        <div className="border-t pt-4">
+          <Button variant="outline" asChild>
+            <Link href={`/admin/personnel?fiche=${result.id}`}>
+              Ouvrir la fiche
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const describedBy = (field: keyof StaffFormValues) =>

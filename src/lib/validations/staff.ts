@@ -77,4 +77,31 @@ export const profileIdSchema = z.object({
   profileId: z.uuid("Fiche invalide."),
 });
 
-export type StaffResult = { ok: boolean; message: string; id?: string };
+/** Lien d'activation à partager (WhatsApp ou copier-coller). */
+export type ShareInfo = {
+  /** Lien d'activation de l'invitation Clerk. */
+  url: string;
+  /** Lien qui ouvre WhatsApp avec le message déjà écrit. */
+  whatsappUrl: string;
+  /** Nom de la personne invitée (affiché sur les boutons). */
+  recipient: string;
+};
+
+export type StaffResult = {
+  ok: boolean;
+  message: string;
+  id?: string;
+  share?: ShareInfo;
+};
+
+/** Accès donné depuis « Accès & rôles » : l'essentiel de la fiche. */
+export const grantAccessSchema = staffSchema.pick({
+  firstName: true,
+  lastName: true,
+  email: true,
+  phone: true,
+  role: true,
+});
+
+export type GrantAccessValues = z.input<typeof grantAccessSchema>;
+export type GrantAccessData = z.output<typeof grantAccessSchema>;

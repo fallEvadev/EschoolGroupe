@@ -2,11 +2,17 @@
 
 import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 
 import { writeAudit } from "@/lib/audit";
 import { requireActionRole } from "@/lib/auth/action-guard";
 import { assignableRoles, type Role } from "@/lib/auth/roles";
+import {
+  createProfileWithInvitation,
+  ERREUR_GENERIQUE,
+  resendProfileInvitation,
+  sendInvitation,
+  toProfileRow,
+} from "@/lib/invitations";
 import { createServerSupabase } from "@/lib/supabase/server";
 import {
   profileIdSchema,
@@ -17,79 +23,6 @@ import {
 } from "@/lib/validations/staff";
 
 const RH_ROLES = ["admin_rh", "super_admin"] as const;
-
-const ERREUR_GENERIQUE: StaffResult = {
-  ok: false,
-  message: "Une erreur est survenue. Réessayez dans un instant.",
-};
-
-/** Code PostgreSQL d'une valeur en double (ici : l'adresse e-mail). */
-const UNIQUE_VIOLATION = "23505";
-
-/** Adresse du site (pour le lien d'activation envoyé par Clerk). */
-async function appUrl(): Promise<string> {
-  const list = await headers();
-  const host = list.get("x-forwarded-host") ?? list.get("host");
-  const protocol = list.get("x-forwarded-proto") ?? "https";
-  return `${protocol}://${host}`;
-}
-
-/** Colonnes de `profiles` correspondant aux champs du formulaire. */
-function toRow(data: StaffData) {
-  return {
-    full_name: `${data.firstName} ${data.lastName}`,
-    phone: data.phone,
-    role: data.role,
-    job_title: data.jobTitle,
-    contract_type: data.contractType,
-    hire_date: data.hireDate,
-  };
-}
-
-/**
- * Envoie (ou renvoie) l'invitation Clerk et l'enregistre sur la fiche.
- * Le rôle voyage dans l'invitation : Clerk le copie dans le compte créé.
- */
-async function sendInvitation(
-  profileId: string,
-  email: string,
-  role: Role,
-  previousInvitationId: string | null,
-) {
-  const client = await clerkClient();
-  if (previousInvitationId) {
-    // L'ancien lien ne doit plus fonctionner (il peut déjà être expiré).
-    await client.invitations
-      .revokeInvitation(previousInvitationId)
-      .catch(() => undefined);
-  }
-  const invitation = await client.invitations.createInvitation({
-    emailAddress: email,
-    publicMetadata: { role },
-    redirectUrl: `${await appUrl()}/activation`,
-    expiresInDays: 7,
-  });
-
-  const supabase = await createServerSupabase();
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      invitation_id: invitation.id,
-      invited_at: new Date().toISOString(),
-    })
-    .eq("id", profileId);
-  if (error) throw new Error(error.message);
-}
-
-/** Vrai si un compte Clerk existe déjà avec cette adresse. */
-async function clerkAccountExists(email: string): Promise<boolean> {
-  const client = await clerkClient();
-  const { totalCount } = await client.users.getUserList({
-    emailAddress: [email],
-    limit: 1,
-  });
-  return totalCount > 0;
-}
 
 /** Valide le formulaire et vérifie que l'appelant peut attribuer le rôle. */
 function parseStaff(
@@ -124,64 +57,9 @@ export async function createStaffMember(input: unknown): Promise<StaffResult> {
   const { data } = parsed;
 
   try {
-    // Un compte existant se gère depuis « Accès & rôles », pas par invitation.
-    if (await clerkAccountExists(data.email)) {
-      return {
-        ok: false,
-        message:
-          "Un compte existe déjà avec cette adresse e-mail. Son rôle se gère depuis « Accès & rôles ».",
-      };
-    }
-
-    const supabase = await createServerSupabase();
-    const { data: created, error } = await supabase
-      .from("profiles")
-      .insert({
-        ...toRow(data),
-        email: data.email,
-        status: "invite",
-        created_by: caller.actorId,
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      if (error.code === UNIQUE_VIOLATION) {
-        return {
-          ok: false,
-          message: "Une fiche existe déjà avec cette adresse e-mail.",
-        };
-      }
-      console.error("profiles :", error.message);
-      return ERREUR_GENERIQUE;
-    }
-
-    await writeAudit({
-      actorId: caller.actorId,
-      action: "staff_created",
-      entity: "profiles",
-      entityId: created.id,
-      details: { email: data.email, role: data.role },
-    });
+    const result = await createProfileWithInvitation(caller.actorId, data);
     revalidatePath("/admin/personnel");
-
-    try {
-      await sendInvitation(created.id, data.email, data.role, null);
-    } catch (error) {
-      console.error("invitation :", error);
-      return {
-        ok: false,
-        id: created.id,
-        message:
-          "Fiche créée, mais l'invitation n'a pas pu être envoyée. Utilisez « Renvoyer l'invitation » sur la fiche.",
-      };
-    }
-
-    return {
-      ok: true,
-      id: created.id,
-      message: `Fiche créée. Une invitation a été envoyée à ${data.email}.`,
-    };
+    return result;
   } catch (error) {
     console.error("createStaffMember :", error);
     return ERREUR_GENERIQUE;
@@ -222,7 +100,7 @@ export async function updateStaffMember(
     // La RLS refuse sans erreur (aucune ligne) une fiche hors de vos droits.
     const { data: updated, error } = await supabase
       .from("profiles")
-      .update(toRow(data))
+      .update(toProfileRow(data))
       .eq("id", profileId)
       .select("id");
     if (error) {
@@ -275,36 +153,13 @@ export async function resendInvitation(input: unknown): Promise<StaffResult> {
   const { profileId } = parsed.data;
 
   try {
-    const supabase = await createServerSupabase();
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("email, role, status, invitation_id")
-      .eq("id", profileId)
-      .maybeSingle();
-    if (!profile) return { ok: false, message: "Fiche introuvable." };
-    if (profile.status !== "invite") {
-      return { ok: false, message: "Ce compte est déjà activé." };
-    }
-    if (!assignableRoles(caller.role).includes(profile.role)) {
-      return { ok: false, message: "Vous ne pouvez pas gérer cette fiche." };
-    }
-
-    await sendInvitation(
+    const result = await resendProfileInvitation(
+      caller.actorId,
       profileId,
-      profile.email,
-      profile.role,
-      profile.invitation_id,
+      (role) => assignableRoles(caller.role).includes(role),
     );
-    await writeAudit({
-      actorId: caller.actorId,
-      action: "invitation_resent",
-      entity: "profiles",
-      entityId: profileId,
-      details: { email: profile.email },
-    });
-
     revalidatePath("/admin/personnel");
-    return { ok: true, message: `Invitation renvoyée à ${profile.email}.` };
+    return result;
   } catch (error) {
     console.error("resendInvitation :", error);
     return ERREUR_GENERIQUE;

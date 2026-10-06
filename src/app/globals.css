@@ -57,6 +57,10 @@
   --destructive: #dc2626;
   --destructive-soft: #fee2e2;
   --destructive-foreground: #ffffff;
+
+  /* Bouton « Envoyer par WhatsApp » (vert foncé : texte blanc lisible) */
+  --whatsapp: #0e7c45;
+  --whatsapp-foreground: #ffffff;
 }
 
 @theme inline {
@@ -97,6 +101,8 @@
   --color-destructive: var(--destructive);
   --color-destructive-soft: var(--destructive-soft);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-whatsapp: var(--whatsapp);
+  --color-whatsapp-foreground: var(--whatsapp-foreground);
 
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 4px);

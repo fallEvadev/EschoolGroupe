@@ -3,6 +3,7 @@
 import { Send } from "lucide-react";
 import { useState, useTransition } from "react";
 
+import { InvitationShare } from "@/components/invitation-share";
 import { Button } from "@/components/ui/button";
 import type { StaffResult } from "@/lib/validations/staff";
 
@@ -14,28 +15,31 @@ export function ResendInvitationButton({ profileId }: { profileId: string }) {
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-      <Button
-        variant="outline"
-        disabled={pending}
-        onClick={() =>
-          startTransition(async () => {
-            setResult(await resendInvitation({ profileId }));
-          })
-        }
-      >
-        <Send aria-hidden />
-        {pending ? "Envoi…" : "Renvoyer l'invitation"}
-      </Button>
-      <p
-        role="status"
-        aria-live="polite"
-        className={
-          result?.ok ? "text-success text-sm" : "text-destructive text-sm"
-        }
-      >
-        {result?.message}
-      </p>
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <Button
+          variant="outline"
+          disabled={pending}
+          onClick={() =>
+            startTransition(async () => {
+              setResult(await resendInvitation({ profileId }));
+            })
+          }
+        >
+          <Send aria-hidden />
+          {pending ? "Envoi…" : "Renvoyer l'invitation"}
+        </Button>
+        <p
+          role="status"
+          aria-live="polite"
+          className={
+            result?.ok ? "text-success text-sm" : "text-destructive text-sm"
+          }
+        >
+          {result?.message}
+        </p>
+      </div>
+      {result?.share && <InvitationShare share={result.share} />}
     </div>
   );
 }

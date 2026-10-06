@@ -8,10 +8,19 @@ import { parseRole } from "@/lib/auth/roles";
 import { requireSuperAdmin } from "@/lib/auth/action-guard";
 import { createServerSupabase } from "@/lib/supabase/server";
 import {
+  createProfileWithInvitation,
+  resendProfileInvitation,
+} from "@/lib/invitations";
+import {
   setActiveSchema,
   updateRoleSchema,
   type AccessResult,
 } from "@/lib/validations/access";
+import {
+  grantAccessSchema,
+  profileIdSchema,
+  type StaffResult,
+} from "@/lib/validations/staff";
 
 const ERREUR_GENERIQUE: AccessResult = {
   ok: false,
@@ -148,6 +157,62 @@ export async function setUserActive(input: unknown): Promise<AccessResult> {
     };
   } catch (error) {
     console.error("setUserActive :", error);
+    return ERREUR_GENERIQUE;
+  }
+}
+
+/**
+ * Donne un accès à une nouvelle personne : fiche créée, invitation envoyée
+ * par e-mail, et lien prêt à être partagé par WhatsApp.
+ */
+export async function grantAccess(input: unknown): Promise<StaffResult> {
+  const caller = await requireSuperAdmin();
+  if (!caller.ok) return { ok: false, message: caller.message };
+
+  const parsed = grantAccessSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Données invalides.",
+    };
+  }
+
+  try {
+    const result = await createProfileWithInvitation(caller.actorId, {
+      ...parsed.data,
+      // Le reste de la fiche se complète ensuite dans « Personnel ».
+      jobTitle: null,
+      contractType: null,
+      hireDate: null,
+    });
+    revalidatePath("/admin/acces");
+    revalidatePath("/admin/personnel");
+    return result;
+  } catch (error) {
+    console.error("grantAccess :", error);
+    return ERREUR_GENERIQUE;
+  }
+}
+
+/** Renvoie l'accès d'une personne qui n'a pas encore activé son compte. */
+export async function resendAccess(input: unknown): Promise<StaffResult> {
+  const caller = await requireSuperAdmin();
+  if (!caller.ok) return { ok: false, message: caller.message };
+
+  const parsed = profileIdSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Fiche invalide." };
+
+  try {
+    // Le Super-Admin peut gérer tous les rôles.
+    const result = await resendProfileInvitation(
+      caller.actorId,
+      parsed.data.profileId,
+      () => true,
+    );
+    revalidatePath("/admin/acces");
+    return result;
+  } catch (error) {
+    console.error("resendAccess :", error);
     return ERREUR_GENERIQUE;
   }
 }
