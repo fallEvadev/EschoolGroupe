@@ -69,6 +69,69 @@ export type Database = {
         }
         Relationships: []
       }
+      document_acceptances: {
+        Row: {
+          accepted_at: string
+          id: string
+          profile_id: string
+          rules_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          id?: string
+          profile_id: string
+          rules_id: string
+        }
+        Update: {
+          accepted_at?: string
+          id?: string
+          profile_id?: string
+          rules_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_acceptances_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_acceptances_rules_id_fkey"
+            columns: ["rules_id"]
+            isOneToOne: false
+            referencedRelation: "internal_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      internal_rules: {
+        Row: {
+          content: string
+          id: string
+          published_at: string
+          published_by: string | null
+          title: string
+          version: number
+        }
+        Insert: {
+          content: string
+          id?: string
+          published_at?: string
+          published_by?: string | null
+          title: string
+          version?: never
+        }
+        Update: {
+          content?: string
+          id?: string
+          published_at?: string
+          published_by?: string | null
+          title?: string
+          version?: never
+        }
+        Relationships: []
+      }
       organization_settings: {
         Row: {
           academic_year: string
