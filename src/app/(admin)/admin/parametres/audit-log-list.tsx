@@ -2,6 +2,7 @@ import "server-only";
 
 import { parseRole, ROLE_LABELS } from "@/lib/auth/roles";
 import { formatDateTime } from "@/lib/dates";
+import { DOCUMENT_LABELS, isDocumentKind } from "@/lib/staff-documents";
 import {
   createServerSupabase,
   isSupabaseConfigured,
@@ -25,6 +26,8 @@ const ACTION_LABELS: Record<string, string> = {
   staff_updated: "Fiche modifiée",
   invitation_resent: "Invitation renvoyée",
   account_activated: "Compte activé",
+  document_uploaded: "Document ajouté",
+  document_viewed: "Document consulté",
 };
 
 function roleLabel(value: Json | undefined): string {
@@ -44,6 +47,11 @@ function describe(action: string, details: Json): string | null {
   }
   if (action === "staff_created") {
     return `${details.email} · ${roleLabel(details.role)} · invitation envoyée`;
+  }
+  if (action === "document_uploaded" || action === "document_viewed") {
+    const kind = typeof details.kind === "string" ? details.kind : "";
+    const label = isDocumentKind(kind) ? DOCUMENT_LABELS[kind] : "Document";
+    return `${label} · ${details.file_name}`;
   }
   if (action === "invitation_resent" || action === "account_activated") {
     return `${details.email}`;

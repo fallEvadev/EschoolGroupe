@@ -153,6 +153,56 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_documents: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          kind: string
+          mime_type: string
+          profile_id: string
+          size_bytes: number
+          status: string
+          storage_path: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          kind: string
+          mime_type: string
+          profile_id: string
+          size_bytes: number
+          status?: string
+          storage_path: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          kind?: string
+          mime_type?: string
+          profile_id?: string
+          size_bytes?: number
+          status?: string
+          storage_path?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_documents_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_notes: {
         Row: {
           content: string

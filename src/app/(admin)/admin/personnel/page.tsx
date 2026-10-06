@@ -18,6 +18,7 @@ import {
   STATUS_LABELS,
   type StaffStatus,
 } from "@/lib/staff";
+import { isDocumentKind, STAFF_DOCUMENTS_BUCKET } from "@/lib/staff-documents";
 import {
   createServerSupabase,
   isSupabaseConfigured,
@@ -26,6 +27,7 @@ import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 
 import { requireStaffManager } from "./access";
+import { DocumentsPanel, type CurrentDocument } from "./documents-panel";
 import { NoteForm } from "./note-form";
 import { ResendInvitationButton } from "./resend-invitation-button";
 
@@ -342,11 +344,42 @@ async function StaffDetail({
 }) {
   const status = statusOf(profile);
   const supabase = await createServerSupabase();
-  const { data: note } = await supabase
-    .from("staff_notes")
-    .select("content")
-    .eq("profile_id", profile.id)
-    .maybeSingle();
+  const [{ data: note }, { data: documentRows }] = await Promise.all([
+    supabase
+      .from("staff_notes")
+      .select("content")
+      .eq("profile_id", profile.id)
+      .maybeSingle(),
+    supabase
+      .from("staff_documents")
+      .select("id, kind, file_name, size_bytes, storage_path, created_at")
+      .eq("profile_id", profile.id)
+      .eq("status", "actif"),
+  ]);
+
+  const documents: CurrentDocument[] = (documentRows ?? []).flatMap((doc) =>
+    isDocumentKind(doc.kind)
+      ? [
+          {
+            id: doc.id,
+            kind: doc.kind,
+            fileName: doc.file_name,
+            sizeBytes: doc.size_bytes,
+            uploadedOn: formatDate(doc.created_at),
+          },
+        ]
+      : [],
+  );
+
+  // Photo affichée dans la pastille : lien temporaire (5 minutes).
+  const photo = documentRows?.find((doc) => doc.kind === "photo");
+  const photoUrl = photo
+    ? (
+        await supabase.storage
+          .from(STAFF_DOCUMENTS_BUCKET)
+          .createSignedUrl(photo.storage_path, 300)
+      ).data?.signedUrl
+    : undefined;
 
   const contract =
     profile.contract_type && isContractType(profile.contract_type)
@@ -382,12 +415,23 @@ async function StaffDetail({
         </Link>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          <span
-            aria-hidden
-            className="bg-accent text-accent-foreground font-heading flex size-16 shrink-0 items-center justify-center rounded-full text-2xl font-bold"
-          >
-            {initials(profile.full_name)}
-          </span>
+          {photoUrl ? (
+            // Lien signé qui change à chaque affichage : pas d'optimisation
+            // d'image Next.js possible ni utile ici.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photoUrl}
+              alt={`Photo de ${profile.full_name}`}
+              className="size-16 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <span
+              aria-hidden
+              className="bg-accent text-accent-foreground font-heading flex size-16 shrink-0 items-center justify-center rounded-full text-2xl font-bold"
+            >
+              {initials(profile.full_name)}
+            </span>
+          )}
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <h2 className="truncate text-2xl font-bold">{profile.full_name}</h2>
             <p className="text-muted-foreground">
@@ -460,15 +504,7 @@ async function StaffDetail({
           </dl>
         </section>
 
-        <section className="flex flex-col gap-3">
-          <h3 className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
-            Dossier administratif
-          </h3>
-          <p className="bg-muted text-muted-foreground rounded-xl p-4 text-sm">
-            CV, pièce d&apos;identité et photo : l&apos;envoi des documents
-            arrive à la prochaine étape du lot 2.
-          </p>
-        </section>
+        <DocumentsPanel profileId={profile.id} documents={documents} />
 
         <section className="border-t pt-6">
           <NoteForm profileId={profile.id} initial={note?.content ?? ""} />
