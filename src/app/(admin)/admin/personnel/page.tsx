@@ -410,20 +410,28 @@ async function StaffDetail({
 }) {
   const status = statusOf(profile);
   const supabase = await createServerSupabase();
-  const [{ data: note }, { data: documentRows }] = await Promise.all([
-    supabase
-      .from("staff_notes")
-      .select("content")
-      .eq("profile_id", profile.id)
-      .maybeSingle(),
-    supabase
-      .from("staff_documents")
-      .select(
-        "id, kind, file_name, size_bytes, storage_path, created_at, review_status, review_reason",
-      )
-      .eq("profile_id", profile.id)
-      .eq("status", "actif"),
+  // Le dossier et la note d'un administrateur ne sont pas chargés pour un
+  // Admin RH : ils restent gérés par le Super-Admin (`canManage` faux).
+  const [noteResult, documentsResult] = await Promise.all([
+    canManage
+      ? supabase
+          .from("staff_notes")
+          .select("content")
+          .eq("profile_id", profile.id)
+          .maybeSingle()
+      : null,
+    canManage
+      ? supabase
+          .from("staff_documents")
+          .select(
+            "id, kind, file_name, size_bytes, storage_path, created_at, review_status, review_reason",
+          )
+          .eq("profile_id", profile.id)
+          .eq("status", "actif")
+      : null,
   ]);
+  const note = noteResult?.data ?? null;
+  const documentRows = documentsResult?.data ?? null;
 
   const documents: CurrentDocument[] = (documentRows ?? []).flatMap((doc) =>
     isDocumentKind(doc.kind)
@@ -601,11 +609,20 @@ async function StaffDetail({
           </dl>
         </section>
 
-        <DocumentsPanel profileId={profile.id} documents={documents} />
+        {canManage ? (
+          <>
+            <DocumentsPanel profileId={profile.id} documents={documents} />
 
-        <section className="border-t pt-6">
-          <NoteForm profileId={profile.id} initial={note?.content ?? ""} />
-        </section>
+            <section className="border-t pt-6">
+              <NoteForm profileId={profile.id} initial={note?.content ?? ""} />
+            </section>
+          </>
+        ) : (
+          <p className="text-muted-foreground border-t pt-6 text-sm">
+            Le dossier et la note de suivi des administrateurs sont gérés par le
+            Super-Admin.
+          </p>
+        )}
       </div>
     </Card>
   );

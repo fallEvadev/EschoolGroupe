@@ -80,6 +80,9 @@ NEXT_PUBLIC_CLERK_SIGN_IN_URL=/connexion
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/activation   # activation après invitation RH
 CLERK_WEBHOOK_SIGNING_SECRET=     # webhook /api/webhooks/clerk (serveur uniquement)
 
+# Application
+NEXT_PUBLIC_APP_URL=http://localhost:3000   # en production : l'adresse réelle (lien d'activation des invitations)
+
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=

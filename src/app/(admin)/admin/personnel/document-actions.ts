@@ -10,7 +10,9 @@ import {
   buildStoragePath,
   decisionNeedsReason,
   DOCUMENT_LABELS,
+  isAcceptedFile,
   isDocumentKind,
+  isValidStoragePath,
   STAFF_DOCUMENTS_BUCKET,
 } from "@/lib/staff-documents";
 import { createServerSupabase } from "@/lib/supabase/server";
@@ -23,6 +25,8 @@ import {
   type PrepareUploadResult,
   type SignedUrlResult,
 } from "@/lib/validations/staff-documents";
+
+import { ADMIN_PROFILE_MESSAGE, checkProfileAccess } from "./access";
 
 const RH_ROLES = ["admin_rh", "super_admin"] as const;
 
@@ -56,12 +60,13 @@ export async function prepareDocumentUpload(
 
   try {
     const supabase = await createServerSupabase();
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", profileId)
-      .maybeSingle();
-    if (!profile) return { ok: false, message: "Fiche introuvable." };
+    const access = await checkProfileAccess(supabase, caller.role, profileId);
+    if (access === "not_found") {
+      return { ok: false, message: "Fiche introuvable." };
+    }
+    if (access === "forbidden") {
+      return { ok: false, message: ADMIN_PROFILE_MESSAGE };
+    }
 
     const storagePath = buildStoragePath(
       profileId,
@@ -105,21 +110,46 @@ export async function confirmDocumentUpload(
   const { profileId, kind, fileName, mimeType, size, storagePath } =
     parsed.data;
 
-  // Le chemin doit être celui préparé pour cette fiche et ce type.
-  if (!storagePath.startsWith(`${profileId}/${kind}/`)) {
+  // Le chemin doit avoir exactement la forme préparée pour cette fiche et ce type.
+  if (!isValidStoragePath(storagePath, profileId, kind)) {
     return { ok: false, message: "Envoi invalide. Recommencez." };
   }
 
   try {
     const supabase = await createServerSupabase();
-    const { data: exists } = await supabase.storage
-      .from(STAFF_DOCUMENTS_BUCKET)
-      .exists(storagePath);
-    if (!exists) {
+    const access = await checkProfileAccess(supabase, caller.role, profileId);
+    if (access === "not_found") {
+      return { ok: false, message: "Fiche introuvable." };
+    }
+    if (access === "forbidden") {
+      return { ok: false, message: ADMIN_PROFILE_MESSAGE };
+    }
+
+    // Type et taille réels du fichier arrivé dans le stockage : ce que
+    // déclare le navigateur n'est pas une preuve. Si le stockage ne sait pas
+    // les donner, on vérifie au moins que le fichier existe.
+    const bucket = supabase.storage.from(STAFF_DOCUMENTS_BUCKET);
+    const { data: info } = await bucket.info(storagePath);
+    let storedMime = mimeType;
+    let storedSize = size;
+    if (info) {
+      storedMime = info.contentType ?? mimeType;
+      storedSize = info.size ?? size;
+    } else {
+      const { data: exists } = await bucket.exists(storagePath);
+      if (!exists) {
+        return {
+          ok: false,
+          message:
+            "Le fichier n'est pas arrivé. Vérifiez la connexion et recommencez.",
+        };
+      }
+    }
+    if (!isAcceptedFile(kind, storedMime, storedSize)) {
       return {
         ok: false,
         message:
-          "Le fichier n'est pas arrivé. Vérifiez la connexion et recommencez.",
+          "Le fichier reçu n'a pas un format ou une taille acceptés (PDF, JPEG, PNG ou WebP, 5 Mo maximum).",
       };
     }
 
@@ -141,8 +171,8 @@ export async function confirmDocumentUpload(
         kind,
         storage_path: storagePath,
         file_name: fileName,
-        mime_type: mimeType,
-        size_bytes: size,
+        mime_type: storedMime,
+        size_bytes: storedSize,
         uploaded_by: caller.actorId,
       })
       .select("id")
@@ -194,6 +224,12 @@ export async function reviewDocument(input: unknown): Promise<DocumentResult> {
       .eq("id", documentId)
       .maybeSingle();
     if (!document) return { ok: false, message: "Document introuvable." };
+    const access = await checkProfileAccess(
+      supabase,
+      caller.role,
+      document.profile_id,
+    );
+    if (access !== "ok") return { ok: false, message: ADMIN_PROFILE_MESSAGE };
     if (document.status !== "actif") {
       return {
         ok: false,
@@ -271,6 +307,12 @@ export async function getDocumentUrl(input: unknown): Promise<SignedUrlResult> {
       .eq("id", parsed.data.documentId)
       .maybeSingle();
     if (!document) return { ok: false, message: "Document introuvable." };
+    const access = await checkProfileAccess(
+      supabase,
+      caller.role,
+      document.profile_id,
+    );
+    if (access !== "ok") return { ok: false, message: ADMIN_PROFILE_MESSAGE };
 
     const { data, error } = await supabase.storage
       .from(STAFF_DOCUMENTS_BUCKET)

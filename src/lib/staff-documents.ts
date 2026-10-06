@@ -110,6 +110,40 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} Mo`;
 }
 
+/** Un fichier de ce type, de ce format et de cette taille est-il acceptable ? */
+export function isAcceptedFile(
+  kind: DocumentKind,
+  mimeType: string,
+  size: number,
+): boolean {
+  return (
+    ACCEPTED_TYPES[kind].includes(mimeType) &&
+    Number.isInteger(size) &&
+    size >= 1 &&
+    size <= MAX_DOCUMENT_BYTES
+  );
+}
+
+const UUID_PATTERN =
+  "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
+/**
+ * Le chemin reçu est-il exactement de la forme produite par `buildStoragePath`
+ * pour cette fiche et ce type (`<fiche>/<type>/<uuid>-<nom sûr>`) ? Un simple
+ * test du début laisserait passer n'importe quel suffixe venu du navigateur.
+ */
+export function isValidStoragePath(
+  path: string,
+  profileId: string,
+  kind: DocumentKind,
+): boolean {
+  const prefix = `${profileId}/${kind}/`;
+  if (!path.startsWith(prefix)) return false;
+  return new RegExp(`^${UUID_PATTERN}-[A-Za-z0-9._-]{1,80}$`, "i").test(
+    path.slice(prefix.length),
+  );
+}
+
 /**
  * Chemin de stockage sûr : dossier de la fiche, type, identifiant unique,
  * puis nom de fichier sans accents ni caractères spéciaux.

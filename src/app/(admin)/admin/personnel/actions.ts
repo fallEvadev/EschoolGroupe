@@ -14,6 +14,7 @@ import {
   toProfileRow,
 } from "@/lib/invitations";
 import { isStaffStatus, needsReason, nextStatus } from "@/lib/staff";
+import { ADMIN_PROFILE_MESSAGE, checkProfileAccess } from "./access";
 import { createServerSupabase } from "@/lib/supabase/server";
 import {
   profileIdSchema,
@@ -326,6 +327,18 @@ export async function saveStaffNote(input: unknown): Promise<StaffResult> {
 
   try {
     const supabase = await createServerSupabase();
+    const access = await checkProfileAccess(
+      supabase,
+      caller.role,
+      parsed.data.profileId,
+    );
+    if (access === "not_found") {
+      return { ok: false, message: "Fiche introuvable." };
+    }
+    if (access === "forbidden") {
+      return { ok: false, message: ADMIN_PROFILE_MESSAGE };
+    }
+
     const { error } = await supabase.from("staff_notes").upsert(
       {
         profile_id: parsed.data.profileId,

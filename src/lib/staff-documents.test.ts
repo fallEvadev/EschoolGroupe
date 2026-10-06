@@ -4,6 +4,8 @@ import {
   buildStoragePath,
   decisionNeedsReason,
   formatFileSize,
+  isAcceptedFile,
+  isValidStoragePath,
   reviewProgress,
 } from "./staff-documents";
 import {
@@ -29,6 +31,57 @@ describe("buildStoragePath", () => {
     expect(buildStoragePath(PROFILE_ID, "cv", "???", "abc")).toBe(
       `${PROFILE_ID}/cv/abc-document`,
     );
+  });
+});
+
+describe("isValidStoragePath", () => {
+  const UNIQUE = "0b8f3c1e-52a4-4d6b-9c7e-1a2b3c4d5e6f";
+
+  it("accepte un chemin produit par buildStoragePath", () => {
+    const path = buildStoragePath(PROFILE_ID, "cv", "Mon CV 2026.pdf", UNIQUE);
+    expect(isValidStoragePath(path, PROFILE_ID, "cv")).toBe(true);
+  });
+
+  it("refuse un chemin d'une autre fiche ou d'un autre type", () => {
+    const path = buildStoragePath(PROFILE_ID, "cv", "cv.pdf", UNIQUE);
+    expect(
+      isValidStoragePath(path, "11111111-1111-4111-8111-111111111111", "cv"),
+    ).toBe(false);
+    expect(isValidStoragePath(path, PROFILE_ID, "cni")).toBe(false);
+  });
+
+  it.each([
+    `${PROFILE_ID}/cv/`,
+    `${PROFILE_ID}/cv/${UNIQUE}`,
+    `${PROFILE_ID}/cv/${UNIQUE}-../autre/fichier.pdf`,
+    `${PROFILE_ID}/cv/../${PROFILE_ID}/cni/${UNIQUE}-x.pdf`,
+    `${PROFILE_ID}/cv/${UNIQUE}-a/b.pdf`,
+    `${PROFILE_ID}/cv/pas-un-uuid-cv.pdf`,
+    `${PROFILE_ID}/cv/${UNIQUE}-${"x".repeat(81)}`,
+  ])("refuse le chemin « %s »", (path) => {
+    expect(isValidStoragePath(path, PROFILE_ID, "cv")).toBe(false);
+  });
+});
+
+describe("isAcceptedFile", () => {
+  it("accepte un PDF de taille normale pour un CV", () => {
+    expect(isAcceptedFile("cv", "application/pdf", 120_000)).toBe(true);
+  });
+
+  it("refuse un PDF pour une photo", () => {
+    expect(isAcceptedFile("photo", "application/pdf", 120_000)).toBe(false);
+  });
+
+  it("refuse un fichier vide, trop gros ou à la taille invalide", () => {
+    expect(isAcceptedFile("cv", "application/pdf", 0)).toBe(false);
+    expect(isAcceptedFile("cv", "application/pdf", 6 * 1024 * 1024)).toBe(
+      false,
+    );
+    expect(isAcceptedFile("cv", "application/pdf", 1.5)).toBe(false);
+  });
+
+  it("refuse un type non prévu", () => {
+    expect(isAcceptedFile("cv", "application/zip", 1000)).toBe(false);
   });
 });
 

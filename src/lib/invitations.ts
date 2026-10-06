@@ -3,6 +3,7 @@ import "server-only";
 import { clerkClient } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
 
+import { resolveAppUrl } from "@/lib/app-url";
 import { writeAudit } from "@/lib/audit";
 import { ROLE_LABELS, type Role } from "@/lib/auth/roles";
 import { getOrganizationSettings } from "@/lib/organization";
@@ -26,12 +27,18 @@ export const ERREUR_GENERIQUE: StaffResult = {
   message: "Une erreur est survenue. Réessayez dans un instant.",
 };
 
-/** Adresse du site (pour le lien d'activation envoyé par Clerk). */
+/**
+ * Adresse du site (pour le lien d'activation envoyé par Clerk). Vient de
+ * `NEXT_PUBLIC_APP_URL` quand elle est définie ; sinon des en-têtes de la
+ * requête, qui ne sont pas fiables : la définir en production.
+ */
 async function appUrl(): Promise<string> {
   const list = await headers();
-  const host = list.get("x-forwarded-host") ?? list.get("host");
-  const protocol = list.get("x-forwarded-proto") ?? "https";
-  return `${protocol}://${host}`;
+  return resolveAppUrl({
+    configured: process.env.NEXT_PUBLIC_APP_URL,
+    host: list.get("x-forwarded-host") ?? list.get("host"),
+    forwardedProto: list.get("x-forwarded-proto"),
+  });
 }
 
 /** Colonnes de `profiles` correspondant aux champs du formulaire. */
