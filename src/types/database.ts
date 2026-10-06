@@ -233,6 +233,10 @@ export type Database = {
           kind: string
           mime_type: string
           profile_id: string
+          review_reason: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           size_bytes: number
           status: string
           storage_path: string
@@ -246,6 +250,10 @@ export type Database = {
           kind: string
           mime_type: string
           profile_id: string
+          review_reason?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           size_bytes: number
           status?: string
           storage_path: string
@@ -259,6 +267,10 @@ export type Database = {
           kind?: string
           mime_type?: string
           profile_id?: string
+          review_reason?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           size_bytes?: number
           status?: string
           storage_path?: string
