@@ -2,8 +2,10 @@ import { z } from "zod";
 
 import {
   ACCEPTED_TYPES,
+  decisionNeedsReason,
   DOCUMENT_KINDS,
   MAX_DOCUMENT_BYTES,
+  REVIEW_DECISIONS,
 } from "@/lib/staff-documents";
 
 /** Description du fichier choisi, contrôlée avant l'envoi. */
@@ -39,6 +41,24 @@ export const documentConfirmSchema = documentUploadSchema.and(
 export const documentIdSchema = z.object({
   documentId: z.uuid("Document invalide."),
 });
+
+/** Contrôle d'une pièce : validée, ou rejetée avec un motif. */
+export const documentReviewSchema = z
+  .object({
+    documentId: z.uuid("Document invalide."),
+    decision: z.enum(REVIEW_DECISIONS, { message: "Décision invalide." }),
+    reason: z
+      .string()
+      .trim()
+      .max(500, "Le motif ne doit pas dépasser 500 caractères."),
+  })
+  .refine(
+    (value) => !decisionNeedsReason(value.decision) || value.reason.length >= 3,
+    {
+      message: "Le motif du rejet est obligatoire (3 caractères minimum).",
+      path: ["reason"],
+    },
+  );
 
 export type DocumentResult = { ok: boolean; message: string };
 

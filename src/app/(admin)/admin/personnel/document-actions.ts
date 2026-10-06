@@ -8,13 +8,16 @@ import { writeAudit } from "@/lib/audit";
 import { requireActionRole } from "@/lib/auth/action-guard";
 import {
   buildStoragePath,
+  decisionNeedsReason,
   DOCUMENT_LABELS,
+  isDocumentKind,
   STAFF_DOCUMENTS_BUCKET,
 } from "@/lib/staff-documents";
 import { createServerSupabase } from "@/lib/supabase/server";
 import {
   documentConfirmSchema,
   documentIdSchema,
+  documentReviewSchema,
   documentUploadSchema,
   type DocumentResult,
   type PrepareUploadResult,
@@ -161,6 +164,93 @@ export async function confirmDocumentUpload(
     return { ok: true, message: `${DOCUMENT_LABELS[kind]} enregistré.` };
   } catch (error) {
     console.error("confirmDocumentUpload :", error);
+    return ERREUR_GENERIQUE;
+  }
+}
+
+/**
+ * Contrôle une pièce du dossier : validée, ou rejetée avec un motif. Seule la
+ * version en vigueur peut être contrôlée ; un nouvel envoi repart « à vérifier ».
+ */
+export async function reviewDocument(input: unknown): Promise<DocumentResult> {
+  const caller = await requireActionRole(RH_ROLES);
+  if (!caller.ok) return { ok: false, message: caller.message };
+
+  const parsed = documentReviewSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Données invalides.",
+    };
+  }
+  const { documentId, decision } = parsed.data;
+  const reason = decisionNeedsReason(decision) ? parsed.data.reason : null;
+
+  try {
+    const supabase = await createServerSupabase();
+    const { data: document } = await supabase
+      .from("staff_documents")
+      .select("profile_id, kind, file_name, status")
+      .eq("id", documentId)
+      .maybeSingle();
+    if (!document) return { ok: false, message: "Document introuvable." };
+    if (document.status !== "actif") {
+      return {
+        ok: false,
+        message:
+          "Cette pièce a été remplacée : contrôlez la version en vigueur.",
+      };
+    }
+
+    // La condition sur `status` évite de contrôler une pièce remplacée entre-temps.
+    const { data: updated, error } = await supabase
+      .from("staff_documents")
+      .update({
+        review_status: decision,
+        review_reason: reason,
+        reviewed_by: caller.actorId,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", documentId)
+      .eq("status", "actif")
+      .select("id");
+    if (error) {
+      console.error("staff_documents :", error.message);
+      return ERREUR_GENERIQUE;
+    }
+    if (updated.length === 0) {
+      return {
+        ok: false,
+        message:
+          "Contrôle impossible : la pièce vient de changer ou vos droits ne le permettent pas. Actualisez la page.",
+      };
+    }
+
+    await writeAudit({
+      actorId: caller.actorId,
+      action: "document_reviewed",
+      entity: "profiles",
+      entityId: document.profile_id,
+      details: {
+        kind: document.kind,
+        document_id: documentId,
+        file_name: document.file_name,
+        decision,
+        reason,
+      },
+    });
+
+    revalidatePath("/admin/personnel");
+    const label = isDocumentKind(document.kind)
+      ? DOCUMENT_LABELS[document.kind]
+      : "Document";
+    return {
+      ok: true,
+      message:
+        decision === "valide" ? `${label} validé.` : `${label} rejeté.`,
+    };
+  } catch (error) {
+    console.error("reviewDocument :", error);
     return ERREUR_GENERIQUE;
   }
 }

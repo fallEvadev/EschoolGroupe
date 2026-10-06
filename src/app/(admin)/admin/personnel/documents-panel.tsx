@@ -1,18 +1,45 @@
 "use client";
 
-import { CheckCircle2, CircleDashed, Eye, Upload } from "lucide-react";
-import { useState } from "react";
+import {
+  Check,
+  CheckCircle2,
+  CircleDashed,
+  Clock,
+  Eye,
+  Upload,
+  X,
+  XCircle,
+} from "lucide-react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ACCEPTED_TYPES,
   DOCUMENT_KINDS,
   DOCUMENT_LABELS,
   formatFileSize,
   REQUIRED_DOCUMENT_KINDS,
+  REVIEW_BADGE,
+  REVIEW_LABELS,
+  reviewProgress,
   STAFF_DOCUMENTS_BUCKET,
   type DocumentKind,
+  type ReviewDecision,
+  type ReviewStatus,
 } from "@/lib/staff-documents";
 import { useSupabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -25,6 +52,7 @@ import {
   confirmDocumentUpload,
   getDocumentUrl,
   prepareDocumentUpload,
+  reviewDocument,
 } from "./document-actions";
 
 export type CurrentDocument = {
@@ -34,6 +62,9 @@ export type CurrentDocument = {
   sizeBytes: number;
   /** Date d'envoi déjà formatée côté serveur (jj/mm/aaaa). */
   uploadedOn: string;
+  reviewStatus: ReviewStatus;
+  /** Motif du rejet (seulement si la pièce est rejetée). */
+  reviewReason: string | null;
 };
 
 /** Dossier administratif d'une fiche : une ligne par type de document. */
@@ -50,10 +81,39 @@ export function DocumentsPanel({
     (DocumentResult & { kind: DocumentKind }) | null
   >(null);
 
+  const [rejecting, setRejecting] = useState<CurrentDocument | null>(null);
+  const [reason, setReason] = useState("");
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewing, startReview] = useTransition();
+
   const byKind = new Map(documents.map((doc) => [doc.kind, doc]));
-  const requiredDone = REQUIRED_DOCUMENT_KINDS.filter((k) =>
-    byKind.has(k),
-  ).length;
+  const progress = reviewProgress(documents);
+
+  function closeRejection() {
+    setRejecting(null);
+    setReason("");
+    setReviewError(null);
+  }
+
+  /** Valide ou rejette une pièce ; un rejet garde la fenêtre ouverte en cas d'erreur. */
+  function review(doc: CurrentDocument, decision: ReviewDecision) {
+    setReviewError(null);
+    startReview(async () => {
+      const response = await reviewDocument({
+        documentId: doc.id,
+        decision,
+        reason,
+      });
+      if (response.ok) {
+        toast.success(response.message);
+        closeRejection();
+      } else if (decision === "rejete") {
+        setReviewError(response.message);
+      } else {
+        toast.error(response.message);
+      }
+    });
+  }
 
   async function upload(kind: DocumentKind, file: File) {
     setResult(null);
@@ -132,7 +192,8 @@ export function DocumentsPanel({
           Dossier administratif
         </h3>
         <span className="text-muted-foreground text-sm">
-          {requiredDone} / {REQUIRED_DOCUMENT_KINDS.length} pièces obligatoires
+          {progress.requiredValidated} / {REQUIRED_DOCUMENT_KINDS.length} pièces
+          obligatoires validées
         </span>
       </div>
 
@@ -147,10 +208,22 @@ export function DocumentsPanel({
             <li key={kind} className="flex flex-col gap-2 p-3 sm:p-4">
               <div className="flex flex-wrap items-center gap-3">
                 {doc ? (
-                  <CheckCircle2
-                    className="text-success size-6 shrink-0"
-                    aria-label="Reçu"
-                  />
+                  doc.reviewStatus === "valide" ? (
+                    <CheckCircle2
+                      className="text-success size-6 shrink-0"
+                      aria-label="Validé"
+                    />
+                  ) : doc.reviewStatus === "rejete" ? (
+                    <XCircle
+                      className="text-destructive size-6 shrink-0"
+                      aria-label="Rejeté"
+                    />
+                  ) : (
+                    <Clock
+                      className="text-warning size-6 shrink-0"
+                      aria-label="À vérifier"
+                    />
+                  )
                 ) : (
                   <CircleDashed
                     className="text-muted-foreground size-6 shrink-0"
@@ -165,14 +238,27 @@ export function DocumentsPanel({
                         Obligatoire
                       </Badge>
                     )}
+                    {doc && (
+                      <Badge
+                        variant={REVIEW_BADGE[doc.reviewStatus]}
+                        className="ml-2"
+                      >
+                        {REVIEW_LABELS[doc.reviewStatus]}
+                      </Badge>
+                    )}
                   </p>
                   <p className="text-muted-foreground truncate text-sm">
                     {doc
                       ? `${doc.fileName} · ${formatFileSize(doc.sizeBytes)} · reçu le ${doc.uploadedOn}`
                       : "Non reçu"}
                   </p>
+                  {doc?.reviewStatus === "rejete" && doc.reviewReason && (
+                    <p className="text-destructive text-sm">
+                      Motif du rejet : {doc.reviewReason}
+                    </p>
+                  )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {doc && (
                     <Button
                       variant="outline"
@@ -182,6 +268,28 @@ export function DocumentsPanel({
                     >
                       <Eye aria-hidden />
                       Voir
+                    </Button>
+                  )}
+                  {doc && doc.reviewStatus !== "valide" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={busy !== null || reviewing}
+                      onClick={() => review(doc, "valide")}
+                    >
+                      <Check aria-hidden />
+                      Valider
+                    </Button>
+                  )}
+                  {doc && doc.reviewStatus !== "rejete" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={busy !== null || reviewing}
+                      onClick={() => setRejecting(doc)}
+                    >
+                      <X aria-hidden />
+                      Rejeter
                     </Button>
                   )}
                   {/* Le bouton ouvre le sélecteur de fichier caché. */}
@@ -230,6 +338,63 @@ export function DocumentsPanel({
         PDF, JPEG, PNG ou WebP, 5 Mo maximum. Les documents sont privés : chaque
         consultation est enregistrée dans le journal d&apos;audit.
       </p>
+
+      <AlertDialog
+        open={rejecting !== null}
+        onOpenChange={(value) => {
+          if (!value && !reviewing) closeRejection();
+        }}
+      >
+        <AlertDialogContent>
+          {rejecting && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Rejeter : {DOCUMENT_LABELS[rejecting.kind]} ?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Expliquez ce qui doit être corrigé. Le motif reste sur la
+                  fiche pour que la personne puisse en être informée.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="review-reason">Motif (obligatoire)</Label>
+                <Textarea
+                  id="review-reason"
+                  rows={3}
+                  maxLength={500}
+                  value={reason}
+                  disabled={reviewing}
+                  aria-invalid={!!reviewError}
+                  onChange={(event) => setReason(event.target.value)}
+                  placeholder="Photo floue, document illisible, pièce expirée…"
+                />
+              </div>
+              {reviewError && (
+                <p role="alert" className="text-destructive text-sm">
+                  {reviewError}
+                </p>
+              )}
+
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={reviewing}>Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  variant="destructive"
+                  disabled={reviewing}
+                  onClick={(event) => {
+                    // Pas de fermeture automatique : on attend la réponse du serveur.
+                    event.preventDefault();
+                    review(rejecting, "rejete");
+                  }}
+                >
+                  {reviewing ? "Enregistrement…" : "Rejeter la pièce"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </>
+          )}
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

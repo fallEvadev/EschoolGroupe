@@ -50,6 +50,56 @@ export const ACCEPTED_TYPES: Record<DocumentKind, readonly string[]> = {
   autre: PDF_AND_IMAGES,
 };
 
+/** Contrôle d'une pièce (mêmes valeurs que la contrainte SQL `review_status`). */
+export const REVIEW_STATUSES = ["a_verifier", "valide", "rejete"] as const;
+
+export type ReviewStatus = (typeof REVIEW_STATUSES)[number];
+
+export const REVIEW_LABELS: Record<ReviewStatus, string> = {
+  a_verifier: "À vérifier",
+  valide: "Validé",
+  rejete: "Rejeté",
+};
+
+export const REVIEW_BADGE: Record<
+  ReviewStatus,
+  "warning" | "success" | "destructive"
+> = {
+  a_verifier: "warning",
+  valide: "success",
+  rejete: "destructive",
+};
+
+export function isReviewStatus(value: string): value is ReviewStatus {
+  return (REVIEW_STATUSES as readonly string[]).includes(value);
+}
+
+/** Décisions possibles d'un contrôle (on ne « remet » pas une pièce à vérifier). */
+export const REVIEW_DECISIONS = ["valide", "rejete"] as const;
+
+export type ReviewDecision = (typeof REVIEW_DECISIONS)[number];
+
+/** Un rejet doit être expliqué : la personne doit savoir quoi corriger. */
+export function decisionNeedsReason(decision: ReviewDecision): boolean {
+  return decision === "rejete";
+}
+
+/** Résumé du contrôle d'un dossier, calculé sur ses pièces en vigueur. */
+export function reviewProgress(
+  documents: readonly { kind: DocumentKind; reviewStatus: ReviewStatus }[],
+): { requiredValidated: number; pending: number; rejected: number } {
+  return {
+    requiredValidated: REQUIRED_DOCUMENT_KINDS.filter((kind) =>
+      documents.some(
+        (doc) => doc.kind === kind && doc.reviewStatus === "valide",
+      ),
+    ).length,
+    pending: documents.filter((doc) => doc.reviewStatus === "a_verifier")
+      .length,
+    rejected: documents.filter((doc) => doc.reviewStatus === "rejete").length,
+  };
+}
+
 export function isDocumentKind(value: string): value is DocumentKind {
   return (DOCUMENT_KINDS as readonly string[]).includes(value);
 }

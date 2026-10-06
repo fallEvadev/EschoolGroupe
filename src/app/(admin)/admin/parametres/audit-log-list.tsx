@@ -29,6 +29,7 @@ const ACTION_LABELS: Record<string, string> = {
   account_activated: "Compte activé",
   document_uploaded: "Document ajouté",
   document_viewed: "Document consulté",
+  document_reviewed: "Document contrôlé",
   rules_published: "Règlement publié",
   rules_accepted: "Règlement accepté",
 };
@@ -50,6 +51,16 @@ function describe(action: string, details: Json): string | null {
   }
   if (action === "staff_created") {
     return `${details.email} · ${roleLabel(details.role)} · invitation envoyée`;
+  }
+  if (action === "document_reviewed") {
+    const kind = typeof details.kind === "string" ? details.kind : "";
+    const label = isDocumentKind(kind) ? DOCUMENT_LABELS[kind] : "Document";
+    const decision = details.decision === "valide" ? "validé" : "rejeté";
+    const reason =
+      typeof details.reason === "string" && details.reason
+        ? ` · Motif : ${details.reason}`
+        : "";
+    return `${label} · ${details.file_name} · ${decision}${reason}`;
   }
   if (action === "document_uploaded" || action === "document_viewed") {
     const kind = typeof details.kind === "string" ? details.kind : "";

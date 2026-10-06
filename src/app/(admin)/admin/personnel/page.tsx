@@ -21,7 +21,11 @@ import {
   STATUS_LABELS,
   type StaffStatus,
 } from "@/lib/staff";
-import { isDocumentKind, STAFF_DOCUMENTS_BUCKET } from "@/lib/staff-documents";
+import {
+  isDocumentKind,
+  isReviewStatus,
+  STAFF_DOCUMENTS_BUCKET,
+} from "@/lib/staff-documents";
 import {
   createServerSupabase,
   isSupabaseConfigured,
@@ -71,18 +75,21 @@ function personnelHref(params: {
   q?: string;
   filtre?: FilterKey;
   fiche?: string;
+  /** Ne montrer que les personnes ayant des pièces à vérifier. */
+  docs?: boolean;
 }): string {
   const search = new URLSearchParams();
   if (params.q) search.set("q", params.q);
   if (params.filtre && params.filtre !== "tous")
     search.set("filtre", params.filtre);
+  if (params.docs) search.set("docs", "a-verifier");
   if (params.fiche) search.set("fiche", params.fiche);
   const query = search.toString();
   return query ? `/admin/personnel?${query}` : "/admin/personnel";
 }
 
 async function loadProfiles(): Promise<
-  { profiles: Profile[] } | { error: string }
+  { profiles: Profile[]; pendingProfileIds: string[] } | { error: string }
 > {
   if (!isSupabaseConfigured()) {
     return {
@@ -98,7 +105,22 @@ async function loadProfiles(): Promise<
     .order("full_name")
     .limit(500);
   if (error) return { error: describeSupabaseError("profiles", error).message };
-  return { profiles: data };
+
+  // Personnes ayant au moins une pièce en vigueur à contrôler. Si cette
+  // requête échoue (migration pas encore appliquée), la page reste utilisable
+  // sans le filtre « Pièces à vérifier ».
+  const { data: pending, error: pendingError } = await supabase
+    .from("staff_documents")
+    .select("profile_id")
+    .eq("status", "actif")
+    .eq("review_status", "a_verifier")
+    .limit(2000);
+  if (pendingError) describeSupabaseError("staff_documents", pendingError);
+
+  return {
+    profiles: data,
+    pendingProfileIds: [...new Set((pending ?? []).map((d) => d.profile_id))],
+  };
 }
 
 export default async function PersonnelPage({
@@ -110,6 +132,7 @@ export default async function PersonnelPage({
   const filtre: FilterKey =
     FILTERS.find((f) => f.key === params.filtre)?.key ?? "tous";
   const ficheId = typeof params.fiche === "string" ? params.fiche : undefined;
+  const docsFilter = params.docs === "a-verifier";
   const { userId } = await auth();
 
   const loaded = await loadProfiles();
@@ -137,9 +160,11 @@ export default async function PersonnelPage({
       ) : (
         <PersonnelContent
           profiles={loaded.profiles}
+          pendingProfileIds={loaded.pendingProfileIds}
           role={role}
           q={q}
           filtre={filtre}
+          docsFilter={docsFilter}
           ficheId={ficheId}
           currentUserId={userId}
         />
@@ -150,16 +175,20 @@ export default async function PersonnelPage({
 
 async function PersonnelContent({
   profiles,
+  pendingProfileIds,
   role,
   q,
   filtre,
+  docsFilter,
   ficheId,
   currentUserId,
 }: {
   profiles: Profile[];
+  pendingProfileIds: string[];
   role: Role;
   q: string;
   filtre: FilterKey;
+  docsFilter: boolean;
   ficheId?: string;
   currentUserId: string | null;
 }) {
@@ -183,10 +212,12 @@ async function PersonnelContent({
 
   const statuses = FILTERS.find((f) => f.key === filtre)?.statuses ?? null;
   const needle = normalize(q);
+  const pending = new Set(pendingProfileIds);
   const visible = profiles.filter(
     (p) =>
       (!statuses ||
         (statuses as readonly StaffStatus[]).includes(statusOf(p))) &&
+      (!docsFilter || pending.has(p.id)) &&
       (!needle ||
         normalize(`${p.full_name} ${p.email} ${p.job_title ?? ""}`).includes(
           needle,
@@ -229,6 +260,9 @@ async function PersonnelContent({
             {filtre !== "tous" && (
               <input type="hidden" name="filtre" value={filtre} />
             )}
+            {docsFilter && (
+              <input type="hidden" name="docs" value="a-verifier" />
+            )}
             <Search
               className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
               aria-hidden
@@ -253,7 +287,7 @@ async function PersonnelContent({
             {FILTERS.map((f) => (
               <Link
                 key={f.key}
-                href={personnelHref({ q, filtre: f.key })}
+                href={personnelHref({ q, filtre: f.key, docs: docsFilter })}
                 aria-current={f.key === filtre ? "page" : undefined}
                 className={cn(
                   "rounded-md px-1 py-2 text-center text-sm font-medium transition-colors",
@@ -267,11 +301,29 @@ async function PersonnelContent({
             ))}
           </nav>
 
+          <Link
+            href={personnelHref({ q, filtre, docs: !docsFilter })}
+            aria-pressed={docsFilter}
+            className={cn(
+              "flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+              docsFilter
+                ? "border-primary bg-accent text-accent-foreground"
+                : "hover:bg-muted",
+            )}
+          >
+            <span>Pièces à vérifier</span>
+            <Badge variant={pending.size > 0 ? "warning" : "neutral"}>
+              {pending.size}
+            </Badge>
+          </Link>
+
           {visible.length === 0 ? (
             <p className="text-muted-foreground py-6 text-center text-sm">
               {profiles.length === 0
                 ? "Aucune fiche pour le moment. Ajoutez la première personne."
-                : "Aucune personne ne correspond à cette recherche."}
+                : docsFilter && !needle
+                  ? "Aucune pièce en attente de contrôle."
+                  : "Aucune personne ne correspond à cette recherche."}
             </p>
           ) : (
             <Stagger as="ul" className="-mx-1 flex flex-col gap-1">
@@ -281,7 +333,12 @@ async function PersonnelContent({
                 return (
                   <StaggerItem as="li" key={profile.id}>
                     <Link
-                      href={personnelHref({ q, filtre, fiche: profile.id })}
+                      href={personnelHref({
+                        q,
+                        filtre,
+                        docs: docsFilter,
+                        fiche: profile.id,
+                      })}
                       aria-current={active ? "true" : undefined}
                       className={cn(
                         "flex items-center gap-3 rounded-xl border p-3 transition-colors",
@@ -325,7 +382,7 @@ async function PersonnelContent({
             profile={selected}
             canManage={assignableRoles(role).includes(selected.role)}
             isSelf={selected.clerk_user_id === currentUserId}
-            backHref={personnelHref({ q, filtre })}
+            backHref={personnelHref({ q, filtre, docs: docsFilter })}
           />
         ) : (
           <Card className="text-muted-foreground hidden items-center justify-center p-10 text-center lg:flex">
@@ -361,7 +418,9 @@ async function StaffDetail({
       .maybeSingle(),
     supabase
       .from("staff_documents")
-      .select("id, kind, file_name, size_bytes, storage_path, created_at")
+      .select(
+        "id, kind, file_name, size_bytes, storage_path, created_at, review_status, review_reason",
+      )
       .eq("profile_id", profile.id)
       .eq("status", "actif"),
   ]);
@@ -375,6 +434,10 @@ async function StaffDetail({
             fileName: doc.file_name,
             sizeBytes: doc.size_bytes,
             uploadedOn: formatDate(doc.created_at),
+            reviewStatus: isReviewStatus(doc.review_status)
+              ? doc.review_status
+              : "a_verifier",
+            reviewReason: doc.review_reason,
           },
         ]
       : [],
