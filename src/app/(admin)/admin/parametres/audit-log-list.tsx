@@ -50,6 +50,7 @@ const ACTION_LABELS: Record<string, string> = {
   day_closed: "Jour sans cours",
   day_reopened: "Jour rouvert",
   program_published: "Programme publié",
+  school_position_set: "Position d'école enregistrée",
 };
 
 function roleLabel(value: Json | undefined): string {
@@ -96,6 +97,15 @@ function describe(action: string, details: Json): string | null {
   if (action === "attendance_reviewed") {
     const verdict = details.decision === "valide" ? "validé" : "refusé";
     return `${details.formateur} · ${details.school} · ${formatDate(String(details.date))} · ${verdict}`;
+  }
+  if (action === "school_position_set") {
+    const by =
+      details.source === "directeur" ? "par le directeur" : "par la Direction";
+    const moved =
+      typeof details.moved_m === "number"
+        ? ` · déplacée de ${details.moved_m} m`
+        : "";
+    return `${details.name} · ${by}${moved}`;
   }
   if (action === "program_published") {
     return `${formatMonthLabel(String(details.month))} · ${details.title}`;

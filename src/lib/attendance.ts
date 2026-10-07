@@ -174,6 +174,67 @@ export function evaluateLocation(
   return { result: "ok", distanceM, accuracyM };
 }
 
+/**
+ * Message affiché au formateur quand son téléphone ne donne pas sa position,
+ * avant d'envoyer le pointage : il peut réessayer (après avoir corrigé le
+ * réglage) ou pointer quand même, auquel cas sa présence sera vérifiée.
+ */
+export function locationProblemMessage(
+  reason: "refusee" | "indisponible",
+): string {
+  return reason === "refusee"
+    ? "La localisation est refusée sur votre téléphone. Autorisez-la dans les réglages du navigateur (le cadenas à côté de l'adresse), puis touchez « Réessayer ». Vous pouvez aussi pointer sans position : votre présence sera alors vérifiée par la Direction."
+    : "Votre position n'a pas pu être relevée (signal GPS introuvable ou délai dépassé). Sortez à l'extérieur, vérifiez que le GPS est activé, puis touchez « Réessayer ». Vous pouvez aussi pointer sans position : votre présence sera alors vérifiée par la Direction.";
+}
+
+/**
+ * Précision maximale (mètres) acceptée quand le directeur enregistre la
+ * position de l'école. Même valeur que le contrôle de la fonction SQL
+ * `set_school_position` : les deux doivent changer ensemble.
+ */
+export const MAX_SCHOOL_POSITION_ACCURACY_M = 100;
+
+export type SchoolPositionCheck =
+  | { ok: true; latitude: number; longitude: number; accuracyM: number }
+  | { ok: false; message: string };
+
+/**
+ * La position relevée par le téléphone du directeur peut-elle devenir la
+ * position de l'école ? Elle sert ensuite de référence à tous les pointages :
+ * on exige donc une position réelle et précise.
+ */
+export function checkSchoolPosition(
+  position: DevicePosition,
+): SchoolPositionCheck {
+  if (position.status === "refusee") {
+    return {
+      ok: false,
+      message:
+        "La localisation est refusée sur votre téléphone. Autorisez-la dans les réglages du navigateur, puis réessayez.",
+    };
+  }
+  if (position.status === "indisponible") {
+    return {
+      ok: false,
+      message:
+        "Votre position n'a pas pu être relevée. Sortez à l'extérieur, vérifiez que le GPS est activé, puis réessayez.",
+    };
+  }
+  const accuracyM = Math.round(position.accuracyM);
+  if (accuracyM > MAX_SCHOOL_POSITION_ACCURACY_M) {
+    return {
+      ok: false,
+      message: `Position trop imprécise (± ${accuracyM} m, ${MAX_SCHOOL_POSITION_ACCURACY_M} m maximum). Sortez à l'extérieur, attendez quelques secondes, puis réessayez.`,
+    };
+  }
+  return {
+    ok: true,
+    latitude: position.latitude,
+    longitude: position.longitude,
+    accuracyM,
+  };
+}
+
 /** Statut final : position non confirmée → à vérifier ; sinon retard ou présent. */
 export function decideStatus(
   location: LocationResult,

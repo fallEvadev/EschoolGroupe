@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireSpace } from "@/lib/auth/guards";
 import { formatCode } from "@/lib/daily-codes";
-import { dakarIsoDate, formatLongDate } from "@/lib/dates";
+import { dakarIsoDate, formatDate, formatLongDate } from "@/lib/dates";
 import { getOwnProfileId } from "@/lib/internal-rules";
 import { describeSupabaseError } from "@/lib/supabase/errors";
 import {
@@ -16,6 +16,11 @@ import {
 } from "@/lib/supabase/server";
 import { buildWhatsAppUrl, trainersCodeMessage } from "@/lib/whatsapp";
 
+import {
+  SchoolPositionCard,
+  type SchoolPositionInfo,
+} from "./school-position-card";
+
 export const metadata = { title: "Codes du jour · E-School Groupe" };
 
 type PartnerSchool = {
@@ -23,6 +28,7 @@ type PartnerSchool = {
   name: string;
   address: string | null;
   code: string | null;
+  position: SchoolPositionInfo;
 };
 
 /**
@@ -59,7 +65,9 @@ async function loadMySchools(
   const [schoolsResult, codesResult] = await Promise.all([
     supabase
       .from("schools")
-      .select("id, name, address")
+      .select(
+        "id, name, address, latitude, longitude, position_source, position_set_at",
+      )
       .in("id", schoolIds)
       .eq("status", "actif")
       .order("name"),
@@ -90,6 +98,18 @@ async function loadMySchools(
       name: school.name,
       address: school.address,
       code: codes.get(school.id) ?? null,
+      position: {
+        defined: school.latitude !== null && school.longitude !== null,
+        setOn: school.position_set_at
+          ? formatDate(school.position_set_at)
+          : null,
+        setBy:
+          school.position_source === "directeur"
+            ? "par le directeur"
+            : school.position_source === "admin"
+              ? "par la Direction pédagogique"
+              : null,
+      },
     })),
   };
 }
@@ -179,6 +199,12 @@ export default async function PartenairePage() {
                     du jour. Revenez dans un instant.
                   </p>
                 )}
+
+                <SchoolPositionCard
+                  schoolId={school.id}
+                  schoolName={school.name}
+                  position={school.position}
+                />
               </Card>
             </li>
           ))}

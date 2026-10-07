@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  checkSchoolPosition,
   codeOutcomeMessage,
   decideStatus,
   evaluateLocation,
@@ -10,7 +11,9 @@ import {
   isCodeOutcome,
   LOCK_MINUTES,
   lockState,
+  MAX_SCHOOL_POSITION_ACCURACY_M,
   locationExplanation,
+  locationProblemMessage,
   locationSummary,
   MAX_FAILED_ATTEMPTS,
   timingMessage,
@@ -181,6 +184,68 @@ describe("evaluateLocation", () => {
     );
     expect(result.result).toBe("ecole_sans_position");
     expect(result.distanceM).toBeNull();
+  });
+});
+
+describe("locationProblemMessage", () => {
+  it("explique un refus de localisation et propose de réessayer ou de pointer sans position", () => {
+    const text = locationProblemMessage("refusee");
+    expect(text).toContain("refusée");
+    expect(text).toContain("Réessayer");
+    expect(text).toContain("vérifiée par la Direction");
+  });
+
+  it("explique une position introuvable", () => {
+    const text = locationProblemMessage("indisponible");
+    expect(text).toContain("n'a pas pu être relevée");
+    expect(text).toContain("à l'extérieur");
+    expect(text).toContain("Réessayer");
+  });
+
+  it("donne un message différent selon la cause", () => {
+    expect(locationProblemMessage("refusee")).not.toBe(
+      locationProblemMessage("indisponible"),
+    );
+  });
+});
+
+describe("checkSchoolPosition", () => {
+  const at = { latitude: 14.6928, longitude: -17.4467 };
+
+  it("accepte une position précise", () => {
+    expect(
+      checkSchoolPosition({ status: "ok", ...at, accuracyM: 12.4 }),
+    ).toEqual({ ok: true, ...at, accuracyM: 12 });
+  });
+
+  it("accepte exactement la précision maximale", () => {
+    const result = checkSchoolPosition({
+      status: "ok",
+      ...at,
+      accuracyM: MAX_SCHOOL_POSITION_ACCURACY_M,
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("refuse une position trop imprécise et dit de sortir", () => {
+    const result = checkSchoolPosition({ status: "ok", ...at, accuracyM: 250 });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("± 250 m");
+      expect(result.message).toContain("à l'extérieur");
+    }
+  });
+
+  it("explique un refus de localisation", () => {
+    const result = checkSchoolPosition({ status: "refusee" });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toContain("refusée");
+  });
+
+  it("explique une position introuvable", () => {
+    const result = checkSchoolPosition({ status: "indisponible" });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toContain("pas pu être relevée");
   });
 });
 

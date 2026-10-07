@@ -179,11 +179,15 @@ export async function submitAttendance(
     );
     const status = decideStatus(evaluation.result, timing.late);
 
-    // Les coordonnées exactes du formateur ne sont jamais conservées : seulement
-    // la distance et la précision.
+    // Le pointage garde la position GPS du formateur (coordonnées, distance à
+    // l'école, précision). Ce sont des données personnelles : seuls le formateur
+    // et la Direction pédagogique les lisent (RLS de `attendances`). Sans
+    // position fournie par le téléphone, les deux coordonnées restent vides.
     const { data: created, error } = await admin
       .from("attendances")
       .insert({
+        latitude: position.status === "ok" ? position.latitude : null,
+        longitude: position.status === "ok" ? position.longitude : null,
         profile_id: profile.id,
         slot_id: slotId,
         school_id: slot.school_id,

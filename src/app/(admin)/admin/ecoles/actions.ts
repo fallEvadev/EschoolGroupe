@@ -11,6 +11,7 @@ import {
   assignmentSchema,
   directorLinkSchema,
   schoolIdSchema,
+  schoolPositionSchema,
   schoolSchema,
   schoolStatusSchema,
   slotIdSchema,
@@ -53,12 +54,11 @@ export async function createSchool(input: unknown): Promise<SchoolResult> {
     const supabase = await createServerSupabase();
     const { data: created, error } = await supabase
       .from("schools")
+      // Pas de position ni de rayon ici : le directeur enregistre la position
+      // sur place, et le rayon garde sa valeur par défaut en base (150 m).
       .insert({
         name: data.name,
         address: data.address,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        radius_m: data.radiusM,
         late_tolerance_minutes: data.lateToleranceMinutes,
         created_by: caller.actorId,
       })
@@ -105,12 +105,11 @@ export async function updateSchool(
     const supabase = await createServerSupabase();
     const { data: updated, error } = await supabase
       .from("schools")
+      // La position et le rayon ne figurent pas ici : modifier le nom d'une
+      // école ne doit jamais effacer la position déjà enregistrée.
       .update({
         name: data.name,
         address: data.address,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        radius_m: data.radiusM,
         late_tolerance_minutes: data.lateToleranceMinutes,
       })
       .eq("id", id.data.schoolId)
@@ -138,6 +137,64 @@ export async function updateSchool(
     return { ok: true, id: id.data.schoolId, message: "École mise à jour." };
   } catch (error) {
     console.error("updateSchool :", error);
+    return ERREUR_GENERIQUE;
+  }
+}
+
+/**
+ * Saisie manuelle de la position d'une école par la Direction pédagogique. C'est
+ * un secours : le plus simple est que le directeur l'enregistre sur place depuis
+ * son téléphone. L'ancienne position, s'il y en a une, est remplacée.
+ */
+export async function setSchoolPositionManual(
+  input: unknown,
+): Promise<SchoolResult> {
+  const caller = await requireActionRole(PEDAGOGY_ROLES);
+  if (!caller.ok) return { ok: false, message: caller.message };
+
+  const parsed = schoolPositionSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const { schoolId, latitude, longitude } = parsed.data;
+
+  try {
+    const supabase = await createServerSupabase();
+    const { data: updated, error } = await supabase
+      .from("schools")
+      .update({
+        latitude,
+        longitude,
+        position_source: "admin",
+        position_set_at: new Date().toISOString(),
+        position_set_by: caller.actorId,
+        // Saisie à la main : aucune précision de GPS à garder.
+        position_accuracy_m: null,
+      })
+      .eq("id", schoolId)
+      .select("name");
+    if (error) {
+      console.error("schools :", error.message);
+      return ERREUR_GENERIQUE;
+    }
+    const school = updated[0];
+    if (!school) {
+      return { ok: false, message: "Vous ne pouvez pas modifier cette école." };
+    }
+
+    await writeAudit({
+      actorId: caller.actorId,
+      action: "school_position_set",
+      entity: "schools",
+      entityId: schoolId,
+      details: { name: school.name, source: "admin" },
+    });
+    refresh();
+    return {
+      ok: true,
+      id: schoolId,
+      message: "Position de l'école enregistrée.",
+    };
+  } catch (error) {
+    console.error("setSchoolPositionManual :", error);
     return ERREUR_GENERIQUE;
   }
 }

@@ -10,7 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ATTENDANCE_BADGE, ATTENDANCE_LABELS } from "@/lib/attendance";
+import {
+  ATTENDANCE_BADGE,
+  ATTENDANCE_LABELS,
+  locationProblemMessage,
+  type DevicePosition,
+} from "@/lib/attendance";
 import { CODE_LENGTH, isCodeFormat } from "@/lib/daily-codes";
 import { formatClock } from "@/lib/dates";
 import { getDevicePosition } from "@/lib/geolocation";
@@ -42,22 +47,16 @@ export function PointageForm({
   const [phase, setPhase] = useState<"idle" | "locating" | "sending">("idle");
   const [error, setError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<Confirmed | null>(null);
+  // Le téléphone n'a pas donné sa position : on explique, et le formateur choisit.
+  const [problem, setProblem] = useState<{
+    position: Exclude<DevicePosition, { status: "ok" }>;
+    message: string;
+  } | null>(null);
 
   const busy = phase !== "idle";
 
-  async function submit(event: React.FormEvent) {
-    event.preventDefault();
-    if (!isCodeFormat(code)) {
-      setError(`Le code a ${CODE_LENGTH} chiffres.`);
-      return;
-    }
-    setError(null);
-
-    // 1. Position du téléphone (jamais bloquante : au pire « à vérifier »).
-    setPhase("locating");
-    const position = await getDevicePosition();
-
-    // 2. Le serveur vérifie le code, l'heure et la position.
+  /** Envoie le pointage au serveur, qui vérifie le code, l'heure et la position. */
+  async function send(position: DevicePosition) {
     setPhase("sending");
     const response = await submitAttendance({ slotId, code, position });
     setPhase("idle");
@@ -68,6 +67,34 @@ export function PointageForm({
     } else {
       setError(response.message);
     }
+  }
+
+  /** Relève la position du téléphone au moment du clic, puis envoie. */
+  async function locateAndSend() {
+    setError(null);
+    setProblem(null);
+    setPhase("locating");
+    const position = await getDevicePosition();
+    if (position.status !== "ok") {
+      // Refus ou GPS en erreur : message clair, et le choix de réessayer ou de
+      // pointer quand même (la présence sera alors « à vérifier »).
+      setPhase("idle");
+      setProblem({
+        position,
+        message: locationProblemMessage(position.status),
+      });
+      return;
+    }
+    await send(position);
+  }
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!isCodeFormat(code)) {
+      setError(`Le code a ${CODE_LENGTH} chiffres.`);
+      return;
+    }
+    void locateAndSend();
   }
 
   if (confirmed) {
@@ -91,7 +118,9 @@ export function PointageForm({
             aria-hidden
           />
           <div className="flex flex-col gap-1">
-            <p className="text-xl font-bold">Présence enregistrée</p>
+            <p className="text-xl font-bold">
+              Pointage enregistré avec succès.
+            </p>
             <p className="font-medium">{confirmed.fullName}</p>
             <p className="text-muted-foreground text-sm">
               {confirmed.schoolName} · {timeLabel} · pointé à{" "}
@@ -157,9 +186,9 @@ export function PointageForm({
             className="h-14 text-center text-3xl font-bold tracking-[0.3em] tabular-nums"
           />
           <p id="code-help" className="text-muted-foreground text-sm">
-            Le directeur de l&apos;école vous donne ce code. Autorisez la
-            localisation quand le téléphone le demande : sans elle, votre
-            présence sera à vérifier.
+            Le directeur de l&apos;école vous donne ce code. Votre position est
+            relevée au moment où vous touchez le bouton : autorisez la
+            localisation quand le téléphone le demande.
           </p>
         </div>
 
@@ -167,6 +196,37 @@ export function PointageForm({
           <p role="alert" className="text-destructive text-sm font-medium">
             {error}
           </p>
+        )}
+
+        {problem && (
+          <div
+            role="alert"
+            className="bg-warning-soft text-warning flex flex-col gap-3 rounded-lg p-3 text-sm"
+          >
+            <p>{problem.message}</p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => void locateAndSend()}
+              >
+                Réessayer la localisation
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => {
+                  const position = problem.position;
+                  setProblem(null);
+                  void send(position);
+                }}
+              >
+                Pointer quand même (position non confirmée)
+              </Button>
+            </div>
+          </div>
         )}
 
         <Button
@@ -178,7 +238,7 @@ export function PointageForm({
             ? "Localisation en cours…"
             : phase === "sending"
               ? "Vérification…"
-              : "Valider ma présence"}
+              : "📍 Je suis arrivé à l'école"}
         </Button>
       </form>
     </Card>

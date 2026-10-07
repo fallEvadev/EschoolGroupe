@@ -31,7 +31,7 @@ import {
   shiftIsoDate,
   shiftMonth,
 } from "@/lib/dates";
-import { formatTime } from "@/lib/schools";
+import { formatTime, mapsUrl } from "@/lib/schools";
 import {
   createServerSupabase,
   isSupabaseConfigured,
@@ -445,6 +445,19 @@ function SheetRowCard({
             {" "}
             · {locationSummary(attendance)}
           </span>
+          {attendance.latitude !== null && attendance.longitude !== null && (
+            <>
+              {" "}
+              <a
+                href={mapsUrl(attendance.latitude, attendance.longitude)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary font-medium hover:underline"
+              >
+                Voir sur la carte
+              </a>
+            </>
+          )}
         </p>
       )}
       {review && (

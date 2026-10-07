@@ -6,6 +6,7 @@ import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { formatDate } from "@/lib/dates";
 import { mapsUrl } from "@/lib/schools";
 import { describeSupabaseError } from "@/lib/supabase/errors";
 import {
@@ -17,12 +18,31 @@ import type { Tables } from "@/types/database";
 
 import { loadStaffDirectory, requirePedagogyManager } from "./access";
 import { DirectorsPanel, type PersonOption } from "./directors-panel";
+import { SchoolPositionPanel } from "./school-position-panel";
 import { SchoolStatusButton } from "./school-status-button";
 import { SlotsPanel, type SlotView } from "./slots-panel";
 
 export const metadata = { title: "Écoles · E-School Groupe" };
 
 type School = Tables<"schools">;
+
+/** D'où vient la position enregistrée, en une phrase (« par le directeur le 07/10/2026 »). */
+function positionOrigin(school: School): string {
+  const who =
+    school.position_source === "directeur"
+      ? "Enregistrée par le directeur"
+      : school.position_source === "admin"
+        ? "Saisie par la Direction pédagogique"
+        : "Enregistrée";
+  const when = school.position_set_at
+    ? ` le ${formatDate(school.position_set_at)}`
+    : "";
+  const precision =
+    school.position_accuracy_m === null
+      ? ""
+      : ` (précision ± ${school.position_accuracy_m} m)`;
+  return `${who}${when}${precision}.`;
+}
 
 async function loadSchools(): Promise<
   { schools: School[] } | { error: string }
@@ -274,14 +294,20 @@ async function SchoolDetail({
           >
             Voir sur la carte
           </a>
+          <span className="text-muted-foreground block text-sm font-normal">
+            {positionOrigin(school)}
+          </span>
         </>
       ) : (
         <span className="text-warning">
-          Non renseignée : la géolocalisation ne pourra pas être vérifiée.
+          Pas encore enregistrée : le directeur de l&apos;école
+          l&apos;enregistre depuis son espace, quand il est sur place.
+          D&apos;ici là, les pointages des formateurs seront à vérifier.
         </span>
       ),
     },
-    { label: "Rayon autorisé", value: `${school.radius_m} m` },
+    // Information seulement : le rayon n'est plus modifiable dans l'interface.
+    { label: "Rayon de contrôle", value: `${school.radius_m} m (fixe)` },
     {
       label: "Tolérance de retard",
       value: `${school.late_tolerance_minutes} min`,
@@ -339,6 +365,7 @@ async function SchoolDetail({
               </div>
             ))}
           </dl>
+          {!archived && <SchoolPositionPanel schoolId={school.id} />}
         </section>
 
         {"error" in directory ? (

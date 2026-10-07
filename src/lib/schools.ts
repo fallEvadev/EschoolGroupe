@@ -1,4 +1,7 @@
-/** Rayon par défaut autour d'une école (mètres), réglable par école. */
+/**
+ * Rayon de contrôle autour de chaque école (mètres). Fixe : il n'est plus
+ * modifiable dans l'interface. Même valeur que le défaut de `schools.radius_m`.
+ */
 export const DEFAULT_RADIUS_M = 150;
 
 /** Minutes de grâce par défaut avant le statut « retard », réglables par école. */

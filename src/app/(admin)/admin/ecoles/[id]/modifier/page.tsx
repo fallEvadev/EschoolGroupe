@@ -47,10 +47,6 @@ export default async function ModifierEcolePage({
           initial={{
             name: school.name,
             address: school.address ?? "",
-            latitude: school.latitude === null ? "" : String(school.latitude),
-            longitude:
-              school.longitude === null ? "" : String(school.longitude),
-            radiusM: school.radius_m,
             lateToleranceMinutes: school.late_tolerance_minutes,
           }}
         />

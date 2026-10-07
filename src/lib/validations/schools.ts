@@ -30,41 +30,65 @@ const coordinate = (label: string, min: number, max: number) =>
 /** Heure « HH:MM » sur 24 h. */
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-/** Fiche d'une école (création et modification). */
-export const schoolSchema = z
-  .object({
-    name: z
-      .string()
-      .trim()
-      .min(2, "Le nom doit contenir au moins 2 caractères.")
-      .max(120, "Le nom ne doit pas dépasser 120 caractères."),
-    address: optionalText(
-      250,
-      "L'adresse ne doit pas dépasser 250 caractères.",
-    ),
-    latitude: coordinate("Latitude", -90, 90),
-    longitude: coordinate("Longitude", -180, 180),
-    radiusM: z
-      .number({ message: "Rayon invalide." })
-      .int("Le rayon doit être un nombre entier de mètres.")
-      .min(20, "Le rayon doit être d'au moins 20 m.")
-      .max(5000, "Le rayon ne doit pas dépasser 5 000 m."),
-    lateToleranceMinutes: z
-      .number({ message: "Tolérance invalide." })
-      .int("La tolérance doit être un nombre entier de minutes.")
-      .min(0, "La tolérance ne peut pas être négative.")
-      .max(180, "La tolérance ne doit pas dépasser 180 minutes."),
-  })
-  .refine((value) => (value.latitude === null) === (value.longitude === null), {
-    message:
-      "Renseignez la latitude et la longitude ensemble, ou aucune des deux.",
-    path: ["longitude"],
-  });
+/**
+ * Fiche d'une école (création et modification). La position GPS et le rayon n'y
+ * figurent plus : le directeur enregistre la position sur place, et le rayon
+ * est fixé (150 m, valeur par défaut de la base).
+ */
+export const schoolSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Le nom doit contenir au moins 2 caractères.")
+    .max(120, "Le nom ne doit pas dépasser 120 caractères."),
+  address: optionalText(250, "L'adresse ne doit pas dépasser 250 caractères."),
+  lateToleranceMinutes: z
+    .number({ message: "Tolérance invalide." })
+    .int("La tolérance doit être un nombre entier de minutes.")
+    .min(0, "La tolérance ne peut pas être négative.")
+    .max(180, "La tolérance ne doit pas dépasser 180 minutes."),
+});
 
 /** Valeurs saisies dans le formulaire (avant nettoyage). */
 export type SchoolFormValues = z.input<typeof schoolSchema>;
 /** Valeurs nettoyées, prêtes pour la base. */
 export type SchoolData = z.output<typeof schoolSchema>;
+
+/** Coordonnée obligatoire : comme `coordinate`, mais le champ vide est refusé. */
+const requiredCoordinate = (label: string, min: number, max: number) =>
+  coordinate(label, min, max).refine(
+    (value): value is number => value !== null,
+    `${label} obligatoire.`,
+  );
+
+/**
+ * Position saisie à la main par la Direction pédagogique (secours : le plus
+ * simple reste que le directeur l'enregistre sur place).
+ */
+export const schoolPositionSchema = z.object({
+  schoolId: z.uuid("École invalide."),
+  latitude: requiredCoordinate("Latitude", -90, 90),
+  longitude: requiredCoordinate("Longitude", -180, 180),
+});
+
+export type SchoolPositionFormValues = z.input<typeof schoolPositionSchema>;
+export type SchoolPositionData = z.output<typeof schoolPositionSchema>;
+
+/**
+ * Position relevée par le téléphone du directeur, sur place. Le serveur
+ * revérifie la précision : une position trop imprécise est refusée.
+ */
+export const directorPositionSchema = z.object({
+  schoolId: z.uuid("École invalide."),
+  latitude: z.number({ message: "Latitude invalide." }).min(-90).max(90),
+  longitude: z.number({ message: "Longitude invalide." }).min(-180).max(180),
+  accuracyM: z
+    .number({ message: "Précision invalide." })
+    .min(0, "Précision invalide.")
+    .max(1_000_000, "Précision invalide."),
+});
+
+export type DirectorPositionInput = z.input<typeof directorPositionSchema>;
 
 /** Créneau hebdomadaire d'une école. */
 export const slotSchema = z

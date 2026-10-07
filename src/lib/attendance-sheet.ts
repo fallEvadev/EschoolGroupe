@@ -42,6 +42,9 @@ export type SheetAttendance = {
   locationResult: LocationResult;
   distanceM: number | null;
   accuracyM: number | null;
+  /** Position GPS du formateur au pointage (vide si le téléphone n'en a pas donné). */
+  latitude: number | null;
+  longitude: number | null;
 };
 
 /** Décision de la Direction sur un pointage « à vérifier ». */

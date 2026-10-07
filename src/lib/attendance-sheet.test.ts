@@ -55,6 +55,8 @@ const attendance = (
   locationResult: "ok",
   distanceM: 30,
   accuracyM: 12,
+  latitude: 14.6928,
+  longitude: -17.4467,
   ...overrides,
 });
 

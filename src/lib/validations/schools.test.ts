@@ -1,24 +1,24 @@
 import { describe, expect, it } from "vitest";
 
-import { assignmentSchema, schoolSchema, slotSchema } from "./schools";
+import {
+  assignmentSchema,
+  directorPositionSchema,
+  schoolPositionSchema,
+  schoolSchema,
+  slotSchema,
+} from "./schools";
 
 const valid = {
   name: "  Campus Dakar-Plateau ",
   address: "  Avenue Léopold Sédar Senghor ",
-  latitude: "14,6928",
-  longitude: "-17.4467",
-  radiusM: 150,
   lateToleranceMinutes: 15,
 };
 
 describe("schoolSchema", () => {
-  it("nettoie une école correcte (virgule décimale acceptée)", () => {
+  it("nettoie une école correcte", () => {
     expect(schoolSchema.parse(valid)).toEqual({
       name: "Campus Dakar-Plateau",
       address: "Avenue Léopold Sédar Senghor",
-      latitude: 14.6928,
-      longitude: -17.4467,
-      radiusM: 150,
       lateToleranceMinutes: 15,
     });
   });
@@ -27,40 +27,89 @@ describe("schoolSchema", () => {
     expect(schoolSchema.parse({ ...valid, address: "  " }).address).toBeNull();
   });
 
-  it("accepte une école sans position", () => {
+  it("ne contient plus ni position ni rayon : ils sont ignorés s'ils sont envoyés", () => {
+    // Une modification du nom ne doit jamais pouvoir écraser la position
+    // enregistrée par le directeur, ni changer le rayon.
     const parsed = schoolSchema.parse({
       ...valid,
-      latitude: "",
-      longitude: "",
+      latitude: "14.6928",
+      longitude: "-17.4467",
+      radiusM: 5000,
     });
-    expect(parsed.latitude).toBeNull();
-    expect(parsed.longitude).toBeNull();
-  });
-
-  it("refuse une seule coordonnée renseignée", () => {
-    expect(schoolSchema.safeParse({ ...valid, longitude: "" }).success).toBe(
-      false,
-    );
-    expect(schoolSchema.safeParse({ ...valid, latitude: "" }).success).toBe(
-      false,
-    );
+    expect("latitude" in parsed).toBe(false);
+    expect("longitude" in parsed).toBe(false);
+    expect("radiusM" in parsed).toBe(false);
   });
 
   it.each([
-    ["latitude", "91"],
-    ["latitude", "abc"],
-    ["longitude", "-181"],
     ["name", " a "],
-    ["radiusM", 10],
-    ["radiusM", 6000],
-    ["radiusM", 150.5],
-    ["radiusM", Number.NaN],
+    ["name", "x".repeat(121)],
     ["lateToleranceMinutes", -1],
     ["lateToleranceMinutes", 181],
+    ["lateToleranceMinutes", 1.5],
+    ["lateToleranceMinutes", Number.NaN],
   ])("refuse %s = %s", (field, value) => {
     expect(schoolSchema.safeParse({ ...valid, [field]: value }).success).toBe(
       false,
     );
+  });
+});
+
+describe("schoolPositionSchema (saisie manuelle de secours)", () => {
+  const schoolId = "5f0c2c1e-6c1f-4a43-9a5b-3d1b2f6e8a10";
+
+  it("accepte des coordonnées, virgule décimale comprise", () => {
+    expect(
+      schoolPositionSchema.parse({
+        schoolId,
+        latitude: "14,6928",
+        longitude: "-17.4467",
+      }),
+    ).toEqual({ schoolId, latitude: 14.6928, longitude: -17.4467 });
+  });
+
+  it.each([
+    { latitude: "" },
+    { longitude: "" },
+    { latitude: "91" },
+    { latitude: "abc" },
+    { longitude: "-181" },
+    { schoolId: "abc" },
+  ])("refuse %j", (override) => {
+    expect(
+      schoolPositionSchema.safeParse({
+        schoolId,
+        latitude: "14.6928",
+        longitude: "-17.4467",
+        ...override,
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("directorPositionSchema (position relevée par le téléphone)", () => {
+  const valid = {
+    schoolId: "5f0c2c1e-6c1f-4a43-9a5b-3d1b2f6e8a10",
+    latitude: 14.6928,
+    longitude: -17.4467,
+    accuracyM: 18,
+  };
+
+  it("accepte une position relevée", () => {
+    expect(directorPositionSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it.each([
+    { latitude: 91 },
+    { longitude: -181 },
+    { accuracyM: -1 },
+    { latitude: "14.6" },
+    { latitude: undefined },
+    { schoolId: "abc" },
+  ])("refuse %j", (override) => {
+    expect(
+      directorPositionSchema.safeParse({ ...valid, ...override }).success,
+    ).toBe(false);
   });
 });
 

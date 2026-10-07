@@ -3,10 +3,7 @@ import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
-import {
-  DEFAULT_LATE_TOLERANCE_MINUTES,
-  DEFAULT_RADIUS_M,
-} from "@/lib/schools";
+import { DEFAULT_LATE_TOLERANCE_MINUTES } from "@/lib/schools";
 
 import { requirePedagogyManager } from "../access";
 import { SchoolForm } from "../school-form";
@@ -28,16 +25,13 @@ export default async function NouvelleEcolePage() {
       <PageHeader
         eyebrow="Pilotage pédagogique"
         title="Ajouter une école"
-        description="Renseignez l'école et sa position. Vous ajouterez ensuite ses créneaux, son directeur et ses formateurs."
+        description="Renseignez le nom et l'adresse de l'école. Vous ajouterez ensuite son directeur, ses créneaux et ses formateurs ; le directeur enregistrera lui-même la position de l'école."
       />
       <Card className="p-4 sm:p-6">
         <SchoolForm
           initial={{
             name: "",
             address: "",
-            latitude: "",
-            longitude: "",
-            radiusM: DEFAULT_RADIUS_M,
             lateToleranceMinutes: DEFAULT_LATE_TOLERANCE_MINUTES,
           }}
         />
