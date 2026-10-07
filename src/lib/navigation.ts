@@ -69,11 +69,11 @@ export const ADMIN_NAV: NavSection[] = [
         roles: ADMIN_PEDAGOGIE,
       },
       {
-        label: "Codes de séance",
+        label: "Codes du jour",
         href: "/admin/codes",
         icon: KeyRound,
         lot: 3,
-        available: false,
+        available: true,
         roles: ADMIN_PEDAGOGIE,
       },
       {

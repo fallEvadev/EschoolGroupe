@@ -17,6 +17,14 @@ export function formatLongDate(value: string | Date): string {
   return format(value, "EEEE d MMMM", options);
 }
 
+/**
+ * Jour courant à Dakar au format aaaa-mm-jj (celui des colonnes `date` de la
+ * base, ex. le jour de validité d'un code). Passer `now` pour les tests.
+ */
+export function dakarIsoDate(now: Date = new Date()): string {
+  return format(now, "yyyy-MM-dd", { in: tz(TIME_ZONE) });
+}
+
 /** Date seule au format jj/mm/aaaa (ex. date d'arrivée). */
 export function formatDate(value: string | Date): string {
   return format(value, "dd/MM/yyyy", options);

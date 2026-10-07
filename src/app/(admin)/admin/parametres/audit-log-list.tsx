@@ -1,7 +1,7 @@
 import "server-only";
 
 import { parseRole, ROLE_LABELS } from "@/lib/auth/roles";
-import { formatDateTime } from "@/lib/dates";
+import { formatDate, formatDateTime } from "@/lib/dates";
 import { DOCUMENT_LABELS, isDocumentKind } from "@/lib/staff-documents";
 import {
   createServerSupabase,
@@ -42,6 +42,8 @@ const ACTION_LABELS: Record<string, string> = {
   slot_archived: "Créneau archivé",
   slot_assigned: "Formateur affecté",
   slot_unassigned: "Formateur retiré",
+  codes_generated: "Codes du jour générés",
+  code_regenerated: "Code régénéré",
 };
 
 function roleLabel(value: Json | undefined): string {
@@ -84,6 +86,12 @@ function describe(action: string, details: Json): string | null {
     action === "school_restored"
   ) {
     return `${details.name}`;
+  }
+  if (action === "codes_generated") {
+    return `${details.created} code(s) · ${formatDate(String(details.date))}`;
+  }
+  if (action === "code_regenerated") {
+    return `${details.school} · ${formatDate(String(details.date))}`;
   }
   if (action === "director_linked") return `${details.director}`;
   if (action === "slot_created" || action === "slot_archived") {

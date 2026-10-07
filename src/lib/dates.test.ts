@@ -1,6 +1,24 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDate, formatDateTime, formatLongDate } from "./dates";
+import {
+  dakarIsoDate,
+  formatDate,
+  formatDateTime,
+  formatLongDate,
+} from "./dates";
+
+describe("dakarIsoDate", () => {
+  it("renvoie le jour à Dakar au format aaaa-mm-jj", () => {
+    expect(dakarIsoDate(new Date("2026-10-07T09:30:00Z"))).toBe("2026-10-07");
+  });
+
+  it("garde le jour de Dakar même quand il est déjà le lendemain ailleurs", () => {
+    // 01:15 à Paris le 1er juillet = 23:15 le 30 juin à Dakar.
+    expect(dakarIsoDate(new Date("2026-07-01T01:15:00+02:00"))).toBe(
+      "2026-06-30",
+    );
+  });
+});
 
 describe("formatDateTime", () => {
   it("affiche jj/mm/aaaa hh:mm à l'heure de Dakar (UTC+0)", () => {
