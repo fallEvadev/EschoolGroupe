@@ -25,6 +25,23 @@ export function buildWhatsAppUrl(phone: string | null, text: string): string {
     : `https://wa.me/?${query}`;
 }
 
+/** Annonce aux formateurs qu'un programme mensuel est disponible. */
+export function programMessage({
+  monthLabel,
+  url,
+}: {
+  /** Mois en toutes lettres, ex. « octobre 2026 ». */
+  monthLabel: string;
+  /** Adresse de la page « Documents » de la plateforme. */
+  url: string;
+}): string {
+  return [
+    `Le programme de ${monthLabel} est disponible sur la plateforme E-School Groupe.`,
+    "Connectez-vous pour le consulter :",
+    url,
+  ].join("\n");
+}
+
 /** Message de la Direction pédagogique au directeur d'une école, avec le code du jour. */
 export function directorCodeMessage({
   firstName,

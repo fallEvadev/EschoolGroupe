@@ -1,7 +1,7 @@
 import "server-only";
 
 import { parseRole, ROLE_LABELS } from "@/lib/auth/roles";
-import { formatDate, formatDateTime } from "@/lib/dates";
+import { formatDate, formatDateTime, formatMonthLabel } from "@/lib/dates";
 import { DOCUMENT_LABELS, isDocumentKind } from "@/lib/staff-documents";
 import {
   createServerSupabase,
@@ -49,6 +49,7 @@ const ACTION_LABELS: Record<string, string> = {
   excuse_cancelled: "Excuse annulée",
   day_closed: "Jour sans cours",
   day_reopened: "Jour rouvert",
+  program_published: "Programme publié",
 };
 
 function roleLabel(value: Json | undefined): string {
@@ -99,6 +100,9 @@ function describe(action: string, details: Json): string | null {
         ? ` · Motif : ${details.comment}`
         : "";
     return `${details.formateur} · ${details.school} · ${formatDate(String(details.date))} · ${verdict}${comment}`;
+  }
+  if (action === "program_published") {
+    return `${formatMonthLabel(String(details.month))} · ${details.title}`;
   }
   if (action === "absence_excused") {
     return `${details.formateur} · ${details.school} · ${formatDate(String(details.date))} · Motif : ${details.reason}`;

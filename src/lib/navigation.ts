@@ -53,6 +53,14 @@ export const ADMIN_NAV: NavSection[] = [
         available: true,
       },
       {
+        label: "Programme mensuel",
+        href: "/admin/programmes",
+        icon: CalendarDays,
+        lot: 3,
+        available: true,
+        roles: ADMIN_PEDAGOGIE,
+      },
+      {
         label: "Pointages",
         href: "/admin/pointages",
         icon: UserCheck,
@@ -177,7 +185,7 @@ export const FORMATEUR_NAV: NavItem[] = [
     href: "/formateur/documents",
     icon: FolderOpen,
     lot: 2,
-    available: false,
+    available: true,
   },
   {
     label: "Profil",

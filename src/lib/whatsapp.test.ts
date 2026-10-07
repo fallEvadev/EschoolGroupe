@@ -4,9 +4,29 @@ import {
   buildWhatsAppUrl,
   directorCodeMessage,
   invitationMessage,
+  programMessage,
   toWhatsAppNumber,
   trainersCodeMessage,
 } from "./whatsapp";
+
+describe("programMessage", () => {
+  it("annonce le mois et se termine par le lien", () => {
+    const text = programMessage({
+      monthLabel: "octobre 2026",
+      url: "https://exemple.sn/formateur/documents",
+    });
+    expect(text).toContain("programme de octobre 2026");
+    expect(text.endsWith("https://exemple.sn/formateur/documents")).toBe(true);
+  });
+
+  it("devient un lien WhatsApp sans destinataire (choix du groupe)", () => {
+    const url = buildWhatsAppUrl(
+      null,
+      programMessage({ monthLabel: "x", url: "u" }),
+    );
+    expect(url.startsWith("https://wa.me/?text=")).toBe(true);
+  });
+});
 
 describe("directorCodeMessage", () => {
   const text = directorCodeMessage({

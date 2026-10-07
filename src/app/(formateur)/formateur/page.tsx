@@ -2,6 +2,7 @@ import { CalendarDays, Clock, MapPin } from "lucide-react";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { OpenProgramButton } from "@/components/open-program-button";
 import { PointedStatus } from "@/components/pointed-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,16 @@ import { Card } from "@/components/ui/card";
 import { slotAvailability, slotsForWeekday } from "@/lib/agenda";
 import { formatMinutes } from "@/lib/attendance";
 import { requireSpace } from "@/lib/auth/guards";
-import { dakarIsoWeekday, dakarMinutes, formatLongDate } from "@/lib/dates";
+import {
+  dakarIsoDate,
+  dakarIsoWeekday,
+  dakarMinutes,
+  formatLongDate,
+  formatMonthLabel,
+  monthOf,
+} from "@/lib/dates";
+import { splitPrograms } from "@/lib/programs";
+import { loadPrograms } from "@/lib/programs-data";
 import { formatTime } from "@/lib/schools";
 import { loadAgenda } from "@/lib/formateur-agenda";
 import { splitFullName } from "@/lib/staff";
@@ -18,9 +28,15 @@ export const metadata = { title: "Accueil · E-School Groupe" };
 
 export default async function FormateurPage() {
   await requireSpace("formateur");
-  const agenda = await loadAgenda();
+  const [agenda, programs] = await Promise.all([loadAgenda(), loadPrograms()]);
 
   const now = new Date();
+  // Une erreur de chargement des programmes ne bloque pas l'accueil : la carte
+  // est simplement absente.
+  const currentProgram =
+    "error" in programs
+      ? null
+      : splitPrograms(programs.programs, monthOf(dakarIsoDate(now))).current;
   const firstName =
     "error" in agenda || !agenda.fullName
       ? null
@@ -40,6 +56,21 @@ export default async function FormateurPage() {
         </p>
       ) : (
         <TodaySlots agenda={agenda} now={now} />
+      )}
+
+      {currentProgram && (
+        <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-0.5">
+            <p className="text-muted-foreground text-xs font-semibold tracking-[0.12em] uppercase">
+              Programme du mois
+            </p>
+            <p className="font-semibold first-letter:uppercase">
+              {formatMonthLabel(currentProgram.month)}
+            </p>
+            <p className="text-sm">{currentProgram.title}</p>
+          </div>
+          <OpenProgramButton programId={currentProgram.id} variant="outline" />
+        </Card>
       )}
 
       <div>
