@@ -1,5 +1,5 @@
 import { tz } from "@date-fns/tz";
-import { format } from "date-fns";
+import { format, getISODay } from "date-fns";
 import { fr } from "date-fns/locale";
 
 /** Fuseau horaire de la plateforme. */
@@ -23,6 +23,24 @@ export function formatLongDate(value: string | Date): string {
  */
 export function dakarIsoDate(now: Date = new Date()): string {
   return format(now, "yyyy-MM-dd", { in: tz(TIME_ZONE) });
+}
+
+/** Minutes écoulées depuis minuit à Dakar (ex. 08:30 → 510). */
+export function dakarMinutes(now: Date = new Date()): number {
+  const [hours = 0, minutes = 0] = format(now, "HH:mm", { in: tz(TIME_ZONE) })
+    .split(":")
+    .map(Number);
+  return hours * 60 + minutes;
+}
+
+/** Jour de la semaine à Dakar, 1 = lundi … 7 = dimanche (norme ISO). */
+export function dakarIsoWeekday(now: Date = new Date()): number {
+  return getISODay(now, { in: tz(TIME_ZONE) });
+}
+
+/** Heure seule « hh:mm » à Dakar (ex. heure d'un pointage). */
+export function formatClock(value: string | Date): string {
+  return format(value, "HH:mm", options);
 }
 
 /** Date seule au format jj/mm/aaaa (ex. date d'arrivée). */

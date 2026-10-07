@@ -163,7 +163,7 @@ export const FORMATEUR_NAV: NavItem[] = [
     href: "/formateur/planning",
     icon: CalendarDays,
     lot: 3,
-    available: false,
+    available: true,
   },
   {
     label: "Cahiers",
