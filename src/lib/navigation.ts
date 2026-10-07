@@ -118,7 +118,7 @@ export const ADMIN_NAV: NavSection[] = [
         href: "/admin/ecoles",
         icon: School,
         lot: 3,
-        available: false,
+        available: true,
         roles: ADMIN_PEDAGOGIE,
       },
       {

@@ -85,7 +85,10 @@ Rôles : `formateur`, `maintenancier`, `directeur_partenaire`, `admin_pedagogie`
 
 ## Avancement
 
-Lot en cours : **Lot 2 — RH** (mettre à jour cette ligne à chaque changement de lot).
+Lot en cours : **Lot 3 — Pointage** (mettre à jour cette ligne à chaque changement de lot).
+
+- Lot 3 — Pointage, découpage : 3.1 écoles, directeurs, créneaux, affectations · 3.2 codes quotidiens · 3.3 pointage du formateur · 3.4 transmission aux directeurs (lien WhatsApp pré-rempli) · 3.5 suivi de la Direction · programme mensuel en PDF (petite étape à part). Décisions : pas de QR code, règlement publié par Admin RH + Super-Admin seulement.
+- 3.1 : code écrit et vérifié (lint, tests, build) — migration `20261006140000_schools_slots.sql` à appliquer sur Supabase. Page `/admin/ecoles` réservée à l'Admin Pédagogie et au Super-Admin.
 
 - Lot 1 — Socle : terminé côté code (rôles, double contrôle, RLS, paramètres, accès). Reste à confirmer : liaison Clerk ↔ Supabase dans `supabase/config.toml` et déploiement Vercel.
 - Lot 2 — RH, fait : invitations, fiches du personnel, note de suivi, dossier administratif (bucket privé), webhook Clerk, désactivation/archivage depuis « Personnel », règlement intérieur versionné (`internal_rules`, `document_acceptances`, acceptation exigée des formateurs et maintenanciers). Contrôle des documents RH (à vérifier, validé, rejeté avec motif) fait : le Lot 2 est terminé côté code, reste à appliquer les migrations sur Supabase et à tester en conditions réelles.

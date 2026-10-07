@@ -32,6 +32,16 @@ const ACTION_LABELS: Record<string, string> = {
   document_reviewed: "Document contrôlé",
   rules_published: "Règlement publié",
   rules_accepted: "Règlement accepté",
+  school_created: "École créée",
+  school_updated: "École modifiée",
+  school_archived: "École archivée",
+  school_restored: "École restaurée",
+  director_linked: "Directeur rattaché",
+  director_unlinked: "Directeur retiré",
+  slot_created: "Créneau ajouté",
+  slot_archived: "Créneau archivé",
+  slot_assigned: "Formateur affecté",
+  slot_unassigned: "Formateur retiré",
 };
 
 function roleLabel(value: Json | undefined): string {
@@ -67,6 +77,22 @@ function describe(action: string, details: Json): string | null {
     const label = isDocumentKind(kind) ? DOCUMENT_LABELS[kind] : "Document";
     return `${label} · ${details.file_name}`;
   }
+  if (
+    action === "school_created" ||
+    action === "school_updated" ||
+    action === "school_archived" ||
+    action === "school_restored"
+  ) {
+    return `${details.name}`;
+  }
+  if (action === "director_linked") return `${details.director}`;
+  if (action === "slot_created" || action === "slot_archived") {
+    return details.school
+      ? `${details.school} · ${details.slot}`
+      : `${details.slot}`;
+  }
+  if (action === "slot_assigned")
+    return `${details.formateur} · ${details.slot}`;
   if (action === "rules_published") {
     return `Version ${details.version} · ${details.title}`;
   }
