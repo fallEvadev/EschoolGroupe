@@ -808,6 +808,19 @@ export type Database = {
         }
         Returns: string
       }
+      verify_attendance_code: {
+        Args: {
+          p_code: string
+          p_code_date: string
+          p_profile_id: string
+          p_school_id: string
+        }
+        Returns: {
+          minutes_left: number
+          outcome: string
+          remaining: number
+        }[]
+      }
       pedagogy_staff_directory: {
         Args: never
         Returns: {
