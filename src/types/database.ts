@@ -69,6 +69,44 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_codes: {
+        Row: {
+          code: string
+          code_date: string
+          created_at: string
+          generated_by: string | null
+          id: string
+          school_id: string
+          status: string
+        }
+        Insert: {
+          code: string
+          code_date: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          school_id: string
+          status?: string
+        }
+        Update: {
+          code?: string
+          code_date?: string
+          created_at?: string
+          generated_by?: string | null
+          id?: string
+          school_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_codes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_acceptances: {
         Row: {
           accepted_at: string
@@ -495,6 +533,10 @@ export type Database = {
       is_rh_manageable_role: {
         Args: { value: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
+      }
+      replace_daily_code: {
+        Args: { p_code: string; p_code_date: string; p_school_id: string }
+        Returns: string
       }
       pedagogy_staff_directory: {
         Args: never
