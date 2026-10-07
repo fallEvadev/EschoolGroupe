@@ -76,6 +76,7 @@ const RESTRICTED_PATHS: { prefix: string; roles: readonly Role[] }[] = [
   { prefix: "/admin/reglement", roles: ["admin_rh", "super_admin"] },
   { prefix: "/admin/ecoles", roles: ["admin_pedagogie", "super_admin"] },
   { prefix: "/admin/codes", roles: ["admin_pedagogie", "super_admin"] },
+  { prefix: "/admin/pointages", roles: ["admin_pedagogie", "super_admin"] },
 ];
 
 /** Vrai si le rôle peut ouvrir ce chemin précis (en plus du contrôle de l'espace). */

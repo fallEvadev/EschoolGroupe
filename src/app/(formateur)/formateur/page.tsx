@@ -2,22 +2,14 @@ import { CalendarDays, Clock, MapPin } from "lucide-react";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { PointedStatus } from "@/components/pointed-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { slotAvailability, slotsForWeekday } from "@/lib/agenda";
-import {
-  ATTENDANCE_BADGE,
-  ATTENDANCE_LABELS,
-  formatMinutes,
-} from "@/lib/attendance";
+import { formatMinutes } from "@/lib/attendance";
 import { requireSpace } from "@/lib/auth/guards";
-import {
-  dakarIsoWeekday,
-  dakarMinutes,
-  formatClock,
-  formatLongDate,
-} from "@/lib/dates";
+import { dakarIsoWeekday, dakarMinutes, formatLongDate } from "@/lib/dates";
 import { formatTime } from "@/lib/schools";
 import { loadAgenda } from "@/lib/formateur-agenda";
 import { splitFullName } from "@/lib/staff";
@@ -124,14 +116,7 @@ function TodaySlots({
                 </div>
 
                 {availability.kind === "pointed" && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant={ATTENDANCE_BADGE[availability.status]}>
-                      {ATTENDANCE_LABELS[availability.status]}
-                    </Badge>
-                    <span className="text-muted-foreground text-sm">
-                      pointé à {formatClock(availability.recordedAt)}
-                    </span>
-                  </div>
+                  <PointedStatus attendance={availability} />
                 )}
                 {availability.kind === "open" && (
                   <Button asChild size="lg">

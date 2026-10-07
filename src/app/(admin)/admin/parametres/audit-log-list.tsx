@@ -44,6 +44,11 @@ const ACTION_LABELS: Record<string, string> = {
   slot_unassigned: "Formateur retiré",
   codes_generated: "Codes du jour générés",
   code_regenerated: "Code régénéré",
+  attendance_reviewed: "Pointage traité",
+  absence_excused: "Absence excusée",
+  excuse_cancelled: "Excuse annulée",
+  day_closed: "Jour sans cours",
+  day_reopened: "Jour rouvert",
 };
 
 function roleLabel(value: Json | undefined): string {
@@ -86,6 +91,26 @@ function describe(action: string, details: Json): string | null {
     action === "school_restored"
   ) {
     return `${details.name}`;
+  }
+  if (action === "attendance_reviewed") {
+    const verdict = details.decision === "valide" ? "validé" : "refusé";
+    const comment =
+      typeof details.comment === "string" && details.comment
+        ? ` · Motif : ${details.comment}`
+        : "";
+    return `${details.formateur} · ${details.school} · ${formatDate(String(details.date))} · ${verdict}${comment}`;
+  }
+  if (action === "absence_excused") {
+    return `${details.formateur} · ${details.school} · ${formatDate(String(details.date))} · Motif : ${details.reason}`;
+  }
+  if (action === "excuse_cancelled") {
+    return formatDate(String(details.date));
+  }
+  if (action === "day_closed") {
+    return `${formatDate(String(details.date))} · ${details.school} · ${details.reason}`;
+  }
+  if (action === "day_reopened") {
+    return `${formatDate(String(details.date))} · ${details.school}`;
   }
   if (action === "codes_generated") {
     return `${details.created} code(s) · ${formatDate(String(details.date))}`;

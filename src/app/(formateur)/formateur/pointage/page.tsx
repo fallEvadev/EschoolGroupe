@@ -2,16 +2,12 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { Badge } from "@/components/ui/badge";
+import { PointedStatus } from "@/components/pointed-status";
 import { Card } from "@/components/ui/card";
 import { slotAvailability } from "@/lib/agenda";
-import {
-  ATTENDANCE_BADGE,
-  ATTENDANCE_LABELS,
-  formatMinutes,
-} from "@/lib/attendance";
+import { formatMinutes } from "@/lib/attendance";
 import { requireSpace } from "@/lib/auth/guards";
-import { dakarIsoWeekday, dakarMinutes, formatClock } from "@/lib/dates";
+import { dakarIsoWeekday, dakarMinutes } from "@/lib/dates";
 import { loadAgenda } from "@/lib/formateur-agenda";
 import { formatTime, isWeekday, WEEKDAY_LABELS } from "@/lib/schools";
 
@@ -69,16 +65,8 @@ export default async function PointagePage({
       content = (
         <Notice>
           <div className="flex flex-col gap-3">
-            <p className="font-medium">
-              Vous avez déjà pointé sur ce créneau à{" "}
-              {formatClock(availability.recordedAt)}.
-            </p>
-            <Badge
-              variant={ATTENDANCE_BADGE[availability.status]}
-              className="w-fit"
-            >
-              {ATTENDANCE_LABELS[availability.status]}
-            </Badge>
+            <p className="font-medium">Vous avez déjà pointé sur ce créneau.</p>
+            <PointedStatus attendance={availability} />
           </div>
         </Notice>
       );

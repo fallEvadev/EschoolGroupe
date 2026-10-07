@@ -47,3 +47,73 @@ export function formatClock(value: string | Date): string {
 export function formatDate(value: string | Date): string {
   return format(value, "dd/MM/yyyy", options);
 }
+
+// ---------------------------------------------------------------------------
+// Calculs sur des dates « aaaa-mm-jj » (jour calendaire, sans heure). Dakar est
+// à UTC+0 toute l'année : le calcul en UTC donne le jour de Dakar.
+// ---------------------------------------------------------------------------
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+function isoToUtc(iso: string): Date {
+  const [year = 1970, month = 1, day = 1] = iso.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+/** Vrai pour une vraie date « aaaa-mm-jj » (le 2026-02-30 n'existe pas). */
+export function isIsoDate(value: string): boolean {
+  return (
+    ISO_DATE.test(value) && isoToUtc(value).toISOString().slice(0, 10) === value
+  );
+}
+
+/** Vrai pour un mois « aaaa-mm ». */
+export function isIsoMonth(value: string): boolean {
+  return ISO_MONTH.test(value);
+}
+
+/** Date décalée de `days` jours (négatif pour reculer). */
+export function shiftIsoDate(iso: string, days: number): string {
+  const date = isoToUtc(iso);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** Jour de la semaine d'une date « aaaa-mm-jj » : 1 = lundi … 7 = dimanche. */
+export function isoWeekdayOf(iso: string): number {
+  const day = isoToUtc(iso).getUTCDay();
+  return day === 0 ? 7 : day;
+}
+
+/** Mois « aaaa-mm » d'une date « aaaa-mm-jj ». */
+export function monthOf(iso: string): string {
+  return iso.slice(0, 7);
+}
+
+/** Mois décalé de `delta` mois (« 2026-01 » − 1 = « 2025-12 »). */
+export function shiftMonth(month: string, delta: number): string {
+  const date = isoToUtc(`${month}-01`);
+  date.setUTCMonth(date.getUTCMonth() + delta);
+  return date.toISOString().slice(0, 7);
+}
+
+/** Tous les jours d'un mois « aaaa-mm », du 1er au dernier. */
+export function monthDays(month: string): string[] {
+  const days: string[] = [];
+  for (let day = `${month}-01`; monthOf(day) === month;) {
+    days.push(day);
+    day = shiftIsoDate(day, 1);
+  }
+  return days;
+}
+
+/** Jour en toutes lettres pour une date « aaaa-mm-jj » (ex. « lundi 5 octobre »). */
+export function formatIsoLongDate(iso: string): string {
+  return formatLongDate(`${iso}T12:00:00Z`);
+}
+
+/** Mois en toutes lettres pour « aaaa-mm » (ex. « octobre 2026 »). */
+export function formatMonthLabel(month: string): string {
+  return format(`${month}-15T12:00:00Z`, "LLLL yyyy", options);
+}

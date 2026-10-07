@@ -45,7 +45,7 @@ export async function loadAgenda(): Promise<Agenda | { error: string }> {
       supabase.from("slot_assignments").select("slot_id").eq("status", "actif"),
       supabase
         .from("attendances")
-        .select("slot_id, status, recorded_at")
+        .select("id, slot_id, status, recorded_at, late_minutes")
         .eq("attendance_date", dakarIsoDate()),
     ]);
 
@@ -96,12 +96,43 @@ export async function loadAgenda(): Promise<Agenda | { error: string }> {
     }));
   }
 
+  // Décisions de la Direction sur les pointages du jour (la RLS ne montre au
+  // formateur que celles qui le concernent).
+  const attendanceRows = attendancesResult.data ?? [];
+  const reviews = new Map<
+    string,
+    { decision: "valide" | "refuse"; comment: string | null }
+  >();
+  if (attendanceRows.length > 0) {
+    const reviewsResult = await supabase
+      .from("attendance_reviews")
+      .select("attendance_id, decision, comment")
+      .in(
+        "attendance_id",
+        attendanceRows.map((row) => row.id),
+      );
+    if (reviewsResult.error) {
+      return {
+        error: describeSupabaseError("attendance_reviews", reviewsResult.error)
+          .message,
+      };
+    }
+    for (const row of reviewsResult.data) {
+      reviews.set(row.attendance_id, {
+        decision: row.decision === "valide" ? "valide" : "refuse",
+        comment: row.comment,
+      });
+    }
+  }
+
   const todayAttendances = new Map<string, SlotAttendance>();
-  for (const row of attendancesResult.data ?? []) {
+  for (const row of attendanceRows) {
     if (isAttendanceStatus(row.status)) {
       todayAttendances.set(row.slot_id, {
         status: row.status,
         recordedAt: row.recorded_at,
+        lateMinutes: row.late_minutes,
+        review: reviews.get(row.id),
       });
     }
   }

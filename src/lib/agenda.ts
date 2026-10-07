@@ -35,6 +35,10 @@ export function groupByWeekday(
 export type SlotAttendance = {
   status: AttendanceStatus;
   recordedAt: string;
+  /** Minutes après le début (0 si à l'heure). Absent : 0. */
+  lateMinutes?: number;
+  /** Décision de la Direction sur un pointage « à vérifier », si elle existe. */
+  review?: { decision: "valide" | "refuse"; comment: string | null };
 };
 
 /** Ce que le formateur peut faire d'un créneau d'aujourd'hui, à cette heure. */

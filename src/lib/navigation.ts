@@ -57,7 +57,7 @@ export const ADMIN_NAV: NavSection[] = [
         href: "/admin/pointages",
         icon: UserCheck,
         lot: 3,
-        available: false,
+        available: true,
         roles: ADMIN_PEDAGOGIE,
       },
       {

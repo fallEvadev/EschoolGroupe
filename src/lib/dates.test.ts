@@ -7,8 +7,85 @@ import {
   formatClock,
   formatDate,
   formatDateTime,
+  formatIsoLongDate,
   formatLongDate,
+  formatMonthLabel,
+  isIsoDate,
+  isIsoMonth,
+  isoWeekdayOf,
+  monthDays,
+  monthOf,
+  shiftIsoDate,
+  shiftMonth,
 } from "./dates";
+
+describe("isIsoDate et isIsoMonth", () => {
+  it("accepte les vraies dates et refuse les autres", () => {
+    expect(isIsoDate("2026-10-07")).toBe(true);
+    expect(isIsoDate("2024-02-29")).toBe(true);
+    expect(isIsoDate("2026-02-29")).toBe(false);
+    expect(isIsoDate("2026-13-01")).toBe(false);
+    expect(isIsoDate("07/10/2026")).toBe(false);
+    expect(isIsoDate("2026-10-7")).toBe(false);
+    expect(isIsoDate("")).toBe(false);
+  });
+
+  it("accepte un mois valide", () => {
+    expect(isIsoMonth("2026-10")).toBe(true);
+    expect(isIsoMonth("2026-00")).toBe(false);
+    expect(isIsoMonth("2026-13")).toBe(false);
+    expect(isIsoMonth("2026-1")).toBe(false);
+  });
+});
+
+describe("shiftIsoDate", () => {
+  it("avance et recule d'un nombre de jours", () => {
+    expect(shiftIsoDate("2026-10-07", 1)).toBe("2026-10-08");
+    expect(shiftIsoDate("2026-10-07", -7)).toBe("2026-09-30");
+  });
+
+  it("passe d'un mois ou d'une année à l'autre", () => {
+    expect(shiftIsoDate("2026-12-31", 1)).toBe("2027-01-01");
+    expect(shiftIsoDate("2026-01-01", -1)).toBe("2025-12-31");
+    expect(shiftIsoDate("2024-02-28", 1)).toBe("2024-02-29");
+  });
+});
+
+describe("isoWeekdayOf", () => {
+  it("renvoie 1 pour lundi et 7 pour dimanche", () => {
+    expect(isoWeekdayOf("2026-10-05")).toBe(1);
+    expect(isoWeekdayOf("2026-10-07")).toBe(3);
+    expect(isoWeekdayOf("2026-10-11")).toBe(7);
+  });
+});
+
+describe("mois", () => {
+  it("monthOf extrait le mois d'une date", () => {
+    expect(monthOf("2026-10-07")).toBe("2026-10");
+  });
+
+  it("shiftMonth change de mois, y compris d'année", () => {
+    expect(shiftMonth("2026-10", 1)).toBe("2026-11");
+    expect(shiftMonth("2026-01", -1)).toBe("2025-12");
+    expect(shiftMonth("2026-12", 1)).toBe("2027-01");
+  });
+
+  it("monthDays liste tous les jours du mois", () => {
+    const october = monthDays("2026-10");
+    expect(october).toHaveLength(31);
+    expect(october[0]).toBe("2026-10-01");
+    expect(october.at(-1)).toBe("2026-10-31");
+    expect(monthDays("2026-02")).toHaveLength(28);
+    expect(monthDays("2024-02")).toHaveLength(29);
+  });
+});
+
+describe("formatIsoLongDate et formatMonthLabel", () => {
+  it("écrit le jour et le mois en français", () => {
+    expect(formatIsoLongDate("2026-10-05")).toBe("lundi 5 octobre");
+    expect(formatMonthLabel("2026-10")).toBe("octobre 2026");
+  });
+});
 
 describe("dakarMinutes", () => {
   it("compte les minutes depuis minuit à l'heure de Dakar", () => {

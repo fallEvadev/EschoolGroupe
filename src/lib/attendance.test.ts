@@ -9,6 +9,7 @@ import {
   LOCK_MINUTES,
   lockState,
   locationExplanation,
+  locationSummary,
   MAX_FAILED_ATTEMPTS,
   timingMessage,
 } from "./attendance";
@@ -221,6 +222,45 @@ describe("locationExplanation", () => {
         locationExplanation({ result, distanceM: null, accuracyM: 300 }, 150),
       ).toContain("vérifi");
     }
+  });
+});
+
+describe("locationSummary", () => {
+  it("donne la distance et la précision pour une position relevée", () => {
+    expect(
+      locationSummary({
+        locationResult: "hors_rayon",
+        distanceM: 850,
+        accuracyM: 20,
+      }),
+    ).toBe("Hors rayon : à 850 m de l'école (± 20 m)");
+    expect(
+      locationSummary({
+        locationResult: "ok",
+        distanceM: 30,
+        accuracyM: 12,
+      }),
+    ).toBe("Position confirmée, à 30 m de l'école (± 12 m)");
+  });
+
+  it("explique chaque cas sans position", () => {
+    const none = { distanceM: null, accuracyM: null };
+    expect(locationSummary({ locationResult: "refusee", ...none })).toContain(
+      "refusée",
+    );
+    expect(
+      locationSummary({ locationResult: "indisponible", ...none }),
+    ).toContain("non relevée");
+    expect(
+      locationSummary({ locationResult: "ecole_sans_position", ...none }),
+    ).toContain("non renseignée");
+    expect(
+      locationSummary({
+        locationResult: "imprecise",
+        distanceM: 40,
+        accuracyM: 400,
+      }),
+    ).toBe("Position trop imprécise (± 400 m)");
   });
 });
 

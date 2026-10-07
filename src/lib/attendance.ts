@@ -45,6 +45,10 @@ export const LOCATION_RESULTS = [
 
 export type LocationResult = (typeof LOCATION_RESULTS)[number];
 
+export function isLocationResult(value: string): value is LocationResult {
+  return (LOCATION_RESULTS as readonly string[]).includes(value);
+}
+
 /** Position d'un point sur la Terre, en degrés. */
 export type Coordinates = { latitude: number; longitude: number };
 
@@ -191,6 +195,36 @@ export function locationExplanation(
       return "Votre position n'a pas pu être relevée : votre présence sera vérifiée par la Direction.";
     case "ecole_sans_position":
       return "La position de l'école n'est pas encore renseignée : votre présence sera vérifiée par la Direction.";
+  }
+}
+
+/**
+ * Résumé du contrôle de position pour la Direction (liste des pointages) :
+ * « Hors rayon : à 850 m de l'école (± 20 m) ».
+ */
+export function locationSummary({
+  locationResult,
+  distanceM,
+  accuracyM,
+}: {
+  locationResult: LocationResult;
+  distanceM: number | null;
+  accuracyM: number | null;
+}): string {
+  const precision = accuracyM === null ? "" : ` (± ${accuracyM} m)`;
+  switch (locationResult) {
+    case "ok":
+      return `Position confirmée, à ${distanceM ?? "?"} m de l'école${precision}`;
+    case "hors_rayon":
+      return `Hors rayon : à ${distanceM ?? "?"} m de l'école${precision}`;
+    case "imprecise":
+      return `Position trop imprécise${precision}`;
+    case "refusee":
+      return "Localisation refusée sur le téléphone";
+    case "indisponible":
+      return "Position non relevée (signal ou appareil)";
+    case "ecole_sans_position":
+      return "Position de l'école non renseignée";
   }
 }
 
