@@ -1,18 +1,15 @@
 "use server";
 
-import { timingSafeEqual } from "node:crypto";
-
 import { revalidatePath } from "next/cache";
 
 import { requireActionRole } from "@/lib/auth/action-guard";
 import {
+  codeOutcomeMessage,
   decideStatus,
   evaluateLocation,
   evaluateTiming,
-  LOCK_MINUTES,
-  lockState,
+  isCodeOutcome,
   locationExplanation,
-  MAX_FAILED_ATTEMPTS,
   timingMessage,
 } from "@/lib/attendance";
 import {
@@ -40,13 +37,6 @@ function fail(message: string): AttendanceResult {
   return { ok: false, message };
 }
 
-/** Comparaison en temps constant : la durée ne révèle pas les chiffres justes. */
-function sameCode(expected: string, received: string): boolean {
-  const a = Buffer.from(expected);
-  const b = Buffer.from(received);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
 /**
  * Enregistre le pointage du formateur connecté.
  *
@@ -54,7 +44,9 @@ function sameCode(expected: string, received: string): boolean {
  * directe (voir la migration), donc TOUTES les règles sont contrôlées ici, dans
  * l'ordre, et rien n'est enregistré tant qu'elles ne sont pas toutes passées :
  * identité (jeton), créneau et affectation, jour, fenêtre horaire, doublon,
- * blocage des essais, puis code.
+ * puis code. Le contrôle du code et la limite des essais se font dans une seule
+ * transaction SQL (`verify_attendance_code`) : des requêtes simultanées ne
+ * peuvent pas multiplier les essais.
  */
 export async function submitAttendance(
   input: unknown,
@@ -149,55 +141,34 @@ export async function submitAttendance(
       );
     }
 
-    // 7. Blocage après trop de codes faux (les demandes bloquées ne comptent pas).
-    const windowStart = new Date(now.getTime() - LOCK_MINUTES * 60_000);
-    const { data: failures, error: failuresError } = await admin
-      .from("attendance_attempts")
-      .select("attempted_at")
-      .eq("profile_id", profile.id)
-      .eq("succeeded", false)
-      .gte("attempted_at", windowStart.toISOString());
-    if (failuresError) {
-      console.error("attendance_attempts :", failuresError.message);
+    // 7. Limite des essais ET contrôle du code, en une seule transaction SQL.
+    // Le code du jour n'est jamais envoyé au navigateur. En cas d'erreur, on
+    // REFUSE le pointage (jamais « on laisse passer ») : sinon une panne
+    // désactiverait la limite sans que personne ne le voie.
+    const { data: check, error: checkError } = await admin.rpc(
+      "verify_attendance_code",
+      {
+        p_profile_id: profile.id,
+        p_school_id: slot.school_id,
+        p_code_date: today,
+        p_code: code,
+      },
+    );
+    const verdict = check?.[0];
+    if (checkError || !verdict || !isCodeOutcome(verdict.outcome)) {
+      console.error(
+        "verify_attendance_code :",
+        checkError?.message ?? "réponse inattendue",
+      );
       return ERREUR_GENERIQUE;
     }
-    const failureTimes = failures.map((row) => new Date(row.attempted_at));
-    const lock = lockState(failureTimes, now);
-    if (lock.locked) {
-      return fail(
-        `Trop de codes incorrects. Réessayez dans ${lock.minutesLeft} minute${lock.minutesLeft > 1 ? "s" : ""}.`,
-      );
-    }
+    const codeProblem = codeOutcomeMessage(verdict.outcome, {
+      remaining: verdict.remaining,
+      minutesLeft: verdict.minutes_left,
+    });
+    if (codeProblem) return fail(codeProblem);
 
-    // 8. Le code du jour de cette école (jamais envoyé au navigateur).
-    const { data: daily } = await admin
-      .from("daily_codes")
-      .select("code")
-      .eq("school_id", slot.school_id)
-      .eq("code_date", today)
-      .eq("status", "actif")
-      .maybeSingle();
-    if (!daily) {
-      return fail(
-        "Le code du jour n'a pas encore été généré pour cette école. Contactez la Direction pédagogique.",
-      );
-    }
-
-    if (!sameCode(daily.code, code)) {
-      await admin.from("attendance_attempts").insert({
-        profile_id: profile.id,
-        school_id: slot.school_id,
-        succeeded: false,
-      });
-      const left = lock.remaining - 1;
-      return fail(
-        left > 0
-          ? `Code incorrect. Il vous reste ${left} tentative${left > 1 ? "s" : ""}.`
-          : `Code incorrect. Pointage bloqué pendant ${LOCK_MINUTES} minutes après ${MAX_FAILED_ATTEMPTS} essais.`,
-      );
-    }
-
-    // 9. Code juste : contrôle de position et statut final.
+    // 8. Code juste : contrôle de position et statut final.
     const evaluation = evaluateLocation(
       {
         latitude: school.latitude,
@@ -232,12 +203,6 @@ export async function submitAttendance(
       console.error("attendances :", error.message);
       return ERREUR_GENERIQUE;
     }
-
-    await admin.from("attendance_attempts").insert({
-      profile_id: profile.id,
-      school_id: slot.school_id,
-      succeeded: true,
-    });
 
     revalidatePath("/formateur");
     return {

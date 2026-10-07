@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  codeOutcomeMessage,
   decideStatus,
   evaluateLocation,
   evaluateTiming,
   formatMinutes,
   haversineMeters,
+  isCodeOutcome,
   LOCK_MINUTES,
   lockState,
   locationExplanation,
@@ -261,6 +263,57 @@ describe("locationSummary", () => {
         accuracyM: 400,
       }),
     ).toBe("Position trop imprécise (± 400 m)");
+  });
+});
+
+describe("codeOutcomeMessage", () => {
+  const details = { remaining: 3, minutesLeft: 12 };
+
+  it("ne dit rien quand le code est accepté", () => {
+    expect(codeOutcomeMessage("ok", details)).toBeNull();
+  });
+
+  it("annonce les essais restants après un code faux", () => {
+    expect(codeOutcomeMessage("wrong", { remaining: 3, minutesLeft: 0 })).toBe(
+      "Code incorrect. Il vous reste 3 tentatives.",
+    );
+    expect(codeOutcomeMessage("wrong", { remaining: 1, minutesLeft: 0 })).toBe(
+      "Code incorrect. Il vous reste 1 tentative.",
+    );
+  });
+
+  it("annonce le blocage au dernier essai", () => {
+    const message = codeOutcomeMessage("wrong", {
+      remaining: 0,
+      minutesLeft: 0,
+    });
+    expect(message).toContain("bloqué");
+    expect(message).toContain(`${LOCK_MINUTES} minutes`);
+  });
+
+  it("indique quand réessayer pendant un blocage", () => {
+    expect(codeOutcomeMessage("locked", details)).toBe(
+      "Trop de codes incorrects. Réessayez dans 12 minutes.",
+    );
+    expect(codeOutcomeMessage("locked", { remaining: 0, minutesLeft: 1 })).toBe(
+      "Trop de codes incorrects. Réessayez dans 1 minute.",
+    );
+  });
+
+  it("renvoie vers la Direction quand le code n'est pas généré", () => {
+    expect(codeOutcomeMessage("no_code", details)).toContain(
+      "pas encore été généré",
+    );
+  });
+});
+
+describe("isCodeOutcome", () => {
+  it("reconnaît les résultats connus et refuse le reste", () => {
+    for (const outcome of ["ok", "wrong", "locked", "no_code"]) {
+      expect(isCodeOutcome(outcome)).toBe(true);
+    }
+    expect(isCodeOutcome("inconnu")).toBe(false);
+    expect(isCodeOutcome("")).toBe(false);
   });
 });
 

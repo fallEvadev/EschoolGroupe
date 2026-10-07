@@ -3,10 +3,16 @@ import { timeToMinutes } from "@/lib/schools";
 /** Le pointage ouvre 30 minutes avant le début du créneau. */
 export const OPEN_BEFORE_MINUTES = 30;
 
-/** Codes faux autorisés avant blocage. */
+/**
+ * Codes faux autorisés avant blocage. Même valeur que `v_max` dans la fonction
+ * SQL `verify_attendance_code` : les deux doivent changer ensemble.
+ */
 export const MAX_FAILED_ATTEMPTS = 5;
 
-/** Durée de blocage (et fenêtre de comptage des échecs), en minutes. */
+/**
+ * Durée de blocage (et fenêtre de comptage des échecs), en minutes. Même valeur
+ * que `v_window` dans la fonction SQL `verify_attendance_code`.
+ */
 export const LOCK_MINUTES = 15;
 
 /** Statut d'un pointage (mêmes valeurs que la contrainte SQL `status`). */
@@ -228,14 +234,52 @@ export function locationSummary({
   }
 }
 
+/** Résultat du contrôle du code, renvoyé par `verify_attendance_code`. */
+export const CODE_OUTCOMES = ["ok", "wrong", "locked", "no_code"] as const;
+
+export type CodeOutcome = (typeof CODE_OUTCOMES)[number];
+
+export function isCodeOutcome(value: string): value is CodeOutcome {
+  return (CODE_OUTCOMES as readonly string[]).includes(value);
+}
+
+/**
+ * Message à afficher quand le code n'est pas accepté, ou `null` s'il l'est.
+ * `remaining` : essais restants après celui-ci ; `minutesLeft` : durée du
+ * blocage restante.
+ */
+export function codeOutcomeMessage(
+  outcome: CodeOutcome,
+  { remaining, minutesLeft }: { remaining: number; minutesLeft: number },
+): string | null {
+  switch (outcome) {
+    case "ok":
+      return null;
+    case "locked":
+      return `Trop de codes incorrects. Réessayez dans ${minutesLeft} minute${minutesLeft > 1 ? "s" : ""}.`;
+    case "no_code":
+      return "Le code du jour n'a pas encore été généré pour cette école. Contactez la Direction pédagogique.";
+    case "wrong":
+      return remaining > 0
+        ? `Code incorrect. Il vous reste ${remaining} tentative${remaining > 1 ? "s" : ""}.`
+        : `Code incorrect. Pointage bloqué pendant ${LOCK_MINUTES} minutes après ${MAX_FAILED_ATTEMPTS} essais.`;
+  }
+}
+
 export type LockState =
   | { locked: false; remaining: number }
   | { locked: true; unlockAt: Date; minutesLeft: number };
 
 /**
- * Limite des essais : à partir de 5 codes faux dans les 15 dernières minutes,
- * le pointage est bloqué jusqu'à ce que le plus ancien de ces échecs sorte de
- * la fenêtre. Les demandes faites pendant le blocage ne sont pas comptées.
+ * Règle de référence de la limite des essais : à partir de 5 codes faux dans
+ * les 15 dernières minutes, le pointage est bloqué jusqu'à ce que le plus
+ * ancien de ces échecs sorte de la fenêtre. Les demandes faites pendant le
+ * blocage ne sont pas comptées.
+ *
+ * Cette fonction N'EST PLUS appelée par l'application : la règle s'applique
+ * dans la base (`verify_attendance_code`), en une seule transaction, pour
+ * résister aux requêtes simultanées. Elle reste ici, testée, comme
+ * spécification exécutable de ce que la fonction SQL doit faire.
  */
 export function lockState(failureTimes: readonly Date[], now: Date): LockState {
   const windowMs = LOCK_MINUTES * 60_000;

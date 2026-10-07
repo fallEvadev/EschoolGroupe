@@ -95,17 +95,13 @@ function describe(action: string, details: Json): string | null {
   }
   if (action === "attendance_reviewed") {
     const verdict = details.decision === "valide" ? "validé" : "refusé";
-    const comment =
-      typeof details.comment === "string" && details.comment
-        ? ` · Motif : ${details.comment}`
-        : "";
-    return `${details.formateur} · ${details.school} · ${formatDate(String(details.date))} · ${verdict}${comment}`;
+    return `${details.formateur} · ${details.school} · ${formatDate(String(details.date))} · ${verdict}`;
   }
   if (action === "program_published") {
     return `${formatMonthLabel(String(details.month))} · ${details.title}`;
   }
   if (action === "absence_excused") {
-    return `${details.formateur} · ${details.school} · ${formatDate(String(details.date))} · Motif : ${details.reason}`;
+    return `${details.formateur} · ${details.school} · ${formatDate(String(details.date))}`;
   }
   if (action === "excuse_cancelled") {
     return formatDate(String(details.date));

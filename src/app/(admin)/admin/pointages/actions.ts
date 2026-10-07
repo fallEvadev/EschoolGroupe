@@ -119,12 +119,13 @@ export async function reviewAttendance(
       action: "attendance_reviewed",
       entity: "attendances",
       entityId: attendanceId,
+      // Le commentaire reste dans `attendance_reviews` : le journal dit qui a
+      // décidé quoi, pas le contenu (il peut être sensible).
       details: {
         decision,
         date: attendance.attendance_date,
         formateur: names.formateur,
         school: names.school,
-        comment: comment || null,
       },
     });
     refresh();
@@ -200,11 +201,12 @@ export async function excuseAbsence(input: unknown): Promise<FollowUpResult> {
       action: "absence_excused",
       entity: "time_slots",
       entityId: slotId,
+      // Le motif (parfois médical) reste dans `absence_excuses`, jamais dans le
+      // journal d'audit.
       details: {
         date,
         formateur: names.formateur,
         school: names.school,
-        reason,
       },
     });
     refresh();
