@@ -67,6 +67,37 @@ export function formatSlot(
   return slot.label ? `${day} · ${range} (${slot.label})` : `${day} · ${range}`;
 }
 
+/** Un directeur partenaire à qui envoyer le code d'une école. */
+export type DirectorContact = {
+  id: string;
+  fullName: string;
+  /** Téléphone, ou `null` s'il n'est pas renseigné. */
+  phone: string | null;
+};
+
+/**
+ * Directeurs de chaque école, dans l'ordre alphabétique. Un rattachement dont
+ * la personne est inconnue (fiche inactive ou archivée) est ignoré.
+ */
+export function directorsBySchool(
+  links: readonly { schoolId: string; profileId: string }[],
+  people: ReadonlyMap<string, DirectorContact>,
+): Map<string, DirectorContact[]> {
+  const bySchool = new Map<string, DirectorContact[]>();
+  for (const link of links) {
+    const person = people.get(link.profileId);
+    if (!person) continue;
+    bySchool.set(link.schoolId, [
+      ...(bySchool.get(link.schoolId) ?? []),
+      person,
+    ]);
+  }
+  for (const list of bySchool.values()) {
+    list.sort((a, b) => a.fullName.localeCompare(b.fullName, "fr"));
+  }
+  return bySchool;
+}
+
 /** Lien qui ouvre la position dans une carte, pour vérifier les coordonnées. */
 export function mapsUrl(latitude: number, longitude: number): string {
   return `https://www.google.com/maps?q=${latitude},${longitude}`;

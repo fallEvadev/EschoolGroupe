@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { canAccessPath } from "@/lib/auth/roles";
 
 import {
+  directorsBySchool,
+  type DirectorContact,
   findOverlap,
   formatSlot,
   formatTime,
@@ -108,6 +110,48 @@ describe("formatSlot", () => {
         label: "Après-midi",
       }),
     ).toBe("Vendredi · 14:00–16:30 (Après-midi)");
+  });
+});
+
+describe("directorsBySchool", () => {
+  const awa: DirectorContact = {
+    id: "p1",
+    fullName: "Awa Diop",
+    phone: "771234567",
+  };
+  const moussa: DirectorContact = {
+    id: "p2",
+    fullName: "Moussa Ba",
+    phone: null,
+  };
+  const people = new Map<string, DirectorContact>([
+    [awa.id, awa],
+    [moussa.id, moussa],
+  ]);
+
+  it("regroupe les directeurs par école, dans l'ordre alphabétique", () => {
+    const result = directorsBySchool(
+      [
+        { schoolId: "s1", profileId: "p1" },
+        { schoolId: "s1", profileId: "p2" },
+        { schoolId: "s2", profileId: "p2" },
+      ],
+      people,
+    );
+    expect(result.get("s1")).toEqual([awa, moussa]);
+    expect(result.get("s2")).toEqual([moussa]);
+  });
+
+  it("ignore un rattachement dont la personne est inconnue", () => {
+    const result = directorsBySchool(
+      [{ schoolId: "s1", profileId: "inconnu" }],
+      people,
+    );
+    expect(result.has("s1")).toBe(false);
+  });
+
+  it("renvoie une table vide sans rattachement", () => {
+    expect(directorsBySchool([], people).size).toBe(0);
   });
 });
 

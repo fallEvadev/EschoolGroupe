@@ -1,4 +1,4 @@
-import { KeyRound } from "lucide-react";
+import { KeyRound, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatCode } from "@/lib/daily-codes";
 import { dakarIsoDate, formatLongDate } from "@/lib/dates";
+import { directorsBySchool, type DirectorContact } from "@/lib/schools";
+import { splitFullName } from "@/lib/staff";
 import { describeSupabaseError } from "@/lib/supabase/errors";
 import {
   createServerSupabase,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
+import { buildWhatsAppUrl, directorCodeMessage } from "@/lib/whatsapp";
 
-import { requirePedagogyManager } from "../ecoles/access";
+import { loadStaffDirectory, requirePedagogyManager } from "../ecoles/access";
 import { CodeActions, GenerateCodesButton } from "./codes-actions";
 
 export const metadata = { title: "Codes du jour · E-School Groupe" };
@@ -24,11 +27,18 @@ type SchoolCode = {
   name: string;
   address: string | null;
   code: string | null;
+  directors: DirectorContact[];
 };
 
-async function loadCodes(
-  today: string,
-): Promise<{ schools: SchoolCode[] } | { error: string }> {
+type Loaded =
+  | {
+      schools: SchoolCode[];
+      /** Message si l'annuaire des directeurs est indisponible, sinon `null`. */
+      directoryError: string | null;
+    }
+  | { error: string };
+
+async function loadCodes(today: string): Promise<Loaded> {
   if (!isSupabaseConfigured()) {
     return {
       error:
@@ -39,18 +49,24 @@ async function loadCodes(
   // codes à la Direction pédagogique et aux directeurs de l'école.
   const supabase = await createServerSupabase();
 
-  const [schoolsResult, codesResult] = await Promise.all([
-    supabase
-      .from("schools")
-      .select("id, name, address")
-      .eq("status", "actif")
-      .order("name"),
-    supabase
-      .from("daily_codes")
-      .select("school_id, code")
-      .eq("code_date", today)
-      .eq("status", "actif"),
-  ]);
+  const [schoolsResult, codesResult, linksResult, directory] =
+    await Promise.all([
+      supabase
+        .from("schools")
+        .select("id, name, address")
+        .eq("status", "actif")
+        .order("name"),
+      supabase
+        .from("daily_codes")
+        .select("school_id, code")
+        .eq("code_date", today)
+        .eq("status", "actif"),
+      supabase
+        .from("school_directors")
+        .select("school_id, profile_id")
+        .eq("status", "actif"),
+      loadStaffDirectory(supabase),
+    ]);
   if (schoolsResult.error) {
     return {
       error: describeSupabaseError("schools", schoolsResult.error).message,
@@ -62,15 +78,49 @@ async function loadCodes(
     };
   }
 
+  // Les directeurs sont un plus : si leur liste est indisponible, les codes
+  // restent utilisables (copie), sans les boutons d'envoi.
+  let directors = new Map<string, DirectorContact[]>();
+  let directoryError: string | null = null;
+  if ("error" in directory) {
+    directoryError = directory.error;
+  } else if (linksResult.error) {
+    directoryError = describeSupabaseError(
+      "school_directors",
+      linksResult.error,
+    ).message;
+  } else {
+    const people = new Map<string, DirectorContact>(
+      directory.staff
+        .filter(
+          (person) =>
+            person.role === "directeur_partenaire" && person.status === "actif",
+        )
+        .map((person) => [
+          person.id,
+          { id: person.id, fullName: person.fullName, phone: person.phone },
+        ]),
+    );
+    directors = directorsBySchool(
+      linksResult.data.map((link) => ({
+        schoolId: link.school_id,
+        profileId: link.profile_id,
+      })),
+      people,
+    );
+  }
+
   const codes = new Map(
     codesResult.data.map((row) => [row.school_id, row.code]),
   );
   return {
+    directoryError,
     schools: schoolsResult.data.map((school) => ({
       id: school.id,
       name: school.name,
       address: school.address,
       code: codes.get(school.id) ?? null,
+      directors: directors.get(school.id) ?? [],
     })),
   };
 }
@@ -78,6 +128,7 @@ async function loadCodes(
 export default async function CodesPage() {
   await requirePedagogyManager();
   const today = dakarIsoDate();
+  const dateLabel = formatLongDate(new Date());
   const loaded = await loadCodes(today);
 
   const missing =
@@ -92,9 +143,9 @@ export default async function CodesPage() {
         title="Codes du jour"
         description={
           <>
-            Codes de pointage de <strong>{formatLongDate(new Date())}</strong>,
-            un par école. Transmettez chaque code uniquement au directeur de
-            l&apos;école : il le donne aux formateurs présents.
+            Codes de pointage de <strong>{dateLabel}</strong>, un par école.
+            Envoyez chaque code uniquement au directeur de l&apos;école : il le
+            donne aux formateurs présents.
           </>
         }
         actions={
@@ -119,6 +170,13 @@ export default async function CodesPage() {
         </Card>
       ) : (
         <>
+          {loaded.directoryError && (
+            <p className="bg-warning-soft text-warning rounded-lg p-3 text-sm">
+              Les directeurs ne peuvent pas être listés :{" "}
+              {loaded.directoryError} Les codes restent utilisables, mais sans
+              les boutons d&apos;envoi.
+            </p>
+          )}
           <p className="text-muted-foreground text-sm tabular-nums">
             {loaded.schools.length - missing} / {loaded.schools.length} écoles
             ont un code aujourd&apos;hui.
@@ -160,6 +218,16 @@ export default async function CodesPage() {
                     schoolName={school.name}
                     code={school.code}
                   />
+
+                  {school.code && !loaded.directoryError && (
+                    <DirectorsSend
+                      schoolId={school.id}
+                      schoolName={school.name}
+                      code={school.code}
+                      dateLabel={dateLabel}
+                      directors={school.directors}
+                    />
+                  )}
                 </Card>
               </StaggerItem>
             ))}
@@ -167,5 +235,73 @@ export default async function CodesPage() {
         </>
       )}
     </main>
+  );
+}
+
+/** Boutons d'envoi du code aux directeurs de l'école (lien WhatsApp déjà rempli). */
+function DirectorsSend({
+  schoolId,
+  schoolName,
+  code,
+  dateLabel,
+  directors,
+}: {
+  schoolId: string;
+  schoolName: string;
+  code: string;
+  dateLabel: string;
+  directors: DirectorContact[];
+}) {
+  return (
+    <div className="flex flex-col gap-3 border-t pt-4">
+      <h3 className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
+        Envoyer au directeur
+      </h3>
+
+      {directors.length === 0 ? (
+        <p className="text-muted-foreground text-sm">
+          Aucun directeur n&apos;est rattaché à cette école.{" "}
+          <Link
+            href={`/admin/ecoles?ecole=${schoolId}`}
+            className="text-primary font-medium hover:underline"
+          >
+            Rattacher un directeur
+          </Link>
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {directors.map((director) => {
+            const firstName =
+              splitFullName(director.fullName).firstName || director.fullName;
+            const message = directorCodeMessage({
+              firstName,
+              schoolName,
+              dateLabel,
+              code: formatCode(code),
+            });
+            return (
+              <li key={director.id} className="flex flex-col gap-1">
+                <Button variant="whatsapp" asChild className="w-fit">
+                  <a
+                    href={buildWhatsAppUrl(director.phone, message)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageCircle aria-hidden />
+                    Envoyer à {director.fullName}
+                  </a>
+                </Button>
+                {!director.phone && (
+                  <p className="text-muted-foreground text-xs">
+                    Numéro non renseigné : choisissez le contact dans WhatsApp,
+                    ou ajoutez le numéro dans « Personnel ».
+                  </p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }

@@ -2,9 +2,61 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildWhatsAppUrl,
+  directorCodeMessage,
   invitationMessage,
   toWhatsAppNumber,
+  trainersCodeMessage,
 } from "./whatsapp";
+
+describe("directorCodeMessage", () => {
+  const text = directorCodeMessage({
+    firstName: "Moussa",
+    schoolName: "Campus Dakar-Plateau",
+    dateLabel: "mercredi 7 octobre",
+    code: "428 105",
+  });
+
+  it("contient le prénom, l'école, le jour et le code", () => {
+    expect(text).toContain("Bonjour Moussa,");
+    expect(text).toContain("Campus Dakar-Plateau");
+    expect(text).toContain("mercredi 7 octobre");
+    expect(text).toContain("428 105");
+  });
+
+  it("demande de ne le donner qu'aux formateurs présents", () => {
+    expect(text).toContain("formateurs présents");
+    expect(text).toContain("ne pas le diffuser");
+  });
+
+  it("devient un lien WhatsApp vers le directeur", () => {
+    const url = buildWhatsAppUrl("77 123 45 67", text);
+    expect(url.startsWith("https://wa.me/221771234567?text=")).toBe(true);
+    expect(decodeURIComponent(url.split("text=")[1] ?? "")).toBe(text);
+  });
+});
+
+describe("trainersCodeMessage", () => {
+  it("donne l'école, le jour, le code et sa durée de validité", () => {
+    const text = trainersCodeMessage({
+      schoolName: "Campus Dakar-Plateau",
+      dateLabel: "mercredi 7 octobre",
+      code: "428 105",
+    });
+    expect(text).toContain("Campus Dakar-Plateau");
+    expect(text).toContain("428 105");
+    expect(text).toContain("Valable aujourd'hui seulement.");
+  });
+
+  it("ne s'adresse à personne en particulier", () => {
+    expect(
+      trainersCodeMessage({
+        schoolName: "A",
+        dateLabel: "lundi 5 octobre",
+        code: "000 000",
+      }),
+    ).not.toContain("Bonjour");
+  });
+});
 
 describe("toWhatsAppNumber", () => {
   it.each([

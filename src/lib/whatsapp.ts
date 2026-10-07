@@ -25,6 +25,43 @@ export function buildWhatsAppUrl(phone: string | null, text: string): string {
     : `https://wa.me/?${query}`;
 }
 
+/** Message de la Direction pédagogique au directeur d'une école, avec le code du jour. */
+export function directorCodeMessage({
+  firstName,
+  schoolName,
+  dateLabel,
+  code,
+}: {
+  firstName: string;
+  schoolName: string;
+  /** Jour en toutes lettres, ex. « mercredi 7 octobre ». */
+  dateLabel: string;
+  /** Code déjà mis en forme pour la lecture, ex. « 428 105 ». */
+  code: string;
+}): string {
+  return [
+    `Bonjour ${firstName},`,
+    `Code de pointage du ${dateLabel} pour ${schoolName} : ${code}`,
+    "À donner uniquement aux formateurs présents aujourd'hui. Merci de ne pas le diffuser.",
+  ].join("\n");
+}
+
+/** Message du directeur aux formateurs de son école, avec le code du jour. */
+export function trainersCodeMessage({
+  schoolName,
+  dateLabel,
+  code,
+}: {
+  schoolName: string;
+  dateLabel: string;
+  code: string;
+}): string {
+  return [
+    `Code de pointage du ${dateLabel} pour ${schoolName} : ${code}`,
+    "Valable aujourd'hui seulement.",
+  ].join("\n");
+}
+
 /** Message d'invitation envoyé par WhatsApp. */
 export function invitationMessage({
   firstName,

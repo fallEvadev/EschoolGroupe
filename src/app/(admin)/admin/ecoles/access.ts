@@ -24,12 +24,16 @@ export async function requirePedagogyManager(): Promise<Role> {
   return role;
 }
 
-/** Une personne de l'annuaire minimal (nom, rôle, statut : rien d'autre). */
+/**
+ * Une personne de l'annuaire minimal : nom, rôle, statut, et le téléphone des
+ * directeurs partenaires seulement (pour leur envoyer le code du jour).
+ */
 export type StaffMember = {
   id: string;
   fullName: string;
   role: Role;
   status: string;
+  phone: string | null;
 };
 
 /**
@@ -50,7 +54,15 @@ export async function loadStaffDirectory(
     staff: data.flatMap((row) => {
       const role = parseRole(row.role);
       return role
-        ? [{ id: row.id, fullName: row.full_name, role, status: row.status }]
+        ? [
+            {
+              id: row.id,
+              fullName: row.full_name,
+              role,
+              status: row.status,
+              phone: row.phone ?? null,
+            },
+          ]
         : [];
     }),
   };
