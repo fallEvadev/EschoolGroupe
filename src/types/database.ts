@@ -39,6 +39,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      absence_excuses: {
+        Row: {
+          absence_date: string
+          created_at: string
+          created_by: string
+          id: string
+          profile_id: string
+          reason: string
+          slot_id: string
+          status: string
+        }
+        Insert: {
+          absence_date: string
+          created_at?: string
+          created_by: string
+          id?: string
+          profile_id: string
+          reason: string
+          slot_id: string
+          status?: string
+        }
+        Update: {
+          absence_date?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          profile_id?: string
+          reason?: string
+          slot_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "absence_excuses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "absence_excuses_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "time_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_attempts: {
         Row: {
           attempted_at: string
@@ -74,6 +122,41 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_reviews: {
+        Row: {
+          attendance_id: string
+          comment: string | null
+          decision: string
+          id: string
+          reviewed_at: string
+          reviewed_by: string
+        }
+        Insert: {
+          attendance_id: string
+          comment?: string | null
+          decision: string
+          id?: string
+          reviewed_at?: string
+          reviewed_by: string
+        }
+        Update: {
+          attendance_id?: string
+          comment?: string | null
+          decision?: string
+          id?: string
+          reviewed_at?: string
+          reviewed_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_reviews_attendance_id_fkey"
+            columns: ["attendance_id"]
+            isOneToOne: true
+            referencedRelation: "attendances"
             referencedColumns: ["id"]
           },
         ]
@@ -171,6 +254,44 @@ export type Database = {
           id?: never
         }
         Relationships: []
+      }
+      closed_days: {
+        Row: {
+          closed_date: string
+          created_at: string
+          created_by: string
+          id: string
+          reason: string
+          school_id: string | null
+          status: string
+        }
+        Insert: {
+          closed_date: string
+          created_at?: string
+          created_by: string
+          id?: string
+          reason: string
+          school_id?: string | null
+          status?: string
+        }
+        Update: {
+          closed_date?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          reason?: string
+          school_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "closed_days_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_codes: {
         Row: {
