@@ -168,7 +168,9 @@ export type Database = {
           distance_m: number | null
           id: string
           late_minutes: number
+          latitude: number | null
           location_result: string
+          longitude: number | null
           profile_id: string
           recorded_at: string
           school_id: string
@@ -181,7 +183,9 @@ export type Database = {
           distance_m?: number | null
           id?: string
           late_minutes?: number
+          latitude?: number | null
           location_result: string
+          longitude?: number | null
           profile_id: string
           recorded_at?: string
           school_id: string
@@ -194,7 +198,9 @@ export type Database = {
           distance_m?: number | null
           id?: string
           late_minutes?: number
+          latitude?: number | null
           location_result?: string
+          longitude?: number | null
           profile_id?: string
           recorded_at?: string
           school_id?: string
@@ -569,6 +575,10 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           name: string
+          position_accuracy_m: number | null
+          position_set_at: string | null
+          position_set_by: string | null
+          position_source: string | null
           radius_m: number
           status: string
           updated_at: string
@@ -582,6 +592,10 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name: string
+          position_accuracy_m?: number | null
+          position_set_at?: string | null
+          position_set_by?: string | null
+          position_source?: string | null
           radius_m?: number
           status?: string
           updated_at?: string
@@ -595,6 +609,10 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name?: string
+          position_accuracy_m?: number | null
+          position_set_at?: string | null
+          position_set_by?: string | null
+          position_source?: string | null
           radius_m?: number
           status?: string
           updated_at?: string
@@ -807,6 +825,15 @@ export type Database = {
           p_title: string
         }
         Returns: string
+      }
+      set_school_position: {
+        Args: {
+          p_accuracy_m: number
+          p_latitude: number
+          p_longitude: number
+          p_school_id: string
+        }
+        Returns: undefined
       }
       verify_attendance_code: {
         Args: {
