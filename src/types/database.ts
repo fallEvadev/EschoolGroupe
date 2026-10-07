@@ -394,6 +394,42 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_programs: {
+        Row: {
+          file_name: string
+          id: string
+          program_month: string
+          published_at: string
+          published_by: string
+          size_bytes: number
+          status: string
+          storage_path: string
+          title: string
+        }
+        Insert: {
+          file_name: string
+          id?: string
+          program_month: string
+          published_at?: string
+          published_by: string
+          size_bytes: number
+          status?: string
+          storage_path: string
+          title: string
+        }
+        Update: {
+          file_name?: string
+          id?: string
+          program_month?: string
+          published_at?: string
+          published_by?: string
+          size_bytes?: number
+          status?: string
+          storage_path?: string
+          title?: string
+        }
+        Relationships: []
+      }
       organization_settings: {
         Row: {
           academic_year: string
@@ -760,6 +796,16 @@ export type Database = {
       }
       replace_daily_code: {
         Args: { p_code: string; p_code_date: string; p_school_id: string }
+        Returns: string
+      }
+      replace_monthly_program: {
+        Args: {
+          p_file_name: string
+          p_month: string
+          p_size_bytes: number
+          p_storage_path: string
+          p_title: string
+        }
         Returns: string
       }
       pedagogy_staff_directory: {
