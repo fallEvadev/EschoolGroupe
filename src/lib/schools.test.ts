@@ -10,6 +10,7 @@ import {
   formatTime,
   isWeekday,
   mapsUrl,
+  parseCoordinatePair,
   slotsOverlap,
   timeToMinutes,
 } from "./schools";
@@ -152,6 +153,45 @@ describe("directorsBySchool", () => {
 
   it("renvoie une table vide sans rattachement", () => {
     expect(directorsBySchool([], people).size).toBe(0);
+  });
+});
+
+describe("parseCoordinatePair", () => {
+  it("sépare les coordonnées copiées depuis Google Maps", () => {
+    expect(parseCoordinatePair("14.692800, -17.446700")).toEqual({
+      latitude: "14.692800",
+      longitude: "-17.446700",
+    });
+    expect(parseCoordinatePair("  16.0326, -16.4818  ")).toEqual({
+      latitude: "16.0326",
+      longitude: "-16.4818",
+    });
+  });
+
+  it("accepte le point-virgule et la virgule décimale", () => {
+    expect(parseCoordinatePair("14,6928; -17,4467")).toEqual({
+      latitude: "14,6928",
+      longitude: "-17,4467",
+    });
+    expect(parseCoordinatePair("14.6928;-17.4467")).toEqual({
+      latitude: "14.6928",
+      longitude: "-17.4467",
+    });
+  });
+
+  it("ne coupe jamais un nombre à virgule décimale", () => {
+    expect(parseCoordinatePair("14,6928")).toBeNull();
+    expect(parseCoordinatePair("-17,4467")).toBeNull();
+  });
+
+  it.each([
+    "",
+    "14.6928",
+    "abc, def",
+    "14.6928, -17.4467, 5",
+    "14.6928 -17.4467",
+  ])("renvoie null pour « %s »", (text) => {
+    expect(parseCoordinatePair(text)).toBeNull();
   });
 });
 

@@ -98,6 +98,23 @@ export function directorsBySchool(
   return bySchool;
 }
 
+/**
+ * Coordonnées collées d'un seul bloc (« 14.6928, -17.4467 », format copié par
+ * Google Maps) : renvoie la latitude et la longitude séparées, sinon `null`.
+ * Le séparateur est un point-virgule, ou une virgule SUIVIE d'une espace : un
+ * nombre à virgule décimale (« 14,6928 ») n'est donc jamais coupé en deux.
+ */
+export function parseCoordinatePair(
+  text: string,
+): { latitude: string; longitude: string } | null {
+  const match =
+    /^\s*(-?\d{1,3}(?:[.,]\d+)?)\s*(?:;|,\s)\s*(-?\d{1,3}(?:[.,]\d+)?)\s*$/.exec(
+      text,
+    );
+  if (!match) return null;
+  return { latitude: match[1] ?? "", longitude: match[2] ?? "" };
+}
+
 /** Lien qui ouvre la position dans une carte, pour vérifier les coordonnées. */
 export function mapsUrl(latitude: number, longitude: number): string {
   return `https://www.google.com/maps?q=${latitude},${longitude}`;

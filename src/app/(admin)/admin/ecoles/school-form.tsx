@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LocateFixed } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -10,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { parseCoordinatePair } from "@/lib/schools";
 import {
   schoolSchema,
   type SchoolData,
@@ -59,7 +59,6 @@ function Field({
 export function SchoolForm({ schoolId, initial }: SchoolFormProps) {
   const router = useRouter();
   const [result, setResult] = useState<SchoolResult | null>(null);
-  const [locating, setLocating] = useState(false);
   const editing = schoolId !== undefined;
 
   const {
@@ -87,34 +86,17 @@ export function SchoolForm({ schoolId, initial }: SchoolFormProps) {
     }
   }
 
-  /** Relève la position du téléphone : à faire une fois sur place, devant l'école. */
-  function fillFromGps() {
-    if (!("geolocation" in navigator)) {
-      toast.error("Ce navigateur ne permet pas la géolocalisation.");
-      return;
-    }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const options = { shouldDirty: true, shouldValidate: true };
-        setValue("latitude", position.coords.latitude.toFixed(6), options);
-        setValue("longitude", position.coords.longitude.toFixed(6), options);
-        setLocating(false);
-        toast.success(
-          `Position relevée (précision d'environ ${Math.round(position.coords.accuracy)} m).`,
-        );
-      },
-      (error) => {
-        setLocating(false);
-        toast.error(
-          error.code === error.PERMISSION_DENIED
-            ? "Autorisez la localisation dans le navigateur pour relever la position."
-            : "Position indisponible. Réessayez à l'extérieur ou saisissez les coordonnées.",
-        );
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-    );
-  }
+  // Latitude : si l'administrateur colle « 14.6928, -17.4467 » (le format copié
+  // par Google Maps), les deux champs se remplissent d'un coup.
+  const latitudeField = register("latitude", {
+    onChange: (event: { target: { value: string } }) => {
+      const pair = parseCoordinatePair(event.target.value);
+      if (!pair) return;
+      const options = { shouldDirty: true, shouldValidate: true };
+      setValue("latitude", pair.latitude, options);
+      setValue("longitude", pair.longitude, options);
+    },
+  });
 
   const describedBy = (field: keyof SchoolFormValues) =>
     errors[field] ? `${field}-error` : undefined;
@@ -158,25 +140,31 @@ export function SchoolForm({ schoolId, initial }: SchoolFormProps) {
           Position pour le pointage
         </legend>
         <p className="text-muted-foreground text-sm">
-          Sans position, le pointage ne peut pas vérifier que le formateur est
-          bien à l&apos;école : ses pointages seront à vérifier.
+          Saisissez les coordonnées <strong>fixes</strong> de l&apos;école. Au
+          pointage, la position du téléphone du formateur est relevée
+          automatiquement et comparée à ces coordonnées. Sans coordonnées, le
+          pointage ne peut pas vérifier que le formateur est bien à l&apos;école
+          : ses pointages seront à vérifier.
         </p>
-        <div>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isSubmitting || locating}
-            onClick={fillFromGps}
+        <p className="text-muted-foreground text-sm">
+          Pour les trouver : ouvrez{" "}
+          <a
+            href="https://www.google.com/maps"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary font-medium hover:underline"
           >
-            <LocateFixed aria-hidden />
-            {locating ? "Localisation…" : "Utiliser ma position actuelle"}
-          </Button>
-        </div>
+            Google Maps
+          </a>
+          , faites un clic droit (ou un appui long) sur l&apos;école, puis
+          cliquez sur les chiffres qui s&apos;affichent pour les copier.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
             id="latitude"
             label="Latitude"
             error={errors.latitude?.message}
+            hint="Vous pouvez coller les deux nombres d'un coup ici : « 14.6928, -17.4467 »."
           >
             <Input
               id="latitude"
@@ -185,7 +173,7 @@ export function SchoolForm({ schoolId, initial }: SchoolFormProps) {
               disabled={isSubmitting}
               aria-invalid={!!errors.latitude}
               aria-describedby={describedBy("latitude")}
-              {...register("latitude")}
+              {...latitudeField}
             />
           </Field>
           <Field
