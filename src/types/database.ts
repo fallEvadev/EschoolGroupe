@@ -39,6 +39,109 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance_attempts: {
+        Row: {
+          attempted_at: string
+          id: number
+          profile_id: string
+          school_id: string
+          succeeded: boolean
+        }
+        Insert: {
+          attempted_at?: string
+          id?: never
+          profile_id: string
+          school_id: string
+          succeeded: boolean
+        }
+        Update: {
+          attempted_at?: string
+          id?: never
+          profile_id?: string
+          school_id?: string
+          succeeded?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_attempts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_attempts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendances: {
+        Row: {
+          accuracy_m: number | null
+          attendance_date: string
+          distance_m: number | null
+          id: string
+          late_minutes: number
+          location_result: string
+          profile_id: string
+          recorded_at: string
+          school_id: string
+          slot_id: string
+          status: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          attendance_date: string
+          distance_m?: number | null
+          id?: string
+          late_minutes?: number
+          location_result: string
+          profile_id: string
+          recorded_at?: string
+          school_id: string
+          slot_id: string
+          status: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          attendance_date?: string
+          distance_m?: number | null
+          id?: string
+          late_minutes?: number
+          location_result?: string
+          profile_id?: string
+          recorded_at?: string
+          school_id?: string
+          slot_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendances_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendances_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "time_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -543,6 +646,7 @@ export type Database = {
         Returns: {
           full_name: string
           id: string
+          phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           status: string
         }[]
