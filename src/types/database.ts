@@ -225,6 +225,126 @@ export type Database = {
         }
         Relationships: []
       }
+      school_directors: {
+        Row: {
+          created_at: string
+          profile_id: string
+          school_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          school_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          school_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_directors_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_directors_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          address: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          late_tolerance_minutes: number
+          latitude: number | null
+          longitude: number | null
+          name: string
+          radius_m: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          late_tolerance_minutes?: number
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          radius_m?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          late_tolerance_minutes?: number
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          radius_m?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      slot_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          slot_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          slot_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          slot_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slot_assignments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slot_assignments_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "time_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_documents: {
         Row: {
           created_at: string
@@ -319,16 +439,71 @@ export type Database = {
           },
         ]
       }
+      time_slots: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          label: string | null
+          school_id: string
+          starts_at: string
+          status: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          label?: string | null
+          school_id: string
+          starts_at: string
+          status?: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          label?: string | null
+          school_id?: string
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_slots_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       current_clerk_id: { Args: never; Returns: string }
+      current_profile_id: { Args: never; Returns: string }
       current_user_role: { Args: never; Returns: string }
+      is_pedagogy_manager: { Args: never; Returns: boolean }
       is_rh_manageable_role: {
         Args: { value: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
+      }
+      pedagogy_staff_directory: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          status: string
+        }[]
       }
     }
     Enums: {
