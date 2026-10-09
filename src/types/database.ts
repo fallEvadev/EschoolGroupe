@@ -337,6 +337,95 @@ export type Database = {
           },
         ]
       }
+      daily_reports: {
+        Row: {
+          attendance_id: string
+          classes: string
+          course_theme: string
+          created_at: string
+          equipment_issues: Json
+          equipment_ok: boolean
+          id: string
+          profile_id: string
+          report_date: string
+          review_comment: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          school_id: string
+          slot_id: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          attendance_id: string
+          classes?: string
+          course_theme?: string
+          created_at?: string
+          equipment_issues?: Json
+          equipment_ok?: boolean
+          id?: string
+          profile_id: string
+          report_date: string
+          review_comment?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id: string
+          slot_id: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attendance_id?: string
+          classes?: string
+          course_theme?: string
+          created_at?: string
+          equipment_issues?: Json
+          equipment_ok?: boolean
+          id?: string
+          profile_id?: string
+          report_date?: string
+          review_comment?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          school_id?: string
+          slot_id?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_reports_attendance_id_fkey"
+            columns: ["attendance_id"]
+            isOneToOne: true
+            referencedRelation: "attendances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_reports_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_reports_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_reports_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "time_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_acceptances: {
         Row: {
           accepted_at: string
@@ -528,6 +617,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      report_revisions: {
+        Row: {
+          author: string
+          comment: string | null
+          created_at: string
+          id: string
+          kind: string
+          report_id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          author: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          report_id: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          author?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          report_id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_revisions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       school_directors: {
         Row: {
@@ -825,6 +955,10 @@ export type Database = {
           p_title: string
         }
         Returns: string
+      }
+      submit_daily_report: {
+        Args: { p_report_id: string }
+        Returns: number
       }
       set_school_position: {
         Args: {
