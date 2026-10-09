@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import { useState } from "react";
 
 import { BrandCard } from "@/components/layout/brand";
+import { NotificationBell } from "@/components/layout/notification-bell";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { ROLE_LABELS, type Role } from "@/lib/auth/roles";
 import { ADMIN_NAV } from "@/lib/navigation";
+import { NOTIFICATIONS_PATH } from "@/lib/notifications";
 import { initials } from "@/lib/staff";
 
 export type AdminShellProps = {
@@ -25,6 +27,8 @@ export type AdminShellProps = {
   period: { academicYear: string; currentSemester: number } | null;
   /** Date du jour déjà formatée côté serveur (ex. « lundi 5 octobre »). */
   today: string;
+  /** Notifications non lues au chargement ; absent : pas de cloche (rôle non notifié). */
+  unreadCount?: number;
   children: React.ReactNode;
 };
 
@@ -38,6 +42,7 @@ export function AdminShell({
   organizationName,
   period,
   today,
+  unreadCount,
   children,
 }: AdminShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -104,6 +109,12 @@ export function AdminShell({
           </span>
 
           <div className="ml-auto flex items-center gap-4">
+            {unreadCount !== undefined && (
+              <NotificationBell
+                initialCount={unreadCount}
+                href={NOTIFICATIONS_PATH.admin}
+              />
+            )}
             {period && (
               <>
                 <div className="hidden text-right md:block">

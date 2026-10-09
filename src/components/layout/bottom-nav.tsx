@@ -5,7 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Brand } from "@/components/layout/brand";
+import { NotificationBell } from "@/components/layout/notification-bell";
 import { FORMATEUR_NAV, MAINTENANCE_NAV } from "@/lib/navigation";
+import { NOTIFICATIONS_PATH } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
 
 const MENUS = {
@@ -21,9 +23,12 @@ const MENUS = {
  */
 export function MobileShell({
   space,
+  unreadCount,
   children,
 }: {
   space: keyof typeof MENUS;
+  /** Notifications non lues au chargement ; absent : pas de cloche (espace sans notifications). */
+  unreadCount?: number;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -33,7 +38,15 @@ export function MobileShell({
     <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col">
       <header className="flex h-16 items-center justify-between px-4">
         <Brand className="text-navy" />
-        <UserButton />
+        <div className="flex items-center gap-2">
+          {unreadCount !== undefined && (
+            <NotificationBell
+              initialCount={unreadCount}
+              href={NOTIFICATIONS_PATH.formateur}
+            />
+          )}
+          <UserButton />
+        </div>
       </header>
 
       {/* pb-24 : laisse la place à la barre du bas */}
