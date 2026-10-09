@@ -178,7 +178,7 @@ export const FORMATEUR_NAV: NavItem[] = [
     href: "/formateur/cahiers",
     icon: NotebookPen,
     lot: 4,
-    available: false,
+    available: true,
   },
   {
     label: "Documents",

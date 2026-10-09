@@ -85,7 +85,10 @@ Rôles : `formateur`, `maintenancier`, `directeur_partenaire`, `admin_pedagogie`
 
 ## Avancement
 
-Lot en cours : **Lot 3 — Pointage** (mettre à jour cette ligne à chaque changement de lot).
+Lot en cours : **Lot 4 — Rapports journaliers** (mettre à jour cette ligne à chaque changement de lot).
+
+- Lot 4 — Rapports journaliers, découpage : 4.1 saisie par le formateur · 4.2 validation par la Direction (corrections, `report_revisions`) · 4.3 notifications (badge rafraîchi chaque minute) · 4.4 brouillon hors ligne (Dexie, nouvelle dépendance à valider). Décisions : classes en texte libre, pannes enregistrées avec le rapport (tickets au Lot 5).
+- 4.1 : terminée côté code, migration `20261008100000_daily_reports.sql` appliquée (`daily_reports`, `report_revisions`, fonction `submit_daily_report`). Un rapport par pointage ; un rapport validé est verrouillé par un déclencheur SQL ; le formateur ne modifie que brouillon ou « à modifier ». Pages `/formateur/cahiers` (liste des 30 derniers jours) et `/formateur/cahiers/[pointage]` (formulaire : classes, thème, matériel, pannes). Écriture avec le jeton du formateur (RLS), jamais la clé de service.
 
 - Lot 3 — Pointage, découpage : 3.1 écoles, directeurs, créneaux, affectations · 3.2 codes quotidiens · 3.3 pointage du formateur · 3.4 transmission aux directeurs (lien WhatsApp pré-rempli) · 3.5 suivi de la Direction · programme mensuel en PDF (petite étape à part). Décisions : pas de QR code, règlement publié par Admin RH + Super-Admin seulement.
 - 3.1 : terminée, migration `20261006140000_schools_slots.sql` appliquée. Page `/admin/ecoles` réservée à l'Admin Pédagogie et au Super-Admin.
