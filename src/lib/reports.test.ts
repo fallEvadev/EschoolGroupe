@@ -8,7 +8,7 @@ import {
   sortReportItems,
   type ReportListItem,
 } from "./reports";
-import { reportSchema } from "./validations/reports";
+import { reportSchema, reviewReportSchema } from "./validations/reports";
 
 const attendanceId = "5f0c2c1e-6c1f-4a43-9a5b-3d1b2f6e8a10";
 const base = {
@@ -88,6 +88,101 @@ describe("reportSchema", () => {
     }));
     expect(
       reportSchema.safeParse({ ...base, equipmentOk: false, issues }).success,
+    ).toBe(false);
+  });
+});
+
+describe("reviewReportSchema", () => {
+  const reportId = attendanceId;
+  const corrections = {
+    classes: "3e B",
+    courseTheme: "Les tableurs",
+    equipmentOk: true,
+    issues: [],
+  };
+
+  it("accepte une validation simple", () => {
+    expect(
+      reviewReportSchema.safeParse({
+        reportId,
+        decision: "valide",
+        comment: "",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("exige un commentaire pour demander une modification", () => {
+    const input = { reportId, decision: "a_modifier" };
+    expect(
+      reviewReportSchema.safeParse({ ...input, comment: "  " }).success,
+    ).toBe(false);
+    expect(
+      reviewReportSchema.safeParse({ ...input, comment: "Précisez la classe" })
+        .success,
+    ).toBe(true);
+  });
+
+  it("exige un contenu corrigé pour valider avec corrections", () => {
+    const input = {
+      reportId,
+      decision: "valide_avec_corrections",
+      comment: "",
+    };
+    expect(reviewReportSchema.safeParse(input).success).toBe(false);
+    expect(
+      reviewReportSchema.safeParse({ ...input, corrections }).success,
+    ).toBe(true);
+    expect(
+      reviewReportSchema.safeParse({
+        ...input,
+        corrections: { ...corrections, classes: "" },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("refuse un contenu corrigé pour les autres décisions", () => {
+    for (const decision of ["valide", "a_modifier"]) {
+      expect(
+        reviewReportSchema.safeParse({
+          reportId,
+          decision,
+          comment: "Précisez",
+          corrections,
+        }).success,
+      ).toBe(false);
+    }
+  });
+
+  it("garde la cohérence matériel / pannes dans les corrections", () => {
+    const input = {
+      reportId,
+      decision: "valide_avec_corrections",
+      comment: "",
+    };
+    expect(
+      reviewReportSchema.safeParse({
+        ...input,
+        corrections: { ...corrections, equipmentOk: false },
+      }).success,
+    ).toBe(false);
+    expect(
+      reviewReportSchema.safeParse({
+        ...input,
+        corrections: {
+          ...corrections,
+          issues: [{ equipment: "PC 1", description: "HS" }],
+        },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("refuse une décision inconnue", () => {
+    expect(
+      reviewReportSchema.safeParse({
+        reportId,
+        decision: "soumis",
+        comment: "",
+      }).success,
     ).toBe(false);
   });
 });

@@ -51,6 +51,14 @@ const ACTION_LABELS: Record<string, string> = {
   day_reopened: "Jour rouvert",
   program_published: "Programme publié",
   school_position_set: "Position d'école enregistrée",
+  report_submitted: "Rapport envoyé",
+  report_reviewed: "Rapport traité",
+};
+
+const REPORT_VERDICTS: Record<string, string> = {
+  valide: "validé",
+  valide_avec_corrections: "validé avec corrections",
+  a_modifier: "à modifier",
 };
 
 function roleLabel(value: Json | undefined): string {
@@ -96,6 +104,10 @@ function describe(action: string, details: Json): string | null {
   }
   if (action === "attendance_reviewed") {
     const verdict = details.decision === "valide" ? "validé" : "refusé";
+    return `${details.formateur} · ${details.school} · ${formatDate(String(details.date))} · ${verdict}`;
+  }
+  if (action === "report_reviewed") {
+    const verdict = REPORT_VERDICTS[String(details.decision)] ?? "traité";
     return `${details.formateur} · ${details.school} · ${formatDate(String(details.date))} · ${verdict}`;
   }
   if (action === "school_position_set") {

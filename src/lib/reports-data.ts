@@ -7,6 +7,7 @@ import {
   type ReportContent,
   type ReportListItem,
   type ReportStatus,
+  type ReviewItem,
 } from "@/lib/reports";
 import { dakarIsoDate, shiftIsoDate } from "@/lib/dates";
 import { describeSupabaseError } from "@/lib/supabase/errors";
@@ -108,6 +109,130 @@ export async function loadReportList(): Promise<
     }));
 
   return { items: sortReportItems(items) };
+}
+
+/** Combien de décisions récentes la Direction revoit sous les rapports à traiter. */
+const RECENT_DECISIONS = 30;
+const MAX_PENDING = 100;
+
+const REVIEW_COLUMNS =
+  "id, attendance_id, profile_id, school_id, slot_id, report_date, status, classes, course_theme, equipment_ok, equipment_issues, review_comment, submitted_at, reviewed_at";
+
+/**
+ * Rapports vus par la Direction pédagogique : ceux à traiter (envoyés, du plus
+ * ancien au plus récent) et les dernières décisions. Lu avec SON jeton : la RLS
+ * ne lui montre pas les brouillons. Les noms des formateurs viennent de
+ * l'annuaire minimal (la Direction ne lit pas `profiles`).
+ */
+export async function loadReviewQueue(): Promise<
+  { pending: ReviewItem[]; decided: ReviewItem[] } | { error: string }
+> {
+  if (!isSupabaseConfigured()) return { error: CONFIG_ERROR };
+  const supabase = await createServerSupabase();
+
+  const [pendingResult, decidedResult, directoryResult] = await Promise.all([
+    supabase
+      .from("daily_reports")
+      .select(REVIEW_COLUMNS)
+      .eq("status", "soumis")
+      .order("submitted_at", { ascending: true })
+      .limit(MAX_PENDING),
+    supabase
+      .from("daily_reports")
+      .select(REVIEW_COLUMNS)
+      .in("status", ["valide", "valide_avec_corrections", "a_modifier"])
+      .order("reviewed_at", { ascending: false })
+      .limit(RECENT_DECISIONS),
+    supabase.rpc("pedagogy_staff_directory"),
+  ]);
+  for (const [table, result] of [
+    ["daily_reports", pendingResult],
+    ["daily_reports", decidedResult],
+    ["pedagogy_staff_directory", directoryResult],
+  ] as const) {
+    if (result.error) {
+      return { error: describeSupabaseError(table, result.error).message };
+    }
+  }
+
+  const rows = [...(pendingResult.data ?? []), ...(decidedResult.data ?? [])];
+  if (rows.length === 0) return { pending: [], decided: [] };
+
+  const reportIds = rows.map((r) => r.id);
+  const slotIds = [...new Set(rows.map((r) => r.slot_id))];
+  const schoolIds = [...new Set(rows.map((r) => r.school_id))];
+  const [slotsResult, schoolsResult, revisionsResult] = await Promise.all([
+    supabase
+      .from("time_slots")
+      .select("id, starts_at, ends_at")
+      .in("id", slotIds),
+    supabase.from("schools").select("id, name").in("id", schoolIds),
+    supabase
+      .from("report_revisions")
+      .select("report_id, version, kind, created_at, comment")
+      .in("report_id", reportIds)
+      .order("version", { ascending: true }),
+  ]);
+  for (const [table, result] of [
+    ["time_slots", slotsResult],
+    ["schools", schoolsResult],
+    ["report_revisions", revisionsResult],
+  ] as const) {
+    if (result.error) {
+      return { error: describeSupabaseError(table, result.error).message };
+    }
+  }
+
+  const slots = new Map(
+    (slotsResult.data ?? []).map((s) => [s.id, s] as const),
+  );
+  const schools = new Map(
+    (schoolsResult.data ?? []).map((s) => [s.id, s.name] as const),
+  );
+  const people = new Map(
+    (directoryResult.data ?? []).map((p) => [p.id, p.full_name] as const),
+  );
+  const history = new Map<string, ReviewItem["history"]>();
+  for (const rev of revisionsResult.data ?? []) {
+    const list = history.get(rev.report_id) ?? [];
+    list.push({
+      version: rev.version,
+      kind: rev.kind,
+      createdAt: rev.created_at,
+      comment: rev.comment,
+    });
+    history.set(rev.report_id, list);
+  }
+
+  const toItem = (row: (typeof rows)[number]): ReviewItem[] =>
+    isReportStatus(row.status)
+      ? [
+          {
+            id: row.id,
+            date: row.report_date,
+            schoolName: schools.get(row.school_id) ?? "École",
+            formateurName: people.get(row.profile_id) ?? "Formateur",
+            startsAt: slots.get(row.slot_id)?.starts_at ?? "",
+            endsAt: slots.get(row.slot_id)?.ends_at ?? "",
+            status: row.status,
+            content: {
+              classes: row.classes,
+              courseTheme: row.course_theme,
+              equipmentOk: row.equipment_ok,
+              issues: parseIssues(row.equipment_issues),
+            },
+            submittedAt: row.submitted_at,
+            reviewComment: row.review_comment,
+            reviewedAt: row.reviewed_at,
+            history: history.get(row.id) ?? [],
+          },
+        ]
+      : [];
+
+  return {
+    pending: (pendingResult.data ?? []).flatMap(toItem),
+    decided: (decidedResult.data ?? []).flatMap(toItem),
+  };
 }
 
 /** Un rapport (ou son absence) pour un pointage, avec le contexte à afficher. */

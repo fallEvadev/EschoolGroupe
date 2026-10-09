@@ -111,8 +111,8 @@ export async function saveReport(input: unknown): Promise<ReportResult> {
       // Pas de texte libre dans l'audit : seulement l'identifiant du rapport.
       await writeAudit({
         actorId: caller.actorId,
-        action: "report.submit",
-        entity: "daily_report",
+        action: "report_submitted",
+        entity: "daily_reports",
         entityId: reportId,
         details: {},
       });

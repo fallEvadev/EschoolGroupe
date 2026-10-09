@@ -99,6 +99,36 @@ export function missingForSubmit(content: ReportContent): string | null {
   return null;
 }
 
+/** Types d'entrées de l'historique d'un rapport (même liste que la base). */
+export const REVISION_LABELS: Record<string, string> = {
+  soumission: "Envoyé par le formateur",
+  resoumission: "Renvoyé par le formateur",
+  correction: "Validé avec corrections",
+  validation: "Validé",
+  demande_modification: "Modification demandée",
+};
+
+/** Un rapport vu par la Direction. */
+export type ReviewItem = {
+  id: string;
+  date: string;
+  schoolName: string;
+  formateurName: string;
+  startsAt: string;
+  endsAt: string;
+  status: ReportStatus;
+  content: ReportContent;
+  submittedAt: string | null;
+  reviewComment: string | null;
+  reviewedAt: string | null;
+  history: {
+    version: number;
+    kind: string;
+    createdAt: string;
+    comment: string | null;
+  }[];
+};
+
 /** Ce qui apparaît dans la liste : un pointage et son rapport éventuel. */
 export type ReportListItem = {
   attendanceId: string;

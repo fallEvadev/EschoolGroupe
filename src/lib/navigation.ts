@@ -73,7 +73,7 @@ export const ADMIN_NAV: NavSection[] = [
         href: "/admin/rapports",
         icon: FileText,
         lot: 4,
-        available: false,
+        available: true,
         roles: ADMIN_PEDAGOGIE,
       },
       {
