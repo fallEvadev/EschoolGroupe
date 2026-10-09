@@ -956,6 +956,18 @@ export type Database = {
         }
         Returns: string
       }
+      review_daily_report: {
+        Args: {
+          p_classes?: string
+          p_comment?: string
+          p_course_theme?: string
+          p_decision: string
+          p_equipment_issues?: Json
+          p_equipment_ok?: boolean
+          p_report_id: string
+        }
+        Returns: number
+      }
       submit_daily_report: {
         Args: { p_report_id: string }
         Returns: number
