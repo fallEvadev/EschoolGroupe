@@ -533,6 +533,73 @@ export type Database = {
           },
         ]
       }
+      maintenance_tickets: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          equipment_label: string
+          id: string
+          machine_id: string | null
+          opened_at: string
+          resolution_note: string | null
+          resolved_at: string | null
+          school_id: string
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          equipment_label: string
+          id?: string
+          machine_id?: string | null
+          opened_at?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          school_id: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          equipment_label?: string
+          id?: string
+          machine_id?: string | null
+          opened_at?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          school_id?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_tickets_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_tickets_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_programs: {
         Row: {
           file_name: string
@@ -969,6 +1036,68 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_reports: {
+        Row: {
+          description: string
+          equipment_label: string
+          id: string
+          machine_id: string | null
+          report_id: string
+          reported_at: string
+          reported_by: string
+          ticket_id: string
+        }
+        Insert: {
+          description: string
+          equipment_label: string
+          id?: string
+          machine_id?: string | null
+          report_id: string
+          reported_at?: string
+          reported_by: string
+          ticket_id: string
+        }
+        Update: {
+          description?: string
+          equipment_label?: string
+          id?: string
+          machine_id?: string | null
+          report_id?: string
+          reported_at?: string
+          reported_by?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_reports_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_reports_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_reports_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_reports_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_tickets"
             referencedColumns: ["id"]
           },
         ]
