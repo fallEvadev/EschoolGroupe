@@ -100,6 +100,16 @@ describe("canAccessPath", () => {
     }
   });
 
+  it("ouvre /admin/notifications aux administrateurs notifiés seulement", () => {
+    for (const role of ROLES) {
+      expect(canAccessPath(role, "/admin/notifications")).toBe(
+        role === "admin_pedagogie" ||
+          role === "admin_maintenance" ||
+          role === "super_admin",
+      );
+    }
+  });
+
   it("laisse passer les pages sans restriction particulière", () => {
     expect(canAccessPath("admin_rh", "/admin")).toBe(true);
   });

@@ -11,6 +11,7 @@ import {
   createServerSupabase,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
+import { computeTicketStats, type TicketStats } from "@/lib/ticket-stats";
 import {
   canArchive,
   canAssign,
@@ -27,6 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { requireMaintenanceManager } from "../parc/access";
+import { StatsPanel } from "./stats-panel";
 import { TicketActions, type MaintenancierOption } from "./ticket-actions";
 
 export const metadata = { title: "Maintenance · E-School Groupe" };
@@ -72,12 +74,15 @@ async function loadTeam(
   return { names, maintenanciers };
 }
 
+type LoadedTickets = {
+  tickets: TicketItem[];
+  schools: { id: string; name: string }[];
+  stats: TicketStats;
+};
+
 async function loadTickets(
   supabase: Awaited<ReturnType<typeof createServerSupabase>>,
-): Promise<
-  | { tickets: TicketItem[]; schools: { id: string; name: string }[] }
-  | { error: string }
-> {
+): Promise<LoadedTickets | { error: string }> {
   const [ticketsResult, schoolsResult] = await Promise.all([
     supabase
       .from("maintenance_tickets")
@@ -121,6 +126,16 @@ async function loadTickets(
 
   const schoolNames = new Map(schoolsResult.data.map((s) => [s.id, s.name]));
   return {
+    // Calculées ici (hors composant) : le calcul dépend de l'heure courante.
+    stats: computeTicketStats(
+      ticketsResult.data.map((t) => ({
+        schoolId: t.school_id,
+        status: t.status,
+        openedAt: t.opened_at,
+        resolvedAt: t.resolved_at,
+      })),
+      new Date(),
+    ),
     schools: schoolsResult.data
       .map((s) => ({ id: s.id, name: s.name }))
       .sort((a, b) => a.name.localeCompare(b.name, "fr")),
@@ -216,7 +231,7 @@ async function TicketsContent({
   ecole,
   ticketId,
 }: {
-  loaded: { tickets: TicketItem[]; schools: { id: string; name: string }[] };
+  loaded: LoadedTickets;
   team: Team;
   filter: TicketFilter;
   ecole?: string;
@@ -234,6 +249,8 @@ async function TicketsContent({
 
   return (
     <div className="flex flex-col gap-4">
+      <StatsPanel stats={loaded.stats} schools={loaded.schools} />
+
       {/* Filtres : statut en liens, école en formulaire (fonctionne sans JavaScript) */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <nav aria-label="Filtrer par statut" className="flex flex-wrap gap-2">

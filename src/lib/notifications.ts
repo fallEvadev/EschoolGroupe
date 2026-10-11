@@ -2,17 +2,21 @@ import type { Role } from "@/lib/auth/roles";
 
 /**
  * Rôles qui reçoivent des notifications : le formateur (décisions sur ses
- * rapports) et la Direction pédagogique (nouveaux rapports à traiter).
+ * rapports), la Direction pédagogique (nouveaux rapports à traiter), le
+ * maintenancier (tickets affectés) et l'Admin Maintenance (nouvelles pannes).
  */
 export const NOTIFIED_ROLES: readonly Role[] = [
   "formateur",
+  "maintenancier",
   "admin_pedagogie",
+  "admin_maintenance",
   "super_admin",
 ];
 
 /** Page des notifications de chaque espace. */
 export const NOTIFICATIONS_PATH = {
   formateur: "/formateur/notifications",
+  maintenance: "/maintenance/notifications",
   admin: "/admin/notifications",
 } as const;
 

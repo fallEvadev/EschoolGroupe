@@ -86,7 +86,7 @@ const RESTRICTED_PATHS: { prefix: string; roles: readonly Role[] }[] = [
   },
   {
     prefix: "/admin/notifications",
-    roles: ["admin_pedagogie", "super_admin"],
+    roles: ["admin_pedagogie", "admin_maintenance", "super_admin"],
   },
 ];
 

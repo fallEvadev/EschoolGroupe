@@ -18,7 +18,8 @@ export default async function AdminLayout({
     getOrganizationSettings(),
   ]);
 
-  // Seule la Direction pédagogique reçoit des notifications (rapports envoyés).
+  // La Direction pédagogique (rapports envoyés) et l'Admin Maintenance (nouvelles
+  // pannes) reçoivent des notifications.
   const unreadCount = NOTIFIED_ROLES.includes(role)
     ? await countUnread()
     : undefined;

@@ -42,7 +42,7 @@ export function MobileShell({
           {unreadCount !== undefined && (
             <NotificationBell
               initialCount={unreadCount}
-              href={NOTIFICATIONS_PATH.formateur}
+              href={NOTIFICATIONS_PATH[space]}
             />
           )}
           <UserButton />

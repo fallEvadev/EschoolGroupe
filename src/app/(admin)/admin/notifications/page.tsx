@@ -1,22 +1,27 @@
+import { redirect } from "next/navigation";
+
 import { PageHeader } from "@/components/layout/page-header";
 import { NotificationList } from "@/components/notification-list";
 import { Card } from "@/components/ui/card";
 import { loadNotifications } from "@/lib/notifications-data";
 
-import { requirePedagogyManager } from "../ecoles/access";
+import { requireSpace } from "@/lib/auth/guards";
+import { NOTIFIED_ROLES } from "@/lib/notifications";
 
 export const metadata = { title: "Notifications · E-School Groupe" };
 
 export default async function AdminNotificationsPage() {
-  await requirePedagogyManager();
+  const role = await requireSpace("admin");
+  // Second verrou : seuls les rôles notifiés de l'espace admin (le premier est dans proxy.ts).
+  if (!NOTIFIED_ROLES.includes(role)) redirect("/non-autorise");
   const loaded = await loadNotifications();
 
   return (
     <main className="flex w-full flex-col gap-6 p-4 sm:p-8">
       <PageHeader
-        eyebrow="Pédagogie"
+        eyebrow="Administration"
         title="Notifications"
-        description="Les rapports envoyés par les formateurs, à traiter."
+        description="Les rapports à traiter et les nouvelles pannes à suivre."
       />
 
       {"error" in loaded ? (
