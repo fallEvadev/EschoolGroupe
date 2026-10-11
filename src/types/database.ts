@@ -1202,6 +1202,10 @@ export type Database = {
         }
         Returns: string
       }
+      resolve_ticket: {
+        Args: { p_note: string; p_ticket_id: string }
+        Returns: undefined
+      }
       review_daily_report: {
         Args: {
           p_classes?: string
@@ -1223,6 +1227,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      start_ticket: { Args: { p_ticket_id: string }; Returns: undefined }
       submit_daily_report: { Args: { p_report_id: string }; Returns: number }
       verify_attendance_code: {
         Args: {

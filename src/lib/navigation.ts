@@ -218,7 +218,7 @@ export const MAINTENANCE_NAV: NavItem[] = [
     href: "/maintenance/interventions",
     icon: Wrench,
     lot: 5,
-    available: false,
+    available: true,
   },
   {
     label: "Équipements",

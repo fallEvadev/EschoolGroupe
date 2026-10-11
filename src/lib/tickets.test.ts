@@ -10,6 +10,8 @@ import {
 import {
   archiveTicketSchema,
   assignTicketSchema,
+  resolveTicketSchema,
+  startTicketSchema,
 } from "@/lib/validations/tickets";
 
 const ID = "0b6f5d52-1d4c-4a45-8f1a-7c2e9a4d5b33";
@@ -99,5 +101,36 @@ describe("schémas de ticket", () => {
     expect(archiveTicketSchema.safeParse({ ticketId: "x" }).success).toBe(
       false,
     );
+  });
+});
+
+describe("travail du maintenancier", () => {
+  it("accepte un ticket valide pour la prise en charge", () => {
+    expect(startTicketSchema.safeParse({ ticketId: ID }).success).toBe(true);
+    expect(startTicketSchema.safeParse({ ticketId: "x" }).success).toBe(false);
+  });
+
+  it("exige une note d'intervention de 3 à 500 caractères", () => {
+    const base = { ticketId: ID };
+    expect(resolveTicketSchema.safeParse({ ...base, note: "  " }).success).toBe(
+      false,
+    );
+    expect(resolveTicketSchema.safeParse({ ...base, note: "ok" }).success).toBe(
+      false,
+    );
+    expect(
+      resolveTicketSchema.safeParse({ ...base, note: "Câble remplacé" })
+        .success,
+    ).toBe(true);
+    expect(
+      resolveTicketSchema.safeParse({ ...base, note: "x".repeat(501) }).success,
+    ).toBe(false);
+  });
+
+  it("nettoie les espaces autour de la note", () => {
+    expect(
+      resolveTicketSchema.parse({ ticketId: ID, note: "  Écran changé  " })
+        .note,
+    ).toBe("Écran changé");
   });
 });

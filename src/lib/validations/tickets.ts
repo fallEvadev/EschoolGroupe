@@ -10,4 +10,19 @@ export const archiveTicketSchema = z.object({
   ticketId: z.uuid("Ticket invalide."),
 });
 
+/** Prendre un ticket en charge (ouvert -> en cours). */
+export const startTicketSchema = z.object({
+  ticketId: z.uuid("Ticket invalide."),
+});
+
+/** Marquer un ticket résolu : la note d'intervention est obligatoire. */
+export const resolveTicketSchema = z.object({
+  ticketId: z.uuid("Ticket invalide."),
+  note: z
+    .string()
+    .trim()
+    .min(3, "Décrivez l'intervention (au moins 3 caractères).")
+    .max(500, "La note ne doit pas dépasser 500 caractères."),
+});
+
 export type TicketResult = { ok: boolean; message: string };
