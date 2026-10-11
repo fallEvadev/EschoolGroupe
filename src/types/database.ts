@@ -1169,6 +1169,15 @@ export type Database = {
           status: string
         }[]
       }
+      maintenance_team_directory: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          status: string
+        }[]
+      }
       pedagogy_staff_directory: {
         Args: never
         Returns: {
