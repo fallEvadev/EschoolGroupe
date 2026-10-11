@@ -1,5 +1,8 @@
+import { Download } from "lucide-react";
+
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   BILAN_KIND_LABELS,
@@ -213,6 +216,13 @@ export default async function BilansPage({
                 >
                   {BILAN_STATUS_LABELS[bilan.status] ?? bilan.status}
                 </Badge>
+                <Button variant="outline" size="sm" asChild>
+                  {/* Téléchargement d'un fichier : un lien classique, pas une page Next. */}
+                  <a href={`/admin/bilans/${bilan.id}/word`} download>
+                    <Download aria-hidden />
+                    Télécharger le Word
+                  </a>
+                </Button>
               </li>
             ))}
           </ul>
