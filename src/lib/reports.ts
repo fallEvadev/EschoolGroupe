@@ -44,8 +44,22 @@ export function isLocked(status: ReportStatus): boolean {
   return status === "valide" || status === "valide_avec_corrections";
 }
 
-/** Une panne signalée dans un rapport. */
-export type EquipmentIssue = { equipment: string; description: string };
+/**
+ * Une panne signalée dans un rapport. `machineId` désigne la machine de
+ * l'inventaire de l'école ; `null` pour « Autre équipement » (nom libre dans
+ * `equipment`). Pour une machine de l'inventaire, `equipment` garde son nom au
+ * moment du rapport, pour que l'historique reste lisible si elle est renommée.
+ */
+export type EquipmentIssue = {
+  machineId: string | null;
+  equipment: string;
+  description: string;
+};
+
+/** Une ligne de panne vide, pour « Ajouter une panne ». */
+export function emptyIssue(): EquipmentIssue {
+  return { machineId: null, equipment: "", description: "" };
+}
 
 /** Contenu saisi par le formateur. */
 export type ReportContent = {
@@ -79,7 +93,12 @@ export function parseIssues(value: Json): EquipmentIssue[] {
       typeof item.equipment === "string" &&
       typeof item.description === "string"
     ) {
-      issues.push({ equipment: item.equipment, description: item.description });
+      issues.push({
+        // Les rapports d'avant le Lot 5 n'ont pas de machine : `null`.
+        machineId: typeof item.machineId === "string" ? item.machineId : null,
+        equipment: item.equipment,
+        description: item.description,
+      });
     }
   }
   return issues;

@@ -17,7 +17,9 @@ const content: ReportContent = {
   classes: "3e A",
   courseTheme: "Les tableurs",
   equipmentOk: false,
-  issues: [{ equipment: "PC 4", description: "Ne démarre plus" }],
+  issues: [
+    { machineId: "m-1", equipment: "PC 4", description: "Ne démarre plus" },
+  ],
 };
 
 function draft(patch: Partial<ReportDraft> = {}): ReportDraft {
@@ -44,9 +46,32 @@ describe("sameContent", () => {
   it("voit une différence dans les pannes", () => {
     const other = {
       ...content,
-      issues: [{ equipment: "PC 5", description: "Ne démarre plus" }],
+      issues: [
+        { machineId: "m-2", equipment: "PC 5", description: "Ne démarre plus" },
+      ],
     };
     expect(sameContent(content, other)).toBe(false);
+  });
+
+  it("voit une différence de machine à nom identique", () => {
+    const other = {
+      ...content,
+      issues: [{ ...content.issues[0], machineId: null }],
+    };
+    expect(sameContent(content, other)).toBe(false);
+  });
+
+  it("lit un ancien brouillon sans machineId comme « aucune machine »", () => {
+    const old = {
+      ...content,
+      // Brouillon écrit avant le Lot 5 : la clé machineId n'existe pas.
+      issues: [{ equipment: "PC 4", description: "Ne démarre plus" }],
+    } as unknown as ReportContent;
+    const withNull = {
+      ...content,
+      issues: [{ ...content.issues[0], machineId: null }],
+    };
+    expect(sameContent(old, withNull)).toBe(true);
   });
 });
 

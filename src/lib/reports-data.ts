@@ -10,6 +10,7 @@ import {
   type ReviewItem,
 } from "@/lib/reports";
 import { dakarIsoDate, shiftIsoDate } from "@/lib/dates";
+import { sortMachines } from "@/lib/machines";
 import { describeSupabaseError } from "@/lib/supabase/errors";
 import {
   createServerSupabase,
@@ -250,6 +251,8 @@ export type ReportDetail = {
     content: ReportContent;
     reviewComment: string | null;
   } | null;
+  /** Machines actives de l'école, proposées pour signaler une panne. */
+  machines: { id: string; label: string }[];
 };
 
 /**
@@ -276,7 +279,7 @@ export async function loadReportDetail(
   const attendance = attendanceResult.data;
   if (!attendance) return null;
 
-  const [slotResult, schoolResult, reportResult, reviewResult] =
+  const [slotResult, schoolResult, reportResult, reviewResult, machinesResult] =
     await Promise.all([
       supabase
         .from("time_slots")
@@ -300,12 +303,20 @@ export async function loadReportDetail(
         .select("decision")
         .eq("attendance_id", attendanceId)
         .maybeSingle(),
+      // Inventaire de l'école : la RLS ne montre que celles où le formateur a un créneau.
+      supabase
+        .from("machines")
+        .select("id, label, status")
+        .eq("school_id", attendance.school_id)
+        .eq("status", "actif")
+        .limit(500),
     ]);
   for (const [table, result] of [
     ["time_slots", slotResult],
     ["schools", schoolResult],
     ["daily_reports", reportResult],
     ["attendance_reviews", reviewResult],
+    ["machines", machinesResult],
   ] as const) {
     if (result.error) {
       return { error: describeSupabaseError(table, result.error).message };
@@ -320,6 +331,10 @@ export async function loadReportDetail(
     startsAt: slotResult.data?.starts_at ?? "",
     endsAt: slotResult.data?.ends_at ?? "",
     refused: reviewResult.data?.decision === "refuse",
+    machines: sortMachines(machinesResult.data ?? []).map((m) => ({
+      id: m.id,
+      label: m.label,
+    })),
     report:
       row && isReportStatus(row.status)
         ? {

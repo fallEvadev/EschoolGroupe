@@ -6,7 +6,11 @@ import { requireActionRole } from "@/lib/auth/action-guard";
 import { writeAudit } from "@/lib/audit";
 import { isReportStatus, isEditable } from "@/lib/reports";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { reportSchema, type ReportResult } from "@/lib/validations/reports";
+import {
+  reportSchema,
+  type ReportData,
+  type ReportResult,
+} from "@/lib/validations/reports";
 
 /** Code PostgreSQL d'une valeur en double (ici : un rapport existe déjà). */
 const UNIQUE_VIOLATION = "23505";
@@ -57,11 +61,21 @@ export async function saveReport(input: unknown): Promise<ReportResult> {
     }
     if (!attendance) return fail("Pointage introuvable.");
 
+    // Les machines choisies doivent être des machines ACTIVES de l'école du
+    // pointage. Le nom enregistré est celui de la base, jamais celui du
+    // navigateur : on ne peut pas falsifier le lien.
+    const resolved = await resolveIssues(
+      supabase,
+      attendance.school_id,
+      data.issues,
+    );
+    if (!resolved.ok) return fail(resolved.message);
+
     const fields = {
       classes: data.classes,
       course_theme: data.courseTheme,
       equipment_ok: data.equipmentOk,
-      equipment_issues: data.issues,
+      equipment_issues: resolved.issues,
     };
 
     const { data: existing, error: existingError } = await supabase
@@ -131,6 +145,49 @@ export async function saveReport(input: unknown): Promise<ReportResult> {
     console.error("saveReport :", error);
     return ERREUR_GENERIQUE;
   }
+}
+
+type Issue = ReportData["issues"][number];
+
+/**
+ * Remplace le nom de chaque machine de l'inventaire par son vrai nom en base, et
+ * refuse une machine inconnue, archivée ou d'une autre école.
+ */
+async function resolveIssues(
+  supabase: Awaited<ReturnType<typeof createServerSupabase>>,
+  schoolId: string,
+  issues: Issue[],
+): Promise<{ ok: true; issues: Issue[] } | { ok: false; message: string }> {
+  const ids = issues.flatMap((i) => (i.machineId ? [i.machineId] : []));
+  if (ids.length === 0) return { ok: true, issues };
+
+  const { data, error } = await supabase
+    .from("machines")
+    .select("id, label")
+    .in("id", ids)
+    .eq("school_id", schoolId)
+    .eq("status", "actif");
+  if (error) {
+    console.error("machines :", error.message);
+    return { ok: false, message: ERREUR_GENERIQUE.message };
+  }
+  const labels = new Map(data.map((m) => [m.id, m.label]));
+  if (ids.some((id) => !labels.has(id))) {
+    return {
+      ok: false,
+      message:
+        "Une machine choisie n'existe plus dans le parc de cette école. Rechargez la page.",
+    };
+  }
+  return {
+    ok: true,
+    issues: issues.map((issue) => ({
+      ...issue,
+      equipment: issue.machineId
+        ? (labels.get(issue.machineId) ?? issue.equipment)
+        : issue.equipment,
+    })),
+  };
 }
 
 /** Traduit une erreur d'écriture de la base en message clair pour le formateur. */

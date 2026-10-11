@@ -77,6 +77,7 @@ export default async function ReportPage({
           <ReportForm
             attendanceId={detail.attendanceId}
             initial={report?.content ?? EMPTY_CONTENT}
+            machines={detail.machines}
           />
         ) : report ? (
           <ReadOnlyReport

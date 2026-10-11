@@ -232,7 +232,7 @@ describe("parseIssues", () => {
         "x",
         null,
       ]),
-    ).toEqual([{ equipment: "PC 1", description: "HS" }]);
+    ).toEqual([{ machineId: null, equipment: "PC 1", description: "HS" }]);
     expect(parseIssues("x")).toEqual([]);
   });
 });
@@ -264,6 +264,81 @@ describe("sortReportItems", () => {
       "2026-10-04",
       "2026-10-08",
       "2026-10-07",
+    ]);
+  });
+});
+
+describe("pannes liées à une machine de l'inventaire", () => {
+  const machineA = "0b6f5d52-1d4c-4a45-8f1a-7c2e9a4d5b33";
+  const machineB = "7d2a9c10-5e3b-4f8a-b1c4-9e6f0a2d3c55";
+  const issue = (machineId: string | null, equipment = "") => ({
+    machineId,
+    equipment,
+    description: "Ne démarre plus",
+  });
+  const withIssues = (issues: unknown[]) => ({
+    ...base,
+    equipmentOk: false,
+    issues,
+  });
+
+  it("accepte une machine de l'inventaire sans nom saisi", () => {
+    expect(reportSchema.safeParse(withIssues([issue(machineA)])).success).toBe(
+      true,
+    );
+  });
+
+  it("exige un nom pour « Autre équipement »", () => {
+    expect(reportSchema.safeParse(withIssues([issue(null)])).success).toBe(
+      false,
+    );
+    expect(
+      reportSchema.safeParse(withIssues([issue(null, "Routeur")])).success,
+    ).toBe(true);
+  });
+
+  it("traite une panne sans machineId (ancien format) comme « Autre »", () => {
+    const parsed = reportSchema.parse(
+      withIssues([{ equipment: "PC 4", description: "Ne démarre plus" }]),
+    );
+    expect(parsed.issues[0]?.machineId).toBeNull();
+  });
+
+  it("refuse un identifiant de machine invalide", () => {
+    expect(
+      reportSchema.safeParse(withIssues([issue("pas-un-uuid", "PC 4")]))
+        .success,
+    ).toBe(false);
+  });
+
+  it("refuse la même machine signalée deux fois", () => {
+    expect(
+      reportSchema.safeParse(withIssues([issue(machineA), issue(machineA)]))
+        .success,
+    ).toBe(false);
+    expect(
+      reportSchema.safeParse(withIssues([issue(machineA), issue(machineB)]))
+        .success,
+    ).toBe(true);
+  });
+
+  it("autorise plusieurs « Autre équipement »", () => {
+    expect(
+      reportSchema.safeParse(
+        withIssues([issue(null, "Routeur"), issue(null, "Prise")]),
+      ).success,
+    ).toBe(true);
+  });
+
+  it("garde le machineId en relisant le JSON de la base", () => {
+    expect(
+      parseIssues([
+        { machineId: machineA, equipment: "PC 4", description: "HS" },
+        { equipment: "Ancien", description: "HS" },
+      ]),
+    ).toEqual([
+      { machineId: machineA, equipment: "PC 4", description: "HS" },
+      { machineId: null, equipment: "Ancien", description: "HS" },
     ]);
   });
 });

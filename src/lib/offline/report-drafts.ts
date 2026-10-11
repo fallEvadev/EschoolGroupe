@@ -24,6 +24,8 @@ function normalize(content: ReportContent) {
     courseTheme: content.courseTheme.trim(),
     equipmentOk: content.equipmentOk,
     issues: content.issues.map((issue) => ({
+      // Un brouillon d'avant le Lot 5 n'a pas de machineId : on lit « aucune ».
+      machineId: issue.machineId ?? null,
       equipment: issue.equipment.trim(),
       description: issue.description.trim(),
     })),

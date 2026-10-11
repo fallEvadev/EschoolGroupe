@@ -2,18 +2,39 @@ import { z } from "zod";
 
 import { MAX_ISSUES } from "@/lib/reports";
 
-const issueSchema = z.object({
-  equipment: z
-    .string()
-    .trim()
-    .min(2, "Nommez l'équipement en panne (au moins 2 caractères).")
-    .max(80, "Le nom de l'équipement ne doit pas dépasser 80 caractères."),
-  description: z
-    .string()
-    .trim()
-    .min(3, "Décrivez la panne (au moins 3 caractères).")
-    .max(300, "La description ne doit pas dépasser 300 caractères."),
-});
+const issueSchema = z
+  .object({
+    // Machine de l'inventaire, ou `null`/absent pour « Autre équipement ».
+    machineId: z
+      .uuid("Machine invalide.")
+      .nullish()
+      .transform((value) => value ?? null),
+    equipment: z
+      .string()
+      .trim()
+      .max(80, "Le nom de l'équipement ne doit pas dépasser 80 caractères."),
+    description: z
+      .string()
+      .trim()
+      .min(3, "Décrivez la panne (au moins 3 caractères).")
+      .max(300, "La description ne doit pas dépasser 300 caractères."),
+  })
+  .superRefine((issue, ctx) => {
+    // Une machine de l'inventaire a déjà son nom ; sinon le nom libre est requis.
+    if (issue.machineId === null && issue.equipment.length < 2) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["equipment"],
+        message: "Nommez l'équipement en panne (au moins 2 caractères).",
+      });
+    }
+  });
+
+/** Vrai si une même machine de l'inventaire est signalée deux fois. */
+function hasDuplicateMachine(issues: { machineId: string | null }[]): boolean {
+  const ids = issues.flatMap((i) => (i.machineId ? [i.machineId] : []));
+  return new Set(ids).size !== ids.length;
+}
 
 /**
  * Contenu du rapport. Pour un brouillon, les champs texte peuvent rester vides ;
@@ -51,6 +72,13 @@ export const reportSchema = z
         code: "custom",
         path: ["issues"],
         message: "Ajoutez au moins une panne.",
+      });
+    }
+    if (hasDuplicateMachine(value.issues)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["issues"],
+        message: "Une même machine ne peut être signalée qu'une fois.",
       });
     }
     if (!value.submit) return;
@@ -149,6 +177,13 @@ export const reviewReportSchema = z
         code: "custom",
         path: ["corrections", "issues"],
         message: "Ajoutez au moins une panne.",
+      });
+    }
+    if (c && hasDuplicateMachine(c.issues)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["corrections", "issues"],
+        message: "Une même machine ne peut être signalée qu'une fois.",
       });
     }
   });

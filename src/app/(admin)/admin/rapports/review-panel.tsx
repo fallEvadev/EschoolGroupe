@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MAX_ISSUES, type ReportContent } from "@/lib/reports";
+import { emptyIssue, MAX_ISSUES, type ReportContent } from "@/lib/reports";
 import type { ReviewDecision } from "@/lib/validations/reports";
 
 import { reviewReport } from "./actions";
@@ -116,9 +116,7 @@ export function ReviewPanel({
                     ...draft,
                     equipmentOk: false,
                     issues:
-                      draft.issues.length > 0
-                        ? draft.issues
-                        : [{ equipment: "", description: "" }],
+                      draft.issues.length > 0 ? draft.issues : [emptyIssue()],
                   })
                 }
               >
@@ -138,7 +136,11 @@ export function ReviewPanel({
                     placeholder="Équipement"
                     disabled={busy}
                     onChange={(e) =>
-                      updateIssue(index, { equipment: e.target.value })
+                      // Nom modifié à la main : le lien avec la machine ne vaut plus.
+                      updateIssue(index, {
+                        equipment: e.target.value,
+                        machineId: null,
+                      })
                     }
                   />
                   <Textarea
@@ -185,10 +187,7 @@ export function ReviewPanel({
                   onClick={() =>
                     setDraft({
                       ...draft,
-                      issues: [
-                        ...draft.issues,
-                        { equipment: "", description: "" },
-                      ],
+                      issues: [...draft.issues, emptyIssue()],
                     })
                   }
                 >
