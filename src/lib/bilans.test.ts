@@ -106,6 +106,31 @@ describe("summarizeGeneration", () => {
   });
 });
 
+describe("summarizeGeneration et PDF détaché", () => {
+  it("signale les bilans dont le PDF est à redéposer", () => {
+    expect(
+      summarizeGeneration([
+        { outcome: "actualise", pdfReset: true },
+        { outcome: "actualise", pdfReset: false },
+      ]),
+    ).toBe(
+      "Bilans : 2 actualisés. Des rapports ont été ajoutés : le PDF de 1 bilan est à redéposer.",
+    );
+    expect(
+      summarizeGeneration([
+        { outcome: "actualise", pdfReset: true },
+        { outcome: "cree", pdfReset: true },
+      ]),
+    ).toContain("le PDF de 2 bilans est à redéposer");
+  });
+
+  it("ne dit rien quand aucun PDF n'est détaché", () => {
+    expect(summarizeGeneration([{ outcome: "cree", pdfReset: false }])).toBe(
+      "Bilans : 1 créé.",
+    );
+  });
+});
+
 describe("generateBilansSchema", () => {
   it("calcule le début de période côté serveur", () => {
     expect(

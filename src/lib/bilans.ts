@@ -82,7 +82,9 @@ export function periodLabel(kind: BilanKind, start: string): string {
 }
 
 /** Phrase de résultat après « Générer » : combien de bilans créés, actualisés, ignorés. */
-export function summarizeGeneration(outcomes: { outcome: string }[]): string {
+export function summarizeGeneration(
+  outcomes: { outcome: string; pdfReset?: boolean }[],
+): string {
   if (outcomes.length === 0) {
     return "Aucun rapport validé sur cette période : aucun bilan à générer.";
   }
@@ -99,5 +101,9 @@ export function summarizeGeneration(outcomes: { outcome: string }[]): string {
       `${ignored} déjà publié${ignored > 1 ? "s" : ""} (inchangé${ignored > 1 ? "s" : ""})`,
     );
   }
-  return `Bilans : ${parts.join(", ")}.`;
+  const reset = outcomes.filter((o) => o.pdfReset).length;
+  const base = `Bilans : ${parts.join(", ")}.`;
+  return reset > 0
+    ? `${base} Des rapports ont été ajoutés : le PDF de ${reset} bilan${reset > 1 ? "s" : ""} est à redéposer.`
+    : base;
 }

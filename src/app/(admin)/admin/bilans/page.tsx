@@ -1,13 +1,8 @@
-import { Download } from "lucide-react";
-
 import { PageHeader } from "@/components/layout/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   BILAN_KIND_LABELS,
   BILAN_KINDS,
-  BILAN_STATUS_LABELS,
   defaultPeriodStart,
   isBilanKind,
   periodInputValue,
@@ -23,23 +18,16 @@ import {
 } from "@/lib/supabase/server";
 
 import { requirePedagogyManager } from "../ecoles/access";
+import { BilanRow, type BilanRowData } from "./bilan-row";
 import { GenerateButton } from "./generate-button";
 
 export const metadata = { title: "Bilans · E-School Groupe" };
-
-type BilanRow = {
-  id: string;
-  schoolName: string;
-  status: string;
-  reportCount: number;
-  generatedAt: string;
-};
 
 /** Bilans d'une période et nombre de rapports de chacun. Lus avec le jeton de l'utilisateur (RLS). */
 async function loadBilans(
   kind: BilanKind,
   periodStart: string,
-): Promise<{ bilans: BilanRow[] } | { error: string }> {
+): Promise<{ bilans: BilanRowData[] } | { error: string }> {
   if (!isSupabaseConfigured()) {
     return {
       error:
@@ -49,7 +37,9 @@ async function loadBilans(
   const supabase = await createServerSupabase();
   const { data, error } = await supabase
     .from("bilans")
-    .select("id, school_id, status, generated_at")
+    .select(
+      "id, school_id, status, generated_at, published_at, pdf_file_name, pdf_size_bytes",
+    )
     .eq("period_kind", kind)
     .eq("period_start", periodStart)
     .limit(500);
@@ -93,6 +83,14 @@ async function loadBilans(
         status: b.status,
         reportCount: counts.get(b.id) ?? 0,
         generatedAt: b.generated_at,
+        dateLabel:
+          b.status === "publie" && b.published_at
+            ? `publié le ${formatDate(b.published_at)}`
+            : `généré le ${formatDate(b.generated_at)}`,
+        pdf:
+          b.pdf_file_name && b.pdf_size_bytes
+            ? { fileName: b.pdf_file_name, sizeBytes: b.pdf_size_bytes }
+            : null,
       }))
       .sort((a, b) => a.schoolName.localeCompare(b.schoolName, "fr")),
   };
@@ -196,34 +194,7 @@ export default async function BilansPage({
         ) : (
           <ul className="divide-border divide-y rounded-xl border">
             {loaded.bilans.map((bilan) => (
-              <li
-                key={bilan.id}
-                className="flex flex-wrap items-center gap-3 p-3 sm:p-4"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold break-words">
-                    {bilan.schoolName}
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    {bilan.reportCount} rapport
-                    {bilan.reportCount > 1 ? "s" : ""} validé
-                    {bilan.reportCount > 1 ? "s" : ""} · généré le{" "}
-                    {formatDate(bilan.generatedAt)}
-                  </p>
-                </div>
-                <Badge
-                  variant={bilan.status === "publie" ? "success" : "neutral"}
-                >
-                  {BILAN_STATUS_LABELS[bilan.status] ?? bilan.status}
-                </Badge>
-                <Button variant="outline" size="sm" asChild>
-                  {/* Téléchargement d'un fichier : un lien classique, pas une page Next. */}
-                  <a href={`/admin/bilans/${bilan.id}/word`} download>
-                    <Download aria-hidden />
-                    Télécharger le Word
-                  </a>
-                </Button>
-              </li>
+              <BilanRow key={bilan.id} bilan={bilan} />
             ))}
           </ul>
         )}

@@ -300,9 +300,15 @@ export type Database = {
           generated_at: string
           generated_by: string | null
           id: string
+          pdf_file_name: string | null
+          pdf_path: string | null
+          pdf_size_bytes: number | null
+          pdf_uploaded_at: string | null
           period_end: string
           period_kind: string
           period_start: string
+          published_at: string | null
+          published_by: string | null
           school_id: string
           status: string
           updated_at: string
@@ -312,9 +318,15 @@ export type Database = {
           generated_at?: string
           generated_by?: string | null
           id?: string
+          pdf_file_name?: string | null
+          pdf_path?: string | null
+          pdf_size_bytes?: number | null
+          pdf_uploaded_at?: string | null
           period_end: string
           period_kind: string
           period_start: string
+          published_at?: string | null
+          published_by?: string | null
           school_id: string
           status?: string
           updated_at?: string
@@ -324,9 +336,15 @@ export type Database = {
           generated_at?: string
           generated_by?: string | null
           id?: string
+          pdf_file_name?: string | null
+          pdf_path?: string | null
+          pdf_size_bytes?: number | null
+          pdf_uploaded_at?: string | null
           period_end?: string
           period_kind?: string
           period_start?: string
+          published_at?: string | null
+          published_by?: string | null
           school_id?: string
           status?: string
           updated_at?: string
@@ -1237,6 +1255,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      attach_bilan_pdf: {
+        Args: {
+          p_bilan_id: string
+          p_file_name: string
+          p_path: string
+          p_size: number
+        }
+        Returns: undefined
+      }
       current_clerk_id: { Args: never; Returns: string }
       current_profile_id: { Args: never; Returns: string }
       current_user_role: { Args: never; Returns: string }
@@ -1245,6 +1272,7 @@ export type Database = {
         Returns: {
           out_bilan_id: string
           out_outcome: string
+          out_pdf_reset: boolean
           out_report_count: number
           out_school_id: string
         }[]
@@ -1287,6 +1315,7 @@ export type Database = {
           status: string
         }[]
       }
+      publish_bilan: { Args: { p_bilan_id: string }; Returns: undefined }
       replace_daily_code: {
         Args: { p_code: string; p_code_date: string; p_school_id: string }
         Returns: string
