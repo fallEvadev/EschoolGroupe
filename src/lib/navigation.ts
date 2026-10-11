@@ -122,11 +122,11 @@ export const ADMIN_NAV: NavSection[] = [
         roles: ["admin_maintenance", "super_admin"],
       },
       {
-        label: "Maintenance",
+        label: "Tickets de pannes",
         href: "/admin/maintenance",
         icon: Wrench,
         lot: 5,
-        available: false,
+        available: true,
         roles: ["admin_maintenance", "super_admin"],
       },
       {

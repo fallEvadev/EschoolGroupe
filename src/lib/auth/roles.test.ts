@@ -92,6 +92,14 @@ describe("canAccessPath", () => {
     }
   });
 
+  it("réserve /admin/maintenance à l'Admin Maintenance et au Super-Admin", () => {
+    for (const role of ROLES) {
+      expect(canAccessPath(role, "/admin/maintenance")).toBe(
+        role === "admin_maintenance" || role === "super_admin",
+      );
+    }
+  });
+
   it("laisse passer les pages sans restriction particulière", () => {
     expect(canAccessPath("admin_rh", "/admin")).toBe(true);
   });
