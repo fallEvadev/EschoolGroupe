@@ -686,7 +686,9 @@ export type Database = {
           created_at: string
           current_semester: number
           id: boolean
+          logo_path: string | null
           organization_name: string
+          signature_path: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -695,7 +697,9 @@ export type Database = {
           created_at?: string
           current_semester?: number
           id?: boolean
+          logo_path?: string | null
           organization_name: string
+          signature_path?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -704,7 +708,9 @@ export type Database = {
           created_at?: string
           current_semester?: number
           id?: boolean
+          logo_path?: string | null
           organization_name?: string
+          signature_path?: string | null
           updated_at?: string
           updated_by?: string | null
         }

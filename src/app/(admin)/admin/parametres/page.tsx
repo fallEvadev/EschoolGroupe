@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { requireSpace } from "@/lib/auth/guards";
+import { ORG_ASSETS_BUCKET } from "@/lib/org-assets";
 import {
   createServerSupabase,
   isSupabaseConfigured,
@@ -18,6 +19,7 @@ import {
   SUPABASE_ISSUE_MESSAGES,
 } from "@/lib/supabase/errors";
 
+import { AssetsCard, type AssetUrls } from "./assets-card";
 import { AuditLogList } from "./audit-log-list";
 import { OrganizationForm } from "./organization-form";
 
@@ -58,12 +60,46 @@ async function loadSettings(): Promise<SettingsLoad> {
   return { settings: data };
 }
 
+/** Durée de validité des adresses d'aperçu : 10 minutes. */
+const PREVIEW_SECONDS = 600;
+
+/**
+ * Adresses signées temporaires du logo et de la signature (stockage privé).
+ * Une erreur ne casse pas la page : l'image est simplement absente.
+ */
+async function loadAssetUrls(): Promise<AssetUrls> {
+  const urls: AssetUrls = { logo: null, signature: null };
+  if (!isSupabaseConfigured()) return urls;
+
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("organization_settings")
+    .select("logo_path, signature_path")
+    .maybeSingle();
+  if (!data) return urls;
+
+  for (const [kind, path] of [
+    ["logo", data.logo_path],
+    ["signature", data.signature_path],
+  ] as const) {
+    if (!path) continue;
+    const { data: signed } = await supabase.storage
+      .from(ORG_ASSETS_BUCKET)
+      .createSignedUrl(path, PREVIEW_SECONDS);
+    urls[kind] = signed?.signedUrl ?? null;
+  }
+  return urls;
+}
+
 export default async function ParametresPage() {
   // Second verrou : l'espace admin ne suffit pas, il faut être Super-Admin.
   const role = await requireSpace("admin");
   if (role !== "super_admin") redirect("/non-autorise");
 
-  const result = await loadSettings();
+  const [result, assetUrls] = await Promise.all([
+    loadSettings(),
+    loadAssetUrls(),
+  ]);
 
   return (
     <main className="flex w-full flex-col gap-6 p-4 sm:p-8">
@@ -94,6 +130,19 @@ export default async function ParametresPage() {
               {result.unavailable}
             </p>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Logo et signature</CardTitle>
+          <CardDescription>
+            Images ajoutées aux bilans envoyés aux écoles partenaires. PNG ou
+            JPEG, 500 Ko au maximum.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AssetsCard urls={assetUrls} />
         </CardContent>
       </Card>
 
