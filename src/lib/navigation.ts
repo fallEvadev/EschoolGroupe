@@ -114,6 +114,14 @@ export const ADMIN_NAV: NavSection[] = [
         roles: ["admin_rh", "super_admin"],
       },
       {
+        label: "Parc informatique",
+        href: "/admin/parc",
+        icon: Monitor,
+        lot: 5,
+        available: true,
+        roles: ["admin_maintenance", "super_admin"],
+      },
+      {
         label: "Maintenance",
         href: "/admin/maintenance",
         icon: Wrench,

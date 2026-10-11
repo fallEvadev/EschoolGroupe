@@ -489,6 +489,50 @@ export type Database = {
         }
         Relationships: []
       }
+      machines: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          label: string
+          school_id: string
+          serial_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          label: string
+          school_id: string
+          serial_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          label?: string
+          school_id?: string
+          serial_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machines_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_programs: {
         Row: {
           file_name: string
@@ -981,10 +1025,30 @@ export type Database = {
       current_clerk_id: { Args: never; Returns: string }
       current_profile_id: { Args: never; Returns: string }
       current_user_role: { Args: never; Returns: string }
+      is_maintenance_manager: { Args: never; Returns: boolean }
+      is_maintenance_staff: { Args: never; Returns: boolean }
       is_pedagogy_manager: { Args: never; Returns: boolean }
       is_rh_manageable_role: {
         Args: { value: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
+      }
+      maintenance_schools: {
+        Args: never
+        Returns: {
+          id: string
+          name: string
+          status: string
+        }[]
+      }
+      pedagogy_staff_directory: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          phone: string
+          role: Database["public"]["Enums"]["user_role"]
+          status: string
+        }[]
       }
       replace_daily_code: {
         Args: { p_code: string; p_code_date: string; p_school_id: string }
@@ -1012,10 +1076,6 @@ export type Database = {
         }
         Returns: number
       }
-      submit_daily_report: {
-        Args: { p_report_id: string }
-        Returns: number
-      }
       set_school_position: {
         Args: {
           p_accuracy_m: number
@@ -1025,6 +1085,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      submit_daily_report: { Args: { p_report_id: string }; Returns: number }
       verify_attendance_code: {
         Args: {
           p_code: string
@@ -1036,16 +1097,6 @@ export type Database = {
           minutes_left: number
           outcome: string
           remaining: number
-        }[]
-      }
-      pedagogy_staff_directory: {
-        Args: never
-        Returns: {
-          full_name: string
-          id: string
-          phone: string | null
-          role: Database["public"]["Enums"]["user_role"]
-          status: string
         }[]
       }
     }
