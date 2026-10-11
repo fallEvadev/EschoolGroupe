@@ -110,6 +110,14 @@ describe("canAccessPath", () => {
     }
   });
 
+  it("réserve /admin/bilans à la Direction pédagogique", () => {
+    for (const role of ROLES) {
+      expect(canAccessPath(role, "/admin/bilans")).toBe(
+        role === "admin_pedagogie" || role === "super_admin",
+      );
+    }
+  });
+
   it("laisse passer les pages sans restriction particulière", () => {
     expect(canAccessPath("admin_rh", "/admin")).toBe(true);
   });

@@ -261,6 +261,86 @@ export type Database = {
         }
         Relationships: []
       }
+      bilan_reports: {
+        Row: {
+          added_at: string
+          bilan_id: string
+          report_id: string
+        }
+        Insert: {
+          added_at?: string
+          bilan_id: string
+          report_id: string
+        }
+        Update: {
+          added_at?: string
+          bilan_id?: string
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bilan_reports_bilan_id_fkey"
+            columns: ["bilan_id"]
+            isOneToOne: false
+            referencedRelation: "bilans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bilan_reports_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "daily_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bilans: {
+        Row: {
+          created_at: string
+          generated_at: string
+          generated_by: string | null
+          id: string
+          period_end: string
+          period_kind: string
+          period_start: string
+          school_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          period_end: string
+          period_kind: string
+          period_start: string
+          school_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          period_end?: string
+          period_kind?: string
+          period_start?: string
+          school_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bilans_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       closed_days: {
         Row: {
           closed_date: string
@@ -1160,6 +1240,15 @@ export type Database = {
       current_clerk_id: { Args: never; Returns: string }
       current_profile_id: { Args: never; Returns: string }
       current_user_role: { Args: never; Returns: string }
+      generate_bilans: {
+        Args: { p_kind: string; p_start: string }
+        Returns: {
+          out_bilan_id: string
+          out_outcome: string
+          out_report_count: number
+          out_school_id: string
+        }[]
+      }
       is_maintenance_manager: { Args: never; Returns: boolean }
       is_maintenance_staff: { Args: never; Returns: boolean }
       is_pedagogy_manager: { Args: never; Returns: boolean }

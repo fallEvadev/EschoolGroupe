@@ -89,7 +89,7 @@ export const ADMIN_NAV: NavSection[] = [
         href: "/admin/bilans",
         icon: ChartColumn,
         lot: 6,
-        available: false,
+        available: true,
         roles: ADMIN_PEDAGOGIE,
       },
     ],
