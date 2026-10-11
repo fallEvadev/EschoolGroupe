@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { parseRole } from "@/lib/auth/roles";
 import { formatDate } from "@/lib/dates";
+import { sortMachines } from "@/lib/machines";
 import { describeSupabaseError } from "@/lib/supabase/errors";
 import {
   createServerSupabase,
@@ -28,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { requireMaintenanceManager } from "../parc/access";
+import { LinkMachineForm, type MachineChoice } from "./link-machine-form";
 import { StatsPanel } from "./stats-panel";
 import { TicketActions, type MaintenancierOption } from "./ticket-actions";
 
@@ -42,6 +44,7 @@ type TicketItem = {
   schoolName: string;
   equipmentLabel: string;
   hasMachine: boolean;
+  machineId: string | null;
   status: string;
   assignedTo: string | null;
   openedAt: string;
@@ -145,6 +148,7 @@ async function loadTickets(
       schoolName: schoolNames.get(t.school_id) ?? "École",
       equipmentLabel: t.equipment_label,
       hasMachine: t.machine_id !== null,
+      machineId: t.machine_id,
       status: t.status,
       assignedTo: t.assigned_to,
       openedAt: t.opened_at,
@@ -362,6 +366,13 @@ async function TicketsContent({
             ticket={selected}
             team={team}
             backHref={href(filter, ecole)}
+            openMachineIds={loaded.tickets
+              .filter(
+                (t) =>
+                  t.machineId !== null &&
+                  (t.status === "ouvert" || t.status === "en_cours"),
+              )
+              .map((t) => t.machineId as string)}
           />
         ) : (
           <Card className="text-muted-foreground hidden items-center justify-center p-10 text-center lg:flex">
@@ -379,12 +390,33 @@ async function TicketDetail({
   ticket,
   team,
   backHref,
+  openMachineIds,
 }: {
   ticket: TicketItem;
   team: Team;
   backHref: string;
+  /** Machines qui ont déjà un ticket ouvert (le rattachement fusionnerait). */
+  openMachineIds: string[];
 }) {
   const supabase = await createServerSupabase();
+  // Machines actives de l'école, proposées pour rattacher un « Autre équipement ».
+  const linkable = !ticket.hasMachine && canAssign(ticket.status);
+  const machinesResult = linkable
+    ? await supabase
+        .from("machines")
+        .select("id, label")
+        .eq("school_id", ticket.schoolId)
+        .eq("status", "actif")
+        .limit(500)
+    : null;
+  const openIds = new Set(openMachineIds);
+  const machineChoices: MachineChoice[] = sortMachines(
+    (machinesResult?.data ?? []).map((m) => ({ ...m, status: "actif" })),
+  ).map((m) => ({
+    id: m.id,
+    label: m.label,
+    hasOpenTicket: openIds.has(m.id),
+  }));
   const { data, error } = await supabase
     .from("ticket_reports")
     .select("id, description, reported_by, reported_at")
@@ -432,6 +464,14 @@ async function TicketDetail({
           assignable={canAssign(ticket.status)}
           archivable={canArchive(ticket.status)}
         />
+
+        {linkable && (
+          <LinkMachineForm
+            ticketId={ticket.id}
+            equipmentLabel={ticket.equipmentLabel}
+            machines={machineChoices}
+          />
+        )}
 
         {ticket.resolutionNote && (
           <section className="flex flex-col gap-1">

@@ -26,3 +26,9 @@ export const resolveTicketSchema = z.object({
 });
 
 export type TicketResult = { ok: boolean; message: string };
+
+/** Rattacher un ticket « Autre équipement » à une machine de l'inventaire. */
+export const linkTicketSchema = z.object({
+  ticketId: z.uuid("Ticket invalide."),
+  machineId: z.uuid("Machine invalide."),
+});

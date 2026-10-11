@@ -10,6 +10,7 @@ import {
 import {
   archiveTicketSchema,
   assignTicketSchema,
+  linkTicketSchema,
   resolveTicketSchema,
   startTicketSchema,
 } from "@/lib/validations/tickets";
@@ -132,5 +133,23 @@ describe("travail du maintenancier", () => {
       resolveTicketSchema.parse({ ticketId: ID, note: "  Écran changé  " })
         .note,
     ).toBe("Écran changé");
+  });
+});
+
+describe("linkTicketSchema", () => {
+  it("accepte un ticket et une machine valides", () => {
+    expect(
+      linkTicketSchema.safeParse({ ticketId: ID, machineId: ID }).success,
+    ).toBe(true);
+  });
+
+  it("refuse une machine absente ou invalide", () => {
+    expect(linkTicketSchema.safeParse({ ticketId: ID }).success).toBe(false);
+    expect(
+      linkTicketSchema.safeParse({ ticketId: ID, machineId: "x" }).success,
+    ).toBe(false);
+    expect(
+      linkTicketSchema.safeParse({ ticketId: ID, machineId: null }).success,
+    ).toBe(false);
   });
 });

@@ -8,6 +8,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import {
   archiveTicketSchema,
   assignTicketSchema,
+  linkTicketSchema,
   type TicketResult,
 } from "@/lib/validations/tickets";
 
@@ -84,6 +85,62 @@ export async function assignTicket(input: unknown): Promise<TicketResult> {
     };
   } catch (error) {
     console.error("assignTicket :", error);
+    return ERREUR_GENERIQUE;
+  }
+}
+
+/**
+ * Rattache un ticket « Autre équipement » à une machine de l'inventaire. Si la
+ * machine a déjà un ticket ouvert, les deux sont fusionnés (le ticket « Autre »
+ * est archivé, ses signalements rejoignent l'autre). La fonction SQL fait tous
+ * les contrôles : école, machine active, statut du ticket, rôle.
+ */
+export async function linkTicketToMachine(
+  input: unknown,
+): Promise<TicketResult> {
+  const caller = await requireActionRole(MAINTENANCE_MANAGER_ROLES);
+  if (!caller.ok) return { ok: false, message: caller.message };
+
+  const parsed = linkTicketSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const { ticketId, machineId } = parsed.data;
+
+  try {
+    const supabase = await createServerSupabase();
+    const { data, error } = await supabase.rpc("link_ticket_to_machine", {
+      p_ticket_id: ticketId,
+      p_machine_id: machineId,
+    });
+    if (error) {
+      // Messages écrits en français dans la base, sans donnée sensible.
+      if (
+        error.code === "P0002" ||
+        error.code === "42501" ||
+        error.code === CHECK_VIOLATION
+      ) {
+        return { ok: false, message: error.message };
+      }
+      console.error("link_ticket_to_machine :", error.message);
+      return ERREUR_GENERIQUE;
+    }
+
+    const merged = data === "fusionne";
+    await writeAudit({
+      actorId: caller.actorId,
+      action: merged ? "ticket_merged" : "ticket_linked_to_machine",
+      entity: "maintenance_tickets",
+      entityId: ticketId,
+      details: {},
+    });
+    refresh();
+    return {
+      ok: true,
+      message: merged
+        ? "Tickets fusionnés : les signalements ont rejoint le ticket de la machine."
+        : "Ticket rattaché à la machine.",
+    };
+  } catch (error) {
+    console.error("linkTicketToMachine :", error);
     return ERREUR_GENERIQUE;
   }
 }

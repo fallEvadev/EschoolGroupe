@@ -1161,6 +1161,10 @@ export type Database = {
         Args: { value: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
       }
+      link_ticket_to_machine: {
+        Args: { p_machine_id: string; p_ticket_id: string }
+        Returns: string
+      }
       maintenance_schools: {
         Args: never
         Returns: {
