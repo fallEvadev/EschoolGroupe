@@ -23,18 +23,18 @@ describe("badgeLabel", () => {
 });
 
 describe("NOTIFIED_ROLES", () => {
-  it("couvre le formateur, la pédagogie et la maintenance seulement", () => {
+  it("couvre le formateur, la pédagogie, la maintenance et les partenaires seulement", () => {
     expect([...NOTIFIED_ROLES].sort()).toEqual(
       [
         "admin_maintenance",
         "admin_pedagogie",
+        "directeur_partenaire",
         "formateur",
         "maintenancier",
         "super_admin",
       ].sort(),
     );
     expect(NOTIFIED_ROLES).not.toContain("admin_rh");
-    expect(NOTIFIED_ROLES).not.toContain("directeur_partenaire");
   });
 });
 

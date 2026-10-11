@@ -32,6 +32,11 @@ export const BILAN_STATUS_LABELS: Record<string, string> = {
   publie: "Publié",
 };
 
+/** « Bilan hebdomadaire » ou « Bilan mensuel ». */
+export function bilanTitle(kind: BilanKind): string {
+  return kind === "semaine" ? "Bilan hebdomadaire" : "Bilan mensuel";
+}
+
 /** Lundi de la semaine qui contient cette date (« aaaa-mm-jj »). */
 export function mondayOf(iso: string): string {
   return shiftIsoDate(iso, 1 - isoWeekdayOf(iso));

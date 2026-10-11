@@ -16,7 +16,12 @@ import {
   WidthType,
 } from "docx";
 
-import { BILAN_KIND_LABELS, periodLabel, type BilanKind } from "@/lib/bilans";
+import {
+  BILAN_KIND_LABELS,
+  bilanTitle,
+  periodLabel,
+  type BilanKind,
+} from "@/lib/bilans";
 import { formatDate } from "@/lib/dates";
 import { fitInBox, type ImageSize } from "@/lib/image-size";
 import { formatTime } from "@/lib/schools";
@@ -95,10 +100,7 @@ export function summarizeReports(reports: BilanDocReport[]): BilanSummary {
   };
 }
 
-/** « Bilan hebdomadaire » ou « Bilan mensuel ». */
-export function bilanTitle(kind: BilanKind): string {
-  return kind === "semaine" ? "Bilan hebdomadaire" : "Bilan mensuel";
-}
+export { bilanTitle };
 
 /**
  * Nom du fichier à télécharger : lettres, chiffres et tirets seulement (aucun

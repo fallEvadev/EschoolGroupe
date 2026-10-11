@@ -1264,6 +1264,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      can_read_bilan_pdf: { Args: { p_path: string }; Returns: boolean }
       current_clerk_id: { Args: never; Returns: string }
       current_profile_id: { Args: never; Returns: string }
       current_user_role: { Args: never; Returns: string }
@@ -1303,6 +1304,27 @@ export type Database = {
           id: string
           role: Database["public"]["Enums"]["user_role"]
           status: string
+        }[]
+      }
+      partner_bilan_file: {
+        Args: { p_bilan_id: string }
+        Returns: {
+          out_file_name: string
+          out_path: string
+        }[]
+      }
+      partner_bilans: {
+        Args: never
+        Returns: {
+          out_id: string
+          out_pdf_file_name: string
+          out_pdf_size_bytes: number
+          out_period_end: string
+          out_period_kind: string
+          out_period_start: string
+          out_published_at: string
+          out_school_id: string
+          out_school_name: string
         }[]
       }
       pedagogy_staff_directory: {

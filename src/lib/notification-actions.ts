@@ -13,6 +13,7 @@ const idSchema = z.uuid("Notification invalide.");
 function refresh() {
   revalidatePath("/formateur/notifications");
   revalidatePath("/maintenance/notifications");
+  revalidatePath("/partenaire/notifications");
   revalidatePath("/admin/notifications");
 }
 
