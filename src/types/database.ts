@@ -1268,6 +1268,37 @@ export type Database = {
       current_clerk_id: { Args: never; Returns: string }
       current_profile_id: { Args: never; Returns: string }
       current_user_role: { Args: never; Returns: string }
+      dashboard_attendance_by_day: {
+        Args: { p_from: string }
+        Returns: {
+          out_count: number
+          out_day: string
+          out_status: string
+        }[]
+      }
+      dashboard_reports_by_week: {
+        Args: { p_from: string }
+        Returns: {
+          out_count: number
+          out_status: string
+          out_week: string
+        }[]
+      }
+      dashboard_staff_by_role: {
+        Args: never
+        Returns: {
+          out_count: number
+          out_role: string
+          out_status: string
+        }[]
+      }
+      dashboard_tickets_by_week: {
+        Args: { p_from: string }
+        Returns: {
+          out_count: number
+          out_week: string
+        }[]
+      }
       generate_bilans: {
         Args: { p_kind: string; p_start: string }
         Returns: {

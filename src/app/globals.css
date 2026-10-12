@@ -58,6 +58,13 @@
   --destructive-soft: #fee2e2;
   --destructive-foreground: #ffffff;
 
+  /* Séries des graphiques : bleu, orange, vert d'eau. Ordre et valeurs validés
+     (séparation pour le daltonisme) ; le vert d'eau est pâle sur fond blanc, d'où
+     la légende et le tableau de données sous chaque graphique. */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+
   /* Bouton « Envoyer par WhatsApp » (vert foncé : texte blanc lisible) */
   --whatsapp: #0e7c45;
   --whatsapp-foreground: #ffffff;
@@ -94,6 +101,9 @@
   --color-sidebar-hover: var(--sidebar-hover);
   --color-sidebar-surface: var(--sidebar-surface);
   --color-overlay: var(--overlay);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);

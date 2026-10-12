@@ -1,28 +1,10 @@
 import { Card } from "@/components/ui/card";
+import { StatTile } from "@/components/dashboard/stat-tile";
 import {
   formatDuration,
   RECENT_DAYS,
   type TicketStats,
 } from "@/lib/ticket-stats";
-
-/** Une tuile de chiffre : le nombre, puis son libellé (couleurs de texte du thème). */
-function StatTile({
-  value,
-  label,
-  hint,
-}: {
-  value: string;
-  label: string;
-  hint?: string;
-}) {
-  return (
-    <Card className="flex flex-col gap-1 p-4">
-      <p className="text-3xl font-bold tabular-nums">{value}</p>
-      <p className="text-sm font-medium">{label}</p>
-      {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
-    </Card>
-  );
-}
 
 /**
  * Chiffres de suivi de la maintenance : quatre tuiles et un tableau par école.
