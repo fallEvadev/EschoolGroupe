@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, FileCheck2, Send, Upload } from "lucide-react";
+import { Download, FileCheck2, Mail, Send, Upload } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +25,7 @@ import {
   MAX_BILAN_PDF_BYTES,
 } from "@/lib/bilan-pdf";
 import { BILAN_STATUS_LABELS } from "@/lib/bilans";
+import { summarizeDeliveries } from "@/lib/emails/bilan-published";
 import { useSupabase } from "@/lib/supabase/client";
 import { bilanPdfUploadSchema } from "@/lib/validations/bilans";
 
@@ -32,6 +33,7 @@ import {
   confirmBilanPdfUpload,
   prepareBilanPdfUpload,
   publishBilan,
+  resendBilanEmails,
 } from "./actions";
 
 export type BilanRowData = {
@@ -43,6 +45,8 @@ export type BilanRowData = {
   /** Texte déjà formaté : « généré le 12/10/2026 » ou « publié le … ». */
   dateLabel: string;
   pdf: { fileName: string; sizeBytes: number } | null;
+  /** Suivi des e-mails d'un bilan publié (`null` pour un brouillon). */
+  emails: { sent: number; failed: number } | null;
 };
 
 /**
@@ -114,6 +118,14 @@ export function BilanRow({ bilan }: { bilan: BilanRowData }) {
     }
   }
 
+  function resendEmails() {
+    startTransition(async () => {
+      const result = await resendBilanEmails({ bilanId: bilan.id });
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
+    });
+  }
+
   function confirmPublish() {
     startTransition(async () => {
       const result = await publishBilan({ bilanId: bilan.id });
@@ -168,6 +180,33 @@ export function BilanRow({ bilan }: { bilan: BilanRowData }) {
           </Button>
         )}
       </div>
+
+      {published && bilan.emails && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-muted-foreground">
+            {bilan.emails.sent + bilan.emails.failed === 0
+              ? "Aucun e-mail envoyé aux directeurs."
+              : summarizeDeliveries({
+                  configured: true,
+                  sent: bilan.emails.sent,
+                  failed: bilan.emails.failed,
+                })}
+          </span>
+          {/* Renvoi : seulement s'il reste des directeurs à prévenir (échecs ou aucun envoi). */}
+          {(bilan.emails.failed > 0 ||
+            bilan.emails.sent + bilan.emails.failed === 0) && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy}
+              onClick={resendEmails}
+            >
+              <Mail aria-hidden />
+              {pending ? "Envoi…" : "Renvoyer les e-mails"}
+            </Button>
+          )}
+        </div>
+      )}
 
       {!published && (
         <form onSubmit={upload} className="flex flex-col gap-2" noValidate>

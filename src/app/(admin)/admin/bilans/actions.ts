@@ -2,8 +2,10 @@
 
 import { randomUUID } from "node:crypto";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
+import { resolveAppUrl } from "@/lib/app-url";
 import { writeAudit } from "@/lib/audit";
 import { requireActionRole } from "@/lib/auth/action-guard";
 import {
@@ -13,7 +15,9 @@ import {
   isValidBilanPdfPath,
   MAX_BILAN_PDF_BYTES,
 } from "@/lib/bilan-pdf";
+import { sendBilanEmails } from "@/lib/bilan-delivery";
 import { summarizeGeneration } from "@/lib/bilans";
+import { summarizeDeliveries } from "@/lib/emails/bilan-published";
 import { looksLikePdf } from "@/lib/programs";
 import { createServerSupabase } from "@/lib/supabase/server";
 import {
@@ -293,9 +297,81 @@ export async function publishBilan(input: unknown): Promise<BilanResult> {
       details: {},
     });
     revalidatePath("/admin/bilans");
-    return { ok: true, message: "Bilan publié." };
+
+    // L'e-mail ne bloque jamais la publication : le bilan est publié quoi qu'il
+    // arrive, et les directeurs sont aussi prévenus dans l'application.
+    const emails = await deliverEmails(caller.actorId, bilanId, false);
+    return { ok: true, message: `Bilan publié. ${emails}` };
   } catch (error) {
     console.error("publishBilan :", error);
     return ERREUR_GENERIQUE;
   }
+}
+
+/** Adresse publique du site (variable d'environnement, sinon en-têtes de la requête). */
+async function siteOrigin(): Promise<string> {
+  const list = await headers();
+  return resolveAppUrl({
+    configured: process.env.NEXT_PUBLIC_APP_URL,
+    host: list.get("x-forwarded-host") ?? list.get("host"),
+    forwardedProto: list.get("x-forwarded-proto"),
+  });
+}
+
+/**
+ * Envoie les e-mails d'un bilan publié et renvoie la phrase de résultat. Ne lève
+ * jamais d'exception : un problème d'envoi devient un message, pas une erreur.
+ * L'audit ne garde que des nombres, jamais d'adresse.
+ */
+async function deliverEmails(
+  actorId: string,
+  bilanId: string,
+  onlyPending: boolean,
+): Promise<string> {
+  try {
+    const result = await sendBilanEmails({
+      bilanId,
+      origin: await siteOrigin(),
+      onlyPending,
+    });
+    if ("error" in result) return result.error;
+
+    if (result.configured) {
+      await writeAudit({
+        actorId,
+        action: "bilan_emails_sent",
+        entity: "bilans",
+        entityId: bilanId,
+        details: { sent: result.sent, failed: result.failed },
+      });
+    }
+    revalidatePath("/admin/bilans");
+    return summarizeDeliveries(result);
+  } catch (error) {
+    console.error("deliverEmails :", error);
+    return "L'envoi des e-mails a échoué : les directeurs sont prévenus dans l'application.";
+  }
+}
+
+/**
+ * Renvoie l'e-mail aux directeurs d'un bilan publié qui ne l'ont pas encore reçu
+ * (échecs, ou directeur rattaché depuis). Ceux qui l'ont reçu ne sont pas relancés.
+ */
+export async function resendBilanEmails(input: unknown): Promise<BilanResult> {
+  const caller = await requireActionRole(PEDAGOGY_ROLES);
+  if (!caller.ok) return { ok: false, message: caller.message };
+
+  const parsed = bilanIdSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Bilan invalide.",
+    };
+  }
+  const message = await deliverEmails(
+    caller.actorId,
+    parsed.data.bilanId,
+    true,
+  );
+  return { ok: true, message };
 }

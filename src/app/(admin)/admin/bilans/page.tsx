@@ -46,7 +46,7 @@ async function loadBilans(
   if (error) return { error: describeSupabaseError("bilans", error).message };
   if (data.length === 0) return { bilans: [] };
 
-  const [schools, links] = await Promise.all([
+  const [schools, links, deliveries] = await Promise.all([
     supabase
       .from("schools")
       .select("id, name")
@@ -59,7 +59,22 @@ async function loadBilans(
         data.map((b) => b.id),
       )
       .limit(10000),
+    // Suivi des e-mails : lisible par la Direction (jamais d'adresse dans cette table).
+    supabase
+      .from("bilan_deliveries")
+      .select("bilan_id, status")
+      .in(
+        "bilan_id",
+        data.map((b) => b.id),
+      )
+      .limit(10000),
   ]);
+  if (deliveries.error) {
+    return {
+      error: describeSupabaseError("bilan_deliveries", deliveries.error)
+        .message,
+    };
+  }
   if (schools.error) {
     return { error: describeSupabaseError("schools", schools.error).message };
   }
@@ -73,6 +88,14 @@ async function loadBilans(
   const counts = new Map<string, number>();
   for (const row of links.data) {
     counts.set(row.bilan_id, (counts.get(row.bilan_id) ?? 0) + 1);
+  }
+
+  const emails = new Map<string, { sent: number; failed: number }>();
+  for (const row of deliveries.data) {
+    const entry = emails.get(row.bilan_id) ?? { sent: 0, failed: 0 };
+    if (row.status === "envoye") entry.sent += 1;
+    else entry.failed += 1;
+    emails.set(row.bilan_id, entry);
   }
 
   return {
@@ -90,6 +113,10 @@ async function loadBilans(
         pdf:
           b.pdf_file_name && b.pdf_size_bytes
             ? { fileName: b.pdf_file_name, sizeBytes: b.pdf_size_bytes }
+            : null,
+        emails:
+          b.status === "publie"
+            ? (emails.get(b.id) ?? { sent: 0, failed: 0 })
             : null,
       }))
       .sort((a, b) => a.schoolName.localeCompare(b.schoolName, "fr")),

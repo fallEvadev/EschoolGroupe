@@ -261,6 +261,60 @@ export type Database = {
         }
         Relationships: []
       }
+      bilan_deliveries: {
+        Row: {
+          attempts: number
+          bilan_id: string
+          created_at: string
+          id: string
+          last_error: string | null
+          profile_id: string
+          provider_message_id: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          bilan_id: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          profile_id: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          bilan_id?: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          profile_id?: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bilan_deliveries_bilan_id_fkey"
+            columns: ["bilan_id"]
+            isOneToOne: false
+            referencedRelation: "bilans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bilan_deliveries_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bilan_reports: {
         Row: {
           added_at: string

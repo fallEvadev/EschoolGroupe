@@ -88,8 +88,9 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=        # serveur uniquement
 
-# Emails
+# Emails (bilans publiés : avertissement des directeurs partenaires)
 RESEND_API_KEY=
+RESEND_FROM_EMAIL=               # ex. « E-School Groupe <bilans@exemple.sn> » (domaine vérifié chez Resend)
 
 # WhatsApp / SMS (lot 6)
 WHATSAPP_API_TOKEN=
