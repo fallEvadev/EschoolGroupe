@@ -12,7 +12,7 @@ Plateforme numérique E-School Groupe : suivi pédagogique des formateurs (point
 
 ## Stack
 
-Next.js (App Router) · TypeScript strict · React · Tailwind CSS · shadcn/ui · Clerk · Supabase (PostgreSQL, Storage, Realtime, Edge Functions, Cron) · React Hook Form + Zod · Serwist + Dexie · Resend · Vitest · Playwright · Vercel.
+Next.js (App Router) · TypeScript strict · React · Tailwind CSS · shadcn/ui · Clerk · Supabase (PostgreSQL, Storage, Realtime, Edge Functions, Cron) · React Hook Form + Zod · Dexie · Resend · Vitest · Playwright · Vercel.
 
 Ne pas ajouter de nouvelle dépendance sans le signaler et expliquer pourquoi.
 
@@ -36,14 +36,14 @@ Après une modification : lancer `npm run lint` et `npm run build`, et les tests
 ## Architecture
 
 - `src/app/(auth|formateur|maintenance|partenaire|admin)/` : un groupe de routes par espace utilisateur.
-- `src/app/api/` : routes API et webhooks (Clerk, WhatsApp).
+- `src/app/api/` : routes API et webhooks (Clerk).
 - `src/lib/supabase/` : clients Supabase (`server.ts`, `client.ts`). Toujours passer par ces helpers.
 - `src/lib/validations/` : schémas Zod, partagés entre formulaires et Server Actions.
-- `src/lib/exports/` : génération Word (docx) et PDF (@react-pdf/renderer).
+- `src/lib/exports/` : génération du Word des bilans (docx). Le PDF final est déposé par la Direction, pas généré.
 - `src/lib/offline/` : Dexie et synchronisation des brouillons.
 - `src/components/ui/` : composants shadcn/ui (générés, modifier avec parcimonie).
 - `supabase/migrations/` : schéma SQL et politiques RLS. `supabase/functions/` : Edge Functions.
-- `src/middleware.ts` : protection des routes par rôle via Clerk.
+- `src/proxy.ts` : protection des routes par rôle via Clerk (Next.js 16 appelle « proxy » l'ancien middleware). Les pages réservées à certains rôles sont listées dans `RESTRICTED_PATHS` (`src/lib/auth/roles.ts`).
 
 Préférer les Server Components et les Server Actions. Utiliser `"use client"` uniquement pour l'interactivité (formulaires, caméra, géolocalisation, mode hors ligne).
 
@@ -51,7 +51,7 @@ Préférer les Server Components et les Server Actions. Utiliser `"use client"` 
 
 Rôles : `formateur`, `maintenancier`, `directeur_partenaire`, `admin_pedagogie`, `admin_rh`, `admin_maintenance`, `super_admin`. Stockés dans `publicMetadata.role` de Clerk et lus par Supabase via le JWT Clerk.
 
-1. **Double contrôle** : toute donnée protégée est filtrée par le middleware/les Server Actions **et** par une politique RLS. Ne jamais compter sur l'interface seule.
+1. **Double contrôle** : toute donnée protégée est filtrée par le proxy/les Server Actions **et** par une politique RLS. Ne jamais compter sur l'interface seule.
 2. **RLS activée sur toutes les tables**. Chaque nouvelle table arrive avec ses politiques dans la même migration.
 3. **`SUPABASE_SERVICE_ROLE_KEY` uniquement côté serveur** (Server Actions, routes API, Edge Functions). Jamais dans un fichier `"use client"` ni dans une variable `NEXT_PUBLIC_`.
 4. **Documents du personnel** (CV, CNI, photos) : bucket privé, accès par URL signées de courte durée, réservé à `admin_rh` et `super_admin`.

@@ -10,12 +10,13 @@ Plateforme web d'E-School Groupe pour automatiser le suivi pédagogique des form
 
 ## Fonctionnalités
 
-- **Rôles et accès** : Formateur, Maintenancier, Directeur partenaire, Admin Pédagogie, Admin RH, Admin Maintenance, Super-Admin. Chaque rôle est contrôlé par le middleware Next.js et par les politiques RLS de Supabase.
+- **Rôles et accès** : Formateur, Maintenancier, Directeur partenaire, Admin Pédagogie, Admin RH, Admin Maintenance, Super-Admin. Chaque rôle est contrôlé par le proxy Next.js (`src/proxy.ts`), par les Server Actions et par les politiques RLS de Supabase.
 - **Gestion RH** : création des recrues (CV, CNI, photo), invitation sécurisée, acceptation du règlement intérieur, désactivation et archivage.
-- **Pointage** : codes quotidiens par école, QR code, contrôle de la fenêtre horaire et de la géolocalisation.
+- **Pointage** : codes quotidiens par école, contrôle de la fenêtre horaire et de la géolocalisation (position de l'école enregistrée par son directeur), suivi et décisions de la Direction, programme mensuel en PDF.
 - **Rapports journaliers** : saisie hors ligne, validation ou renvoi par la Direction, corrections historisées, notifications.
-- **Maintenance** : inventaire des machines, tickets de pannes créés depuis les rapports, suivi jusqu'à la résolution.
-- **Bilans périodiques** : regroupement hebdomadaire ou mensuel, export Word et PDF avec logo et signature, envoi aux écoles partenaires.
+- **Maintenance** : inventaire des machines par école, tickets de pannes créés à l'envoi des rapports, affectation aux maintenanciers, suivi jusqu'à la résolution, notifications et statistiques.
+- **Bilans périodiques** : regroupement hebdomadaire ou mensuel des rapports validés, export Word éditable avec logo et signature, PDF final déposé puis publié, consultation par les directeurs partenaires sur leur portail, avertis par notification et par e-mail.
+- **Tableau de bord** : chiffres et graphiques de l'espace admin, adaptés au rôle (pédagogie, RH, maintenance).
 
 ## Stack technique
 
@@ -27,9 +28,9 @@ Plateforme web d'E-School Groupe pour automatiser le suivi pédagogique des form
 | Authentification | Clerk |
 | Base de données, fichiers, temps réel | Supabase (PostgreSQL, Storage, Realtime, Edge Functions, Cron) |
 | Formulaires | React Hook Form + Zod |
-| Hors ligne | Serwist (PWA) + Dexie (IndexedDB) |
-| Exports | docx, @react-pdf/renderer |
-| Emails | Resend + React Email |
+| Hors ligne | Dexie (IndexedDB) : copie locale du brouillon de rapport. Pas de PWA ni de service worker |
+| Exports | docx (fichier Word des bilans). Le PDF final est déposé par la Direction, il n'est pas généré |
+| Emails | Resend (e-mail en HTML simple, sans React Email) |
 | Tests | Vitest, Playwright |
 | Hébergement | Vercel |
 
@@ -92,9 +93,7 @@ SUPABASE_SERVICE_ROLE_KEY=        # serveur uniquement
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=               # ex. « E-School Groupe <bilans@exemple.sn> » (domaine vérifié chez Resend)
 
-# WhatsApp / SMS (lot 6)
-WHATSAPP_API_TOKEN=
-WHATSAPP_PHONE_NUMBER_ID=
+# (WhatsApp : aucune clé. Les messages sont des liens « wa.me » pré-remplis, sans API.)
 
 # Suivi des erreurs
 SENTRY_DSN=
@@ -131,7 +130,7 @@ eschool-plateforme/
 │   │   ├── (maintenance)/       # Tickets et inventaire
 │   │   ├── (partenaire)/        # Portail des directeurs partenaires
 │   │   ├── (admin)/             # Pédagogie, RH, Maintenance, Super-Admin
-│   │   └── api/                 # Routes API et webhooks (Clerk, WhatsApp)
+│   │   └── api/                 # Routes API et webhooks (Clerk)
 │   ├── components/
 │   │   ├── ui/                  # Composants shadcn/ui
 │   │   └── ...                  # Composants métier
@@ -169,12 +168,17 @@ Le rôle est stocké dans les métadonnées publiques Clerk (`publicMetadata.rol
 
 ## Feuille de route
 
-- [ ] **Lot 1 — Socle** : Next.js, Clerk ↔ Supabase, rôles, RLS, charte, déploiement Vercel (code terminé ; liaison Clerk et Vercel à confirmer)
-- [ ] **Lot 2 — RH** *(en cours)* : recrues, invitations, activation, archivage (invitations, fiches et documents faits ; archivage, validation des documents et règlement à faire)
-- [ ] **Lot 3 — Pointage** : écoles, planning, codes quotidiens, QR, géolocalisation
-- [ ] **Lot 4 — Rapports journaliers** : formulaire hors ligne, validation, notifications
-- [ ] **Lot 5 — Maintenance** : inventaire, tickets, statistiques
-- [ ] **Lot 6 — Bilans et partenaires** : exports Word/PDF, signature, portail et envois
+Une case cochée signifie « code terminé, vérifié par les tests automatiques et par des tests en base ». **Aucun lot n'a encore été testé de bout en bout dans un navigateur** : ce test réel est la dernière étape, après le déploiement.
+
+- [x] **Lot 1 — Socle** : Next.js, Clerk ↔ Supabase, rôles, RLS, charte. *À confirmer : liaison Clerk ↔ Supabase (jeton de session `user_role`, Third-Party Auth) et déploiement Vercel.*
+- [x] **Lot 2 — RH** : invitations et activation (webhook Clerk), fiches du personnel, dossier administratif et contrôle des documents, désactivation et archivage, règlement intérieur versionné.
+- [x] **Lot 3 — Pointage** : écoles, créneaux et affectations, codes quotidiens, pointage avec géolocalisation, suivi de la Direction, programme mensuel en PDF. *Décision : pas de QR code.*
+- [x] **Lot 4 — Rapports journaliers** : saisie, validation avec corrections historisées, notifications, brouillon hors ligne (Dexie).
+- [x] **Lot 5 — Maintenance** : inventaire du parc, tickets créés à l'envoi des rapports, espace du maintenancier, affectation, notifications, statistiques.
+- [x] **Lot 6 — Bilans et partenaires** : génération par période, export Word, PDF final publié, portail partenaire, notification et e-mail (Resend).
+- [x] **Tableau de bord** de l'espace admin, adapté au rôle, avec graphiques.
+- [ ] **Déploiement** sur Vercel et déclaration du webhook Clerk.
+- [ ] **Test réel** de bout en bout des lots 3 à 6 (pointage, rapport, validation, ticket, bilan, e-mail).
 
 ## Conventions
 
