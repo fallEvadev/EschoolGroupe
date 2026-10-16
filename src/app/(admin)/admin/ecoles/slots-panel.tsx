@@ -209,6 +209,14 @@ function SlotRow({
         </ul>
       )}
 
+      {!disabled && available.length === 0 && (
+        <p className="bg-warning-soft text-warning rounded-lg p-3 text-sm">
+          {formateurs.length === 0
+            ? "Aucun formateur actif à proposer. Un formateur devient actif quand il a créé son mot de passe depuis l'invitation ; vérifiez son statut dans « Personnel »."
+            : "Tous les formateurs actifs sont déjà affectés à ce créneau."}
+        </p>
+      )}
+
       {!disabled && available.length > 0 && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="flex flex-1 flex-col gap-2">
