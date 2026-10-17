@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SELECT_CLASS } from "@/components/ui/select";
 import {
   formatSlot,
   formatTime,
@@ -49,9 +50,6 @@ export type SlotView = {
   label: string | null;
   assignments: { id: string; profileId: string; name: string }[];
 };
-
-const SELECT_CLASS =
-  "border-input bg-card focus-visible:ring-ring h-11 w-full rounded-lg border px-3 text-base focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50 md:text-sm";
 
 function notify(result: SchoolResult) {
   if (result.ok) toast.success(result.message);

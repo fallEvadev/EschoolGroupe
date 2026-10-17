@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SELECT_CLASS } from "@/components/ui/select";
 import { locationSummary } from "@/lib/attendance";
 import { loadSheetData, type SheetData } from "@/lib/attendance-data";
 import {
@@ -47,9 +48,6 @@ import {
 } from "./sheet-actions";
 
 export const metadata = { title: "Pointages · E-School Groupe" };
-
-const SELECT_CLASS =
-  "border-input bg-card focus-visible:ring-ring h-11 w-full rounded-lg border px-3 text-base focus-visible:ring-2 focus-visible:outline-none md:text-sm";
 
 /** Filtres de statut de la vue du jour. */
 const STATUS_FILTERS = [

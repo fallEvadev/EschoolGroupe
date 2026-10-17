@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-base font-semibold transition-colors md:text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-5 md:[&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -21,10 +21,10 @@ const buttonVariants = cva(
         whatsapp: "bg-whatsapp text-whatsapp-foreground hover:bg-whatsapp/90",
       },
       size: {
-        default: "h-11 px-5",
-        sm: "h-9 px-3",
-        lg: "h-12 px-6 text-base",
-        icon: "size-11",
+        default: "h-12 px-5 md:h-11",
+        sm: "h-11 px-4 md:h-9 md:px-3",
+        lg: "h-14 px-6 text-base md:h-12",
+        icon: "size-12 md:size-11",
       },
     },
     defaultVariants: {

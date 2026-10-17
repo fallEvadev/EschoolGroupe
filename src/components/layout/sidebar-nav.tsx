@@ -70,7 +70,7 @@ export function SidebarNav({ sections, role, onNavigate }: SidebarNavProps) {
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="right">
-                      Disponible au lot {item.lot}
+                      Bientôt disponible
                     </TooltipContent>
                   </Tooltip>
                 );

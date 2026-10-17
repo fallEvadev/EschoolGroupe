@@ -54,14 +54,14 @@ export function MobileShell({
 
       <nav
         aria-label="Navigation principale"
-        className="bg-card fixed inset-x-0 bottom-0 z-40 border-t"
+        className="bg-card fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)]"
       >
         <ul className="mx-auto flex max-w-2xl justify-around px-2 py-2">
           {items.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
             const style =
-              "flex min-w-14 flex-col items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium";
+              "flex min-h-14 min-w-16 flex-col items-center justify-center gap-1 rounded-xl px-3 py-1.5 text-[13px] font-medium";
 
             return (
               <li key={item.href}>
@@ -76,19 +76,19 @@ export function MobileShell({
                         : "text-muted-foreground",
                     )}
                   >
-                    <Icon className="size-5" aria-hidden />
+                    <Icon className="size-6" aria-hidden />
                     {item.label}
                   </Link>
                 ) : (
                   <span
                     aria-disabled="true"
-                    title={`Disponible au lot ${item.lot}`}
+                    title="Bientôt disponible"
                     className={cn(
                       style,
                       "text-muted-foreground cursor-not-allowed opacity-45",
                     )}
                   >
-                    <Icon className="size-5" aria-hidden />
+                    <Icon className="size-6" aria-hidden />
                     {item.label}
                   </span>
                 )}

@@ -1,5 +1,5 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { AppProviders } from "@/components/motion/app-providers";
 
@@ -21,6 +21,13 @@ export const metadata: Metadata = {
   title: "E-School Groupe",
   description:
     "Suivi pédagogique, maintenance du parc informatique et gestion RH d'E-School Groupe.",
+};
+
+/** Plein écran sur téléphone : permet de tenir compte de la zone de sécurité (encoche, barre du bas). */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

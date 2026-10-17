@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SELECT_CLASS } from "@/components/ui/select";
 import { formatDate } from "@/lib/dates";
 import type { FollowUpResult } from "@/lib/validations/attendance-follow-up";
 
@@ -27,9 +28,6 @@ import {
   reopenDay,
   reviewAttendance,
 } from "./actions";
-
-const SELECT_CLASS =
-  "border-input bg-card focus-visible:ring-ring h-11 w-full rounded-lg border px-3 text-base focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50 md:text-sm";
 
 function notify(result: FollowUpResult) {
   if (result.ok) toast.success(result.message);

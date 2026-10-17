@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SELECT_CLASS } from "@/components/ui/select";
 import {
   shouldOfferDraft,
   shouldSaveDraft,
@@ -36,9 +37,6 @@ const OTHER = "__autre__";
 
 /** Une machine de l'inventaire de l'école, proposée dans la liste. */
 export type MachineOption = { id: string; label: string };
-
-const SELECT_CLASS =
-  "border-input bg-card focus-visible:ring-ring h-11 w-full rounded-lg border px-3 text-base focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50 md:text-sm";
 
 /** Pause après la dernière frappe avant d'écrire la copie locale. */
 const AUTOSAVE_DELAY_MS = 800;

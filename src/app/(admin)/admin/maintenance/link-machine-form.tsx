@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { SELECT_CLASS } from "@/components/ui/select";
 
 import { linkTicketToMachine } from "./actions";
 
@@ -24,9 +25,6 @@ export type MachineChoice = {
   /** La machine a déjà un ticket ouvert : le rattachement fusionne les deux. */
   hasOpenTicket: boolean;
 };
-
-const SELECT_CLASS =
-  "border-input bg-card focus-visible:ring-ring h-11 w-full rounded-lg border px-3 text-base focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50 md:text-sm";
 
 /**
  * Rattache un ticket « Autre équipement » à une machine de l'inventaire de

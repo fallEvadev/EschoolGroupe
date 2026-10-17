@@ -11,6 +11,7 @@ import { InvitationShare } from "@/components/invitation-share";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SELECT_CLASS } from "@/components/ui/select";
 import { ROLE_LABELS, type Role } from "@/lib/auth/roles";
 import { CONTRACT_LABELS, CONTRACT_TYPES } from "@/lib/staff";
 import {
@@ -21,9 +22,6 @@ import {
 } from "@/lib/validations/staff";
 
 import { createStaffMember, updateStaffMember } from "./actions";
-
-const SELECT_CLASS =
-  "border-input bg-card focus-visible:ring-ring h-11 w-full rounded-lg border px-3 text-base focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50 md:text-sm";
 
 type StaffFormProps = {
   /** Absent : création d'une recrue. Présent : modification de la fiche. */
