@@ -6,7 +6,7 @@ Ce fichier guide Claude Code lorsqu'il travaille sur ce dépôt.
 
 Plateforme numérique E-School Groupe : suivi pédagogique des formateurs (pointage, rapports journaliers), maintenance du parc informatique, gestion RH et diffusion de bilans aux écoles partenaires.
 
-- Spécifications complètes : `CAHIER_DES_CHARGES.md` (v3.0). **Le lire avant toute nouvelle fonctionnalité.**
+- Spécifications complètes : `CAHIER_DES_CHARGES.md` (v3.0) — **ce fichier n'est pas dans le dépôt** ; seul `cahier_des_charges_e_school_groupe_v2_7.pdf` existe (illisible pour Claude). Awa colle les modules en texte au besoin. Le lire avant toute nouvelle fonctionnalité.
 - Installation et structure : `README.md`.
 - Langue de l'interface, des messages d'erreur et des commentaires métier : **français**. Noms de code (variables, fonctions, tables) : **anglais**.
 
@@ -24,7 +24,7 @@ npm run build          # build de production (doit passer avant tout commit)
 npm run lint           # ESLint
 npm run format         # Prettier
 npm run test           # Vitest
-npm run test:e2e       # Playwright
+npm run test:e2e       # Playwright (pas encore installé : la commande n'existe pas)
 supabase start         # base locale (Docker)
 supabase db reset      # réapplique migrations + seed
 supabase migration new <nom>                                    # nouvelle migration
