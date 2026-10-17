@@ -1,8 +1,7 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 
+import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { assignableRoles } from "@/lib/auth/roles";
@@ -35,13 +34,7 @@ export default async function ModifierPersonnePage({
 
   return (
     <main className="flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-8">
-      <Link
-        href={ficheHref}
-        className="text-primary flex w-fit items-center gap-1 text-sm font-medium"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Retour à la fiche
-      </Link>
+      <BackLink href={ficheHref}>Retour à la fiche</BackLink>
       <PageHeader
         eyebrow="Organisation · RH"
         title="Modifier la fiche"

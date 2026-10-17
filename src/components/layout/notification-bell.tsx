@@ -66,9 +66,9 @@ export function NotificationBell({
     <Link
       href={href}
       aria-label={bellLabel(count)}
-      className="text-navy focus-visible:ring-ring relative flex size-10 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
+      className="text-navy focus-visible:ring-ring relative flex size-11 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
     >
-      <Bell className="size-5" aria-hidden />
+      <Bell className="size-6" aria-hidden />
       {label && (
         <span
           aria-hidden

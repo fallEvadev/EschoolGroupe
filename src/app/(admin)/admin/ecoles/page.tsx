@@ -1,6 +1,7 @@
-import { ArrowLeft, MapPin, Plus } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import Link from "next/link";
 
+import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Stagger, StaggerItem } from "@/components/motion/stagger";
 import { Badge } from "@/components/ui/badge";
@@ -317,13 +318,9 @@ async function SchoolDetail({
   return (
     <Card className="flex flex-col">
       <div className="flex flex-col gap-4 border-b p-4 sm:p-6">
-        <Link
-          href={backHref}
-          className="text-primary flex items-center gap-1 text-sm font-medium lg:hidden"
-        >
-          <ArrowLeft className="size-4" aria-hidden />
+        <BackLink href={backHref} className="lg:hidden">
           Retour aux écoles
-        </Link>
+        </BackLink>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="flex min-w-0 flex-1 flex-col gap-1">

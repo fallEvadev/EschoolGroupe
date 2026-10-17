@@ -1,6 +1,4 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
-
+import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { DEFAULT_LATE_TOLERANCE_MINUTES } from "@/lib/schools";
@@ -15,13 +13,7 @@ export default async function NouvelleEcolePage() {
 
   return (
     <main className="flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-8">
-      <Link
-        href="/admin/ecoles"
-        className="text-primary flex w-fit items-center gap-1 text-sm font-medium"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Écoles
-      </Link>
+      <BackLink href="/admin/ecoles">Écoles</BackLink>
       <PageHeader
         eyebrow="Pilotage pédagogique"
         title="Ajouter une école"

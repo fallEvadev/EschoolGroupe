@@ -1,6 +1,7 @@
-import { ArrowLeft, School } from "lucide-react";
+import { School } from "lucide-react";
 import Link from "next/link";
 
+import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -152,13 +153,9 @@ export default async function ParcPage({
 
           {selected && machinesResult ? (
             <div className="flex flex-col gap-3">
-              <Link
-                href="/admin/parc"
-                className="text-primary flex items-center gap-1 text-sm font-medium lg:hidden"
-              >
-                <ArrowLeft className="size-4" aria-hidden />
+              <BackLink href="/admin/parc" className="lg:hidden">
                 Retour aux écoles
-              </Link>
+              </BackLink>
               {"error" in machinesResult ? (
                 <p className="bg-warning-soft text-warning rounded-lg p-3 text-sm">
                   {machinesResult.error}

@@ -1,6 +1,7 @@
-import { ArrowLeft, Wrench } from "lucide-react";
+import { Wrench } from "lucide-react";
 import Link from "next/link";
 
+import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -427,13 +428,9 @@ async function TicketDetail({
   return (
     <Card className="flex flex-col">
       <div className="flex flex-col gap-3 border-b p-4 sm:p-6">
-        <Link
-          href={backHref}
-          className="text-primary flex items-center gap-1 text-sm font-medium lg:hidden"
-        >
-          <ArrowLeft className="size-4" aria-hidden />
+        <BackLink href={backHref} className="lg:hidden">
           Retour aux tickets
-        </Link>
+        </BackLink>
         <div className="flex flex-wrap items-start gap-3">
           <div className="min-w-0 flex-1">
             <h2 className="text-2xl font-bold break-words">
