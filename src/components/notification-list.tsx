@@ -28,6 +28,7 @@ export function NotificationList({ items }: { items: NotificationItem[] }) {
       {unread > 0 && (
         <div>
           <Button
+            className="w-full sm:w-auto"
             variant="outline"
             size="sm"
             disabled={pending}

@@ -374,7 +374,11 @@ function AddSlotForm({ schoolId }: { schoolId: string }) {
         </div>
       </div>
       <div>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button
+          className="w-full sm:w-auto"
+          type="submit"
+          disabled={isSubmitting}
+        >
           <CalendarPlus aria-hidden />
           {isSubmitting ? "Ajout…" : "Ajouter le créneau"}
         </Button>

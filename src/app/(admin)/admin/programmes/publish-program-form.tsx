@@ -189,7 +189,7 @@ export function PublishProgramForm({ defaultMonth }: { defaultMonth: string }) {
         )}
 
         <div>
-          <Button type="submit" disabled={busy}>
+          <Button className="w-full sm:w-auto" type="submit" disabled={busy}>
             <Upload aria-hidden />
             {busy ? "Publication…" : "Publier le programme"}
           </Button>

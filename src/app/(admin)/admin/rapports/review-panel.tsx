@@ -156,6 +156,7 @@ export function ReviewPanel({
                   />
                   <div>
                     <Button
+                      className="w-full sm:w-auto"
                       type="button"
                       variant="ghost"
                       size="sm"
@@ -180,6 +181,7 @@ export function ReviewPanel({
             {!draft.equipmentOk && draft.issues.length < MAX_ISSUES && (
               <div>
                 <Button
+                  className="w-full sm:w-auto"
                   type="button"
                   variant="outline"
                   size="sm"

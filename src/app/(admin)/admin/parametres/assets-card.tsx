@@ -108,7 +108,12 @@ function AssetUploader({ kind, url }: { kind: AssetKind; url: string | null }) {
       )}
 
       <div>
-        <Button type="submit" variant="outline" disabled={pending}>
+        <Button
+          className="w-full sm:w-auto"
+          type="submit"
+          variant="outline"
+          disabled={pending}
+        >
           {pending ? "Envoi…" : "Enregistrer"}
         </Button>
       </div>

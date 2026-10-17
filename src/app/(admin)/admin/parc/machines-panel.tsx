@@ -169,7 +169,7 @@ function AddMachineForm({ schoolId }: { schoolId: string }) {
   if (!open) {
     return (
       <div>
-        <Button onClick={() => setOpen(true)}>
+        <Button className="w-full sm:w-auto" onClick={() => setOpen(true)}>
           <Plus aria-hidden />
           Ajouter une machine
         </Button>

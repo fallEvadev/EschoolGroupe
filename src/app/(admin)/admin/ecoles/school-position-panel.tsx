@@ -105,7 +105,12 @@ export function SchoolPositionPanel({ schoolId }: { schoolId: string }) {
           </p>
         )}
         <div>
-          <Button type="submit" variant="outline" disabled={pending}>
+          <Button
+            className="w-full sm:w-auto"
+            type="submit"
+            variant="outline"
+            disabled={pending}
+          >
             {pending ? "Enregistrement…" : "Enregistrer la position"}
           </Button>
         </div>

@@ -89,7 +89,11 @@ export function PublishRulesForm({ initial }: { initial: PublishRulesInput }) {
       </div>
 
       <div>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button
+          className="w-full sm:w-auto"
+          type="submit"
+          disabled={isSubmitting}
+        >
           {isSubmitting ? "Publication…" : "Publier cette version"}
         </Button>
       </div>

@@ -104,6 +104,7 @@ export function TicketActions({
       {archivable && (
         <div>
           <Button
+            className="w-full sm:w-auto"
             variant="outline"
             disabled={pending}
             onClick={() => setConfirming(true)}

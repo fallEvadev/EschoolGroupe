@@ -302,7 +302,11 @@ export function ClosedDayControl({
       ))}
 
       <div>
-        <Button variant="outline" onClick={() => setOpen(true)}>
+        <Button
+          className="w-full sm:w-auto"
+          variant="outline"
+          onClick={() => setOpen(true)}
+        >
           <CalendarOff aria-hidden />
           Marquer ce jour sans cours
         </Button>

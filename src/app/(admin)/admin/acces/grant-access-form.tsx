@@ -69,7 +69,7 @@ export function GrantAccessForm() {
   if (!open) {
     return (
       <div>
-        <Button onClick={() => setOpen(true)}>
+        <Button className="w-full sm:w-auto" onClick={() => setOpen(true)}>
           <UserPlus aria-hidden />
           Donner un accès
         </Button>
