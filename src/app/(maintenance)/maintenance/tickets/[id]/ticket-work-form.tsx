@@ -53,11 +53,14 @@ export function TicketWorkForm({
   return (
     <div className="flex flex-col gap-5">
       {status === "ouvert" && (
-        <div>
-          <Button size="lg" disabled={pending} onClick={start}>
-            {pending ? "Enregistrement…" : "Prendre en charge"}
-          </Button>
-        </div>
+        <Button
+          size="lg"
+          className="w-full sm:w-auto sm:self-start"
+          disabled={pending}
+          onClick={start}
+        >
+          {pending ? "Enregistrement…" : "Prendre en charge"}
+        </Button>
       )}
 
       <form onSubmit={resolve} className="flex flex-col gap-3" noValidate>
@@ -75,11 +78,15 @@ export function TicketWorkForm({
             {error}
           </p>
         )}
-        <div>
-          <Button type="submit" size="lg" variant="outline" disabled={pending}>
-            {pending ? "Enregistrement…" : "Marquer résolu"}
-          </Button>
-        </div>
+        <Button
+          type="submit"
+          size="lg"
+          variant="outline"
+          className="w-full sm:w-auto sm:self-start"
+          disabled={pending}
+        >
+          {pending ? "Enregistrement…" : "Marquer résolu"}
+        </Button>
       </form>
     </div>
   );

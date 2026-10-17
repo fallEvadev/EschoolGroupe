@@ -1,6 +1,4 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
-
+import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { NotificationList } from "@/components/notification-list";
 import { Card } from "@/components/ui/card";
@@ -15,13 +13,7 @@ export default async function MaintenanceNotificationsPage() {
 
   return (
     <main className="flex w-full flex-col gap-6 p-4 sm:p-8">
-      <Link
-        href="/maintenance"
-        className="text-primary flex w-fit items-center gap-1 text-sm font-medium"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Mes tickets
-      </Link>
+      <BackLink href="/maintenance">Mes tickets</BackLink>
       <PageHeader
         eyebrow="Maintenance"
         title="Notifications"

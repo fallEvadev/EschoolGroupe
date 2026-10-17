@@ -1,7 +1,6 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -39,13 +38,9 @@ export default async function TicketPage({
 
   return (
     <main className="flex w-full flex-col gap-4 p-4 sm:p-8">
-      <Link
-        href={workable ? "/maintenance" : "/maintenance/interventions"}
-        className="text-primary flex items-center gap-1 text-sm font-medium"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
+      <BackLink href={workable ? "/maintenance" : "/maintenance/interventions"}>
         Retour aux tickets
-      </Link>
+      </BackLink>
 
       <PageHeader
         eyebrow={detail.schoolName}
@@ -57,7 +52,7 @@ export default async function TicketPage({
         }
         actions={
           status ? (
-            <Badge variant={TICKET_BADGE[status]}>
+            <Badge variant={TICKET_BADGE[status]} className="w-fit">
               {TICKET_LABELS[status]}
             </Badge>
           ) : undefined
