@@ -1,6 +1,4 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
-
+import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { requireSpace } from "@/lib/auth/guards";
@@ -16,13 +14,7 @@ export default async function NotificationsPage() {
 
   return (
     <main className="flex w-full flex-col gap-6 p-4 sm:p-8">
-      <Link
-        href="/formateur"
-        className="text-primary flex w-fit items-center gap-1 text-sm font-medium"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Accueil
-      </Link>
+      <BackLink href="/formateur">Accueil</BackLink>
       <PageHeader
         eyebrow="Espace formateur"
         title="Notifications"

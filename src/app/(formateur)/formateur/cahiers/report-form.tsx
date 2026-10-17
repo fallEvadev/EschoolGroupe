@@ -449,6 +449,7 @@ export function ReportForm({
                       type="button"
                       variant="ghost"
                       size="sm"
+                      className="w-full sm:w-auto"
                       disabled={busy}
                       onClick={() => removeIssue(index)}
                     >
@@ -464,6 +465,7 @@ export function ReportForm({
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="w-full sm:w-auto"
                     disabled={busy}
                     onClick={() =>
                       update({ issues: [...content.issues, emptyIssue()] })

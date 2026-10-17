@@ -68,7 +68,12 @@ export default async function DocumentsPage() {
           <p className="text-sm">
             Relisez à tout moment la version en vigueur du règlement.
           </p>
-          <Button variant="outline" size="sm" asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto"
+            asChild
+          >
             <Link href="/reglement">
               <ScrollText aria-hidden />
               Lire le règlement

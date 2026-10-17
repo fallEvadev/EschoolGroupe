@@ -143,11 +143,9 @@ export function PointageForm({
             {confirmed.explanation}
           </p>
         )}
-        <div>
-          <Button asChild>
-            <Link href="/formateur">Retour à l&apos;accueil</Link>
-          </Button>
-        </div>
+        <Button asChild size="lg" className="w-full sm:w-auto">
+          <Link href="/formateur">Retour à l&apos;accueil</Link>
+        </Button>
       </Card>
     );
   }
@@ -186,8 +184,7 @@ export function PointageForm({
             className="h-14 text-center text-3xl font-bold tracking-[0.3em] tabular-nums"
           />
           <p id="code-help" className="text-muted-foreground text-sm">
-            Le directeur de l&apos;école vous donne ce code. Votre position est
-            relevée au moment où vous touchez le bouton : autorisez la
+            Le directeur de l&apos;école vous donne ce code. Autorisez la
             localisation quand le téléphone le demande.
           </p>
         </div>

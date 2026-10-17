@@ -1,4 +1,4 @@
-import { CalendarDays, Clock, MapPin } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
@@ -72,15 +72,6 @@ export default async function FormateurPage() {
           <OpenProgramButton programId={currentProgram.id} variant="outline" />
         </Card>
       )}
-
-      <div>
-        <Button variant="outline" asChild>
-          <Link href="/formateur/planning">
-            <CalendarDays aria-hidden />
-            Voir mon planning de la semaine
-          </Link>
-        </Button>
-      </div>
     </main>
   );
 }

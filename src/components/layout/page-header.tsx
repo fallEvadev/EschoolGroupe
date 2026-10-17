@@ -26,7 +26,11 @@ export function PageHeader({
           <p className="text-muted-foreground max-w-3xl">{description}</p>
         )}
       </div>
-      {actions && <div className="flex shrink-0 gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
+          {actions}
+        </div>
+      )}
     </header>
   );
 }

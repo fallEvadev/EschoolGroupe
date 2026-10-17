@@ -1,7 +1,6 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -96,13 +95,7 @@ export default async function ReportPage({
 
   return (
     <main className="flex w-full flex-col gap-6 p-4 sm:p-8">
-      <Link
-        href="/formateur/cahiers"
-        className="text-primary flex w-fit items-center gap-1 text-sm font-medium"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Mes rapports
-      </Link>
+      <BackLink href="/formateur/cahiers">Mes rapports</BackLink>
       <PageHeader eyebrow="Rapport journalier" title="Rapport du cours" />
       {content}
     </main>
