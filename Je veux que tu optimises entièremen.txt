@@ -1,0 +1,34 @@
+Je veux que tu optimises entièrement cette plateforme pour en faire une expérience moderne, esthétique et parfaitement adaptée au mobile, tout en améliorant également la version desktop.
+
+1. Une expérience mobile irréprochable
+
+* Transformer l’interface mobile pour qu’elle ressemble réellement à une application mobile professionnelle, fluide et agréable à utiliser.
+* Augmenter sensiblement la taille des textes, des icônes, des champs de saisie et des éléments interactifs, avec des espacements mieux adaptés aux petits écrans.
+* Prévoir des boutons suffisamment larges et hauts pour être facilement utilisables au toucher. Utiliser des boutons en pleine largeur lorsque c’est pertinent et organiser intelligemment les boutons lorsqu’il y en a plusieurs sur une même ligne.
+* Mettre en place une navigation intuitive, avec des boutons de retour clairement positionnés, des parcours cohérents et aucun bouton inutile servant simplement à naviguer vers une page sans réelle valeur ajoutée.
+* Supprimer ou simplifier tous les éléments superflus sur mobile afin de privilégier l’essentiel, sans sacrifier les fonctionnalités importantes.
+* Optimiser particulièrement l’interface des opérateurs : formulaires simples, champs larges, saisie confortable, actions accessibles et utilisation rapide, même sur un petit écran.
+
+2. Transformer la plateforme en PWA
+Faire de la plateforme une véritable Progressive Web App (PWA), installable sur mobile et offrant une expérience aussi proche que possible d’une application native. Configurer correctement le manifeste, les icônes, l’écran de lancement, le comportement en mode autonome et les autres éléments nécessaires. Prévoir également une gestion appropriée de la connexion et du mode hors ligne lorsque cela est pertinent et compatible avec le fonctionnement de la plateforme.
+
+3. Revoir et optimiser le logo
+Réduire le logo lorsqu’il est trop imposant et l’adapter à chaque contexte d’utilisation. Examiner le fichier source, extraire proprement le fond si nécessaire et conserver le texte et les éléments graphiques utiles. Créer les déclinaisons adaptées aux thèmes clair et sombre, ainsi qu’une version compacte ou une icône lorsque l’espace est limité. Veiller à ce que le logo reste net, lisible et bien proportionné partout, notamment sur mobile.
+
+4. Mettre en place un véritable thème clair et sombre
+Configurer les thèmes clair et sombre sur l’ensemble de la plateforme. Par défaut, respecter automatiquement le thème du système de l’utilisateur, tout en lui permettant de choisir facilement son thème préféré depuis l’interface. Ce choix doit être appliqué de manière cohérente à toutes les pages, aux formulaires, aux menus, aux tableaux, aux fenêtres modales, aux icônes et aux autres composants. Éviter les problèmes de contraste et les éléments qui conservent des couleurs inadaptées au thème actif.
+
+5. Moderniser également la version desktop
+Revoir l’interface desktop pour obtenir un rendu moderne, professionnel, épuré et cohérent. Optimiser les espacements, les proportions, la hiérarchie visuelle, la navigation et l’utilisation de l’espace disponible. L’objectif n’est pas simplement d’agrandir la version mobile, mais de proposer une véritable interface desktop bien pensée, avec une présentation adaptée aux grands écrans.
+
+6. Simplifier et améliorer l’ergonomie générale
+Supprimer les textes, libellés, boutons, espaces et éléments visuels inutiles. Privilégier des libellés courts, des actions évidentes et des parcours simples. Éviter les interfaces surchargées, les boutons trop petits, les formulaires inutilement complexes et les informations répétées. Chaque élément doit avoir une utilité claire.
+
+Conserver les fonctionnalités existantes et leur logique métier. Ne pas supprimer une fonctionnalité importante simplement pour alléger l’interface : il faut avant tout améliorer sa présentation, son accessibilité et sa facilité d’utilisation. Respecter également l’identité visuelle existante lorsqu’elle est pertinente, tout en corrigeant les défauts.
+
+7. Tout doit être parfaitement en français
+L’intégralité de l’interface doit être rédigée en français : menus, boutons, titres, formulaires, tableaux, messages de confirmation, erreurs, notifications, fenêtres modales, états vides, paramètres, écrans d’installation et autres éléments visibles. Éliminer les textes en anglais, les libellés techniques exposés à l’utilisateur et les traductions approximatives. Employer un français naturel, professionnel, concis et facile à comprendre.
+
+Méthode de travail attendue : commence par examiner l’ensemble de la plateforme et son architecture, puis identifie les problèmes d’ergonomie et les améliorations nécessaires. Implémente ensuite les modifications de manière cohérente sur toutes les pages, et pas uniquement sur la page d’accueil. Vérifie les différents formats d’écran, les interactions tactiles, la navigation, les thèmes clair et sombre, les formulaires et l’installation PWA. Évite les corrections superficielles ou les changements isolés qui créeraient des incohérences.
+
+Le résultat attendu est une plateforme réellement moderne, très agréable sur mobile, aussi simple à utiliser qu’une bonne application native, et parfaitement fonctionnelle sur desktop. La priorité absolue est la qualité de l’expérience mobile, sans négliger la version desktop, la cohérence visuelle et la simplicité d’utilisation. Prends les initiatives nécessaires pour atteindre ce résultat plutôt que de te limiter à appliquer mécaniquement les exemples mentionnés ci-dessus.
