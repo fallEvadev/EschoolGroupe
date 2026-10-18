@@ -125,3 +125,13 @@ Lot en cours : **Lot 6 — Bilans et partenaires** (mettre à jour cette ligne �
 - Lot 2 — RH, fait : invitations, fiches du personnel, note de suivi, dossier administratif (bucket privé), webhook Clerk, désactivation/archivage depuis « Personnel », règlement intérieur versionné (`internal_rules`, `document_acceptances`, acceptation exigée des formateurs et maintenanciers). Contrôle des documents RH (à vérifier, validé, rejeté avec motif) fait : le Lot 2 est terminé côté code, migrations appliquées sur Supabase (les 19 migrations le sont au 11/10/2026) ; reste à tester en conditions réelles.
 
 Ordre des lots : 1 Socle → 2 RH → 3 Pointage → 4 Rapports journaliers → 5 Maintenance → 6 Bilans et partenaires. Ne pas implémenter une fonctionnalité d'un lot futur sans demande explicite.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
