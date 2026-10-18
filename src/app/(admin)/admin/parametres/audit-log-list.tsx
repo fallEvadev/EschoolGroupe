@@ -53,6 +53,21 @@ const ACTION_LABELS: Record<string, string> = {
   school_position_set: "Position d'école enregistrée",
   report_submitted: "Rapport envoyé",
   report_reviewed: "Rapport traité",
+  phone_updated: "Téléphone modifié",
+  machine_created: "Machine ajoutée",
+  machine_updated: "Machine modifiée",
+  ticket_assigned: "Ticket affecté",
+  ticket_unassigned: "Affectation de ticket retirée",
+  ticket_started: "Ticket pris en charge",
+  ticket_resolved: "Ticket résolu",
+  ticket_archived: "Ticket archivé",
+  ticket_linked_to_machine: "Ticket rattaché à une machine",
+  ticket_merged: "Tickets fusionnés",
+  bilans_generated: "Bilans générés",
+  bilan_pdf_attached: "PDF du bilan déposé",
+  bilan_published: "Bilan publié",
+  bilan_emails_sent: "E-mails du bilan envoyés",
+  organization_asset_updated: "Logo ou signature modifié",
 };
 
 const REPORT_VERDICTS: Record<string, string> = {

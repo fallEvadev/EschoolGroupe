@@ -17,6 +17,17 @@ const optionalText = (max: number, message: string) =>
  */
 const PHONE_PATTERN = /^(?:\+221|00221)?[37]\d{8}$/;
 
+/** Téléphone facultatif : nettoyé (sans espaces) puis `null` s'il est vide. */
+export const phoneSchema = z
+  .string()
+  .trim()
+  .transform((value) => value.replace(/[\s.-]/g, ""))
+  .refine(
+    (value) => value === "" || PHONE_PATTERN.test(value),
+    "Numéro invalide (ex. 77 123 45 67 ou +221 77 123 45 67).",
+  )
+  .transform((value) => value || null);
+
 /** Fiche d'un membre du personnel (création et modification). */
 export const staffSchema = z.object({
   firstName: z
@@ -34,15 +45,7 @@ export const staffSchema = z.object({
     .trim()
     .toLowerCase()
     .pipe(z.email("Adresse e-mail invalide.")),
-  phone: z
-    .string()
-    .trim()
-    .transform((value) => value.replace(/[\s.-]/g, ""))
-    .refine(
-      (value) => value === "" || PHONE_PATTERN.test(value),
-      "Numéro invalide (ex. 77 123 45 67 ou +221 77 123 45 67).",
-    )
-    .transform((value) => value || null),
+  phone: phoneSchema,
   role: z.enum(ROLES, { message: "Rôle invalide." }),
   jobTitle: optionalText(
     120,

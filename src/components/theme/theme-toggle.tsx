@@ -13,7 +13,7 @@ import {
 } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
-const ICONS = { auto: Monitor, clair: Sun, sombre: Moon } as const;
+export const THEME_ICONS = { auto: Monitor, clair: Sun, sombre: Moon } as const;
 
 // Le choix vit dans le navigateur (localStorage) : on le lit comme une source
 // externe, ce qui évite tout décalage entre le serveur et le premier affichage.
@@ -45,16 +45,29 @@ function apply(choice: ThemeChoice) {
   document.documentElement.style.colorScheme = dark ? "dark" : "light";
 }
 
+/** Choix de thème actuel de la personne (Automatique tant qu'elle n'a rien choisi). */
+export function useThemeChoice(): ThemeChoice {
+  return useSyncExternalStore<ThemeChoice>(subscribe, readChoice, () => "auto");
+}
+
+/** Enregistre et applique le choix ; tous les boutons de thème se mettent à jour. */
+export function setThemeChoice(next: ThemeChoice) {
+  try {
+    if (next === "auto") localStorage.removeItem(THEME_STORAGE_KEY);
+    else localStorage.setItem(THEME_STORAGE_KEY, next);
+  } catch {
+    // Le choix ne sera pas gardé, mais on l'applique pour cette visite.
+  }
+  apply(next);
+  listeners.forEach((listener) => listener());
+}
+
 /**
  * Bouton « Thème » : un appui passe d'Automatique (réglage de l'appareil) à
  * Clair, puis Sombre. Le choix est gardé dans le navigateur de la personne.
  */
 export function ThemeToggle({ className }: { className?: string }) {
-  const choice = useSyncExternalStore<ThemeChoice>(
-    subscribe,
-    readChoice,
-    () => "auto",
-  );
+  const choice = useThemeChoice();
 
   // Applique le choix (le script de l'en-tête l'a déjà fait au chargement) et,
   // en automatique, suit l'appareil s'il change de thème.
@@ -67,25 +80,13 @@ export function ThemeToggle({ className }: { className?: string }) {
     return () => query.removeEventListener("change", onChange);
   }, [choice]);
 
-  function cycle() {
-    const next = nextThemeChoice(choice);
-    try {
-      if (next === "auto") localStorage.removeItem(THEME_STORAGE_KEY);
-      else localStorage.setItem(THEME_STORAGE_KEY, next);
-    } catch {
-      // Le choix ne sera pas gardé, mais on l'applique pour cette visite.
-      apply(next);
-    }
-    listeners.forEach((listener) => listener());
-  }
-
-  const Icon = ICONS[choice];
+  const Icon = THEME_ICONS[choice];
   const label = `Thème : ${THEME_LABELS[choice].toLowerCase()}. Appuyez pour changer.`;
 
   return (
     <button
       type="button"
-      onClick={cycle}
+      onClick={() => setThemeChoice(nextThemeChoice(choice))}
       aria-label={label}
       title={label}
       className={cn(

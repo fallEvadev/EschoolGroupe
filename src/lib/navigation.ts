@@ -200,7 +200,7 @@ export const FORMATEUR_NAV: NavItem[] = [
     href: "/formateur/profil",
     icon: User,
     lot: 2,
-    available: false,
+    available: true,
   },
 ];
 
@@ -232,7 +232,7 @@ export const MAINTENANCE_NAV: NavItem[] = [
     href: "/maintenance/profil",
     icon: User,
     lot: 2,
-    available: false,
+    available: true,
   },
 ];
 

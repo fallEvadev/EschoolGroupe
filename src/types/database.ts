@@ -1453,6 +1453,7 @@ export type Database = {
         }
         Returns: number
       }
+      set_my_phone: { Args: { p_phone: string }; Returns: undefined }
       set_school_position: {
         Args: {
           p_accuracy_m: number
