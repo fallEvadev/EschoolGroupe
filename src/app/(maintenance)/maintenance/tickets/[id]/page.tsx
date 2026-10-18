@@ -37,7 +37,7 @@ export default async function TicketPage({
   const workable = detail.status === "ouvert" || detail.status === "en_cours";
 
   return (
-    <main className="flex w-full flex-col gap-4 p-4 sm:p-8">
+    <main className="flex w-full max-w-3xl flex-col gap-4 p-4 sm:p-8">
       <BackLink href={workable ? "/maintenance" : "/maintenance/interventions"}>
         Retour aux tickets
       </BackLink>

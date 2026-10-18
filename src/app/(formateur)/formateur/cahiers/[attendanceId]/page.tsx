@@ -94,7 +94,7 @@ export default async function ReportPage({
   }
 
   return (
-    <main className="flex w-full flex-col gap-6 p-4 sm:p-8">
+    <main className="flex w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
       <BackLink href="/formateur/cahiers">Mes rapports</BackLink>
       <PageHeader eyebrow="Rapport journalier" title="Rapport du cours" />
       {content}

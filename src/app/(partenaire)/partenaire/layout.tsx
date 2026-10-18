@@ -24,7 +24,7 @@ export default async function PartenaireLayout({
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col">
-      <header className="flex h-16 items-center justify-between px-4">
+      <header className="flex h-16 items-center justify-between px-4 md:h-[72px] md:px-8">
         <Brand className="text-foreground" />
         <div className="flex items-center gap-1">
           <InstallButton />

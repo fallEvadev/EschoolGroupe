@@ -153,7 +153,7 @@ export function AdminShell({
             </div>
           </div>
         </header>
-        <div className="flex-1">{children}</div>
+        <div className="mx-auto w-full max-w-[1600px] flex-1">{children}</div>
       </div>
     </div>
   );

@@ -94,7 +94,7 @@ export default async function PointagePage({
   }
 
   return (
-    <main className="flex w-full flex-col gap-6 p-4 sm:p-8">
+    <main className="flex w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
       <BackLink href="/formateur">Accueil</BackLink>
       <PageHeader eyebrow="Pointage" title="Pointer ma présence" />
       {content}
