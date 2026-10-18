@@ -1,3 +1,4 @@
+import { frFR } from "@clerk/localizations";
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
@@ -18,6 +19,31 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+/**
+ * Textes de Clerk (connexion, activation, menu du compte) en français. Les
+ * titres sont écrits ici pour ne pas dépendre du nom de l'application saisi
+ * dans le tableau de bord Clerk.
+ */
+const LOCALIZATION = {
+  ...frFR,
+  signIn: {
+    ...frFR.signIn,
+    start: {
+      ...frFR.signIn?.start,
+      title: "Connexion",
+      subtitle: "Bienvenue sur E-School Groupe. Connectez-vous pour continuer.",
+    },
+  },
+  signUp: {
+    ...frFR.signUp,
+    start: {
+      ...frFR.signUp?.start,
+      title: "Créer mon mot de passe",
+      subtitle: "Dernière étape pour accéder à E-School Groupe.",
+    },
+  },
+};
+
 export const metadata: Metadata = {
   title: "E-School Groupe",
   description:
@@ -33,7 +59,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <ClerkProvider>
+    <ClerkProvider localization={LOCALIZATION}>
       <html
         lang="fr"
         className={`${inter.variable} ${jakarta.variable} h-full antialiased`}
