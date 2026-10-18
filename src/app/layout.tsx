@@ -2,6 +2,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { AppProviders } from "@/components/motion/app-providers";
+import { ThemeScript } from "@/components/theme/theme-script";
 
 import "./globals.css";
 
@@ -36,7 +37,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <html
         lang="fr"
         className={`${inter.variable} ${jakarta.variable} h-full antialiased`}
+        suppressHydrationWarning
       >
+        <head>
+          <ThemeScript />
+        </head>
         <body className="flex min-h-full flex-col">
           <AppProviders>{children}</AppProviders>
         </body>

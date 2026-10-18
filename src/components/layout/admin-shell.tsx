@@ -7,6 +7,7 @@ import { useState } from "react";
 import { BrandCard } from "@/components/layout/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -108,7 +109,8 @@ export function AdminShell({
             {organizationName}
           </span>
 
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex items-center gap-2 sm:gap-4">
+            <ThemeToggle />
             {unreadCount !== undefined && (
               <NotificationBell
                 initialCount={unreadCount}

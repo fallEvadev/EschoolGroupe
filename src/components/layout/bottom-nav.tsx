@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 import { Brand } from "@/components/layout/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { FORMATEUR_NAV, MAINTENANCE_NAV } from "@/lib/navigation";
 import { NOTIFICATIONS_PATH } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
@@ -37,8 +38,9 @@ export function MobileShell({
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col">
       <header className="flex h-16 items-center justify-between px-4">
-        <Brand className="text-navy" />
-        <div className="flex items-center gap-2">
+        <Brand className="text-foreground" />
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
           {unreadCount !== undefined && (
             <NotificationBell
               initialCount={unreadCount}

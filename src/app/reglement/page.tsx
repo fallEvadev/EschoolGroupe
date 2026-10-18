@@ -28,7 +28,7 @@ export default async function ReglementPage() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
       <header>
-        <Brand className="text-navy" />
+        <Brand className="text-foreground" />
       </header>
 
       {!rules ? (

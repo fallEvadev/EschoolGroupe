@@ -10,7 +10,8 @@ import {
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // Pas de mode sombre sur la plateforme : thème clair fixe.
+  // Les couleurs viennent des variables du thème (clair ou sombre) ; le thème
+  // « light » de la bibliothèque ne fixe que les teintes des icônes de statut.
   return (
     <Sonner
       theme="light"

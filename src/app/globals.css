@@ -136,3 +136,63 @@
     @apply font-heading tracking-tight;
   }
 }
+
+/*
+ * Thème sombre : mêmes variables que le thème clair, valeurs adaptées.
+ * La classe `dark` est posée sur <html> avant l'affichage (voir
+ * `src/components/theme/theme-script.tsx`) : réglage de l'appareil par défaut,
+ * ou choix de la personne via le bouton « Thème ».
+ * Le bleu de marque est éclairci et son texte passe en bleu nuit, pour que les
+ * liens et les boutons restent lisibles sur fond sombre.
+ */
+.dark {
+  color-scheme: dark;
+
+  --background: #0b1226;
+  --foreground: #e8ecf8;
+  --card: #131c36;
+  --card-foreground: #e8ecf8;
+  --popover: #131c36;
+  --popover-foreground: #e8ecf8;
+
+  --primary: #6b8fff;
+  --primary-foreground: #0b1226;
+
+  --secondary: #1c2749;
+  --secondary-foreground: #e8ecf8;
+  --muted: #18223f;
+  --muted-foreground: #9aa6c7;
+  --accent: #1d2b57;
+  --accent-foreground: #b8ccff;
+
+  --border: #26325a;
+  --input: #34416d;
+  --ring: #6b8fff;
+
+  --navy: #1a2860;
+  --navy-foreground: #ffffff;
+  --sidebar: #0d1534;
+  --sidebar-foreground: #b5c0e3;
+  --sidebar-accent: #3f6ae6;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-strong: #ffffff;
+  --sidebar-hover: rgb(255 255 255 / 0.1);
+  --sidebar-surface: rgb(255 255 255 / 0.05);
+
+  --overlay: rgb(0 0 0 / 0.6);
+
+  --success: #4ade80;
+  --success-soft: #0f2e1d;
+  --warning: #fbbf24;
+  --warning-soft: #33260a;
+  --destructive: #f87171;
+  --destructive-soft: #3a1414;
+  --destructive-foreground: #1a0a0a;
+
+  --chart-1: #5aa2ef;
+  --chart-2: #f58a5f;
+  --chart-3: #34d399;
+
+  --whatsapp: #0e7c45;
+  --whatsapp-foreground: #ffffff;
+}

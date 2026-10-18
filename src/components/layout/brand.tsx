@@ -29,7 +29,7 @@ export function BrandCard({ className }: { className?: string }) {
           <span className="text-primary font-serif text-2xl font-bold tracking-tight">
             SCHOOL
           </span>
-          <span className="font-heading text-navy text-xl font-extrabold">
+          <span className="font-heading text-foreground text-xl font-extrabold">
             Group
           </span>
         </span>
