@@ -36,7 +36,8 @@ export function MobileShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const items = MENUS[space];
+  // Les pages pas encore livrées ne sont pas affichées.
+  const items = MENUS[space].filter((item) => item.available);
   const rootHref = items[0]?.href ?? "/";
 
   // La rubrique reste active dans ses sous-pages (ex. un rapport ouvert).

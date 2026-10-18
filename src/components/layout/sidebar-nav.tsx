@@ -34,7 +34,13 @@ export function SidebarNav({ sections, role, onNavigate }: SidebarNavProps) {
   // Un groupe par menu affiché (barre fixe et menu mobile) : le fond actif
   // glisse à l'intérieur de son propre menu seulement.
   const groupId = useId();
-  const visible = sectionsForRole(sections, role);
+  // Les pages pas encore livrées ne sont pas affichées : un bouton grisé ne sert à rien.
+  const visible = sectionsForRole(sections, role)
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => item.available),
+    }))
+    .filter((section) => section.items.length > 0);
   const rootHref = visible[0]?.items[0]?.href ?? "/";
 
   return (

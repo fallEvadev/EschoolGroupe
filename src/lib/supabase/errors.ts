@@ -20,22 +20,32 @@ export function classifySupabaseError(error: {
   return "other";
 }
 
+/** Ce que voit l'utilisateur : aucun terme technique. */
 export const SUPABASE_ISSUE_MESSAGES: Record<SupabaseIssue, string> = {
-  auth: "Supabase ne reconnaît pas encore la connexion Clerk. Il faut activer l'intégration Supabase dans Clerk, puis ajouter Clerk dans Supabase (Authentication → Sign In / Providers → Third-Party Auth).",
+  auth: "Le service n'est pas encore bien configuré. Contactez l'administrateur technique.",
   migration:
-    "Une table n'existe pas encore : les migrations doivent être appliquées sur Supabase (npx supabase db push).",
+    "Cette fonction n'est pas encore disponible : la base de données n'est pas à jour. Contactez l'administrateur technique.",
   other: "Données indisponibles pour le moment. Réessayez dans un instant.",
 };
 
+/** Consigne pour la personne qui met en place la plateforme : écrite dans la console du serveur seulement. */
+const SETUP_HINTS: Partial<Record<SupabaseIssue, string>> = {
+  auth: "Supabase ne reconnaît pas la connexion Clerk : activer l'intégration Supabase dans Clerk, puis ajouter Clerk dans Supabase (Authentication → Sign In / Providers → Third-Party Auth).",
+  migration:
+    "Une table n'existe pas : appliquer les migrations sur Supabase (npx supabase db push).",
+};
+
 /**
- * Message à afficher pour une erreur Supabase. Seules les erreurs inattendues
- * sont écrites dans la console (les autres sont des étapes de configuration).
+ * Message à afficher pour une erreur Supabase. Le détail technique (et la
+ * marche à suivre pour la configuration) va dans la console du serveur.
  */
 export function describeSupabaseError(
   context: string,
   error: { code?: string; message: string },
 ): { issue: SupabaseIssue; message: string } {
   const issue = classifySupabaseError(error);
-  if (issue === "other") console.error(`${context} :`, error.message);
+  // Les erreurs de configuration sont aussi écrites, avec leur consigne, pour
+  // que le développeur sache quoi faire sans que l'utilisateur voie du jargon.
+  console.error(`${context} :`, SETUP_HINTS[issue] ?? error.message);
   return { issue, message: SUPABASE_ISSUE_MESSAGES[issue] };
 }
