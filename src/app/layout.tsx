@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { AppProviders } from "@/components/motion/app-providers";
+import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import { ThemeScript } from "@/components/theme/theme-script";
 
 import "./globals.css";
@@ -55,6 +56,11 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Couleur de la barre d'état du téléphone, selon le thème.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f3f5fa" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1226" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -70,6 +76,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </head>
         <body className="flex min-h-full flex-col">
           <AppProviders>{children}</AppProviders>
+          <ServiceWorkerRegister />
         </body>
       </html>
     </ClerkProvider>

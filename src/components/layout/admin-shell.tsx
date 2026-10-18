@@ -7,6 +7,7 @@ import { useState } from "react";
 import { BrandCard } from "@/components/layout/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { InstallButton } from "@/components/pwa/install-button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -110,6 +111,7 @@ export function AdminShell({
           </span>
 
           <div className="ml-auto flex items-center gap-2 sm:gap-4">
+            <InstallButton />
             <ThemeToggle />
             {unreadCount !== undefined && (
               <NotificationBell

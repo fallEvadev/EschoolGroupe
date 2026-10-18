@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 import { Brand } from "@/components/layout/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
+import { InstallButton } from "@/components/pwa/install-button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { FORMATEUR_NAV, MAINTENANCE_NAV } from "@/lib/navigation";
 import { NOTIFICATIONS_PATH } from "@/lib/notifications";
@@ -40,6 +41,7 @@ export function MobileShell({
       <header className="flex h-16 items-center justify-between px-4">
         <Brand className="text-foreground" />
         <div className="flex items-center gap-1">
+          <InstallButton />
           <ThemeToggle />
           {unreadCount !== undefined && (
             <NotificationBell

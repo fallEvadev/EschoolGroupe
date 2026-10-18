@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
   "/connexion(.*)",
   "/activation(.*)", // activation du compte après invitation RH
   "/non-autorise",
+  "/hors-ligne", // page affichée sans réseau (service worker)
   "/charte", // aperçu temporaire de la charte graphique
   "/api/webhooks(.*)", // webhooks signés (Clerk, WhatsApp)
 ]);

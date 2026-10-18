@@ -2,6 +2,7 @@ import { UserButton } from "@clerk/nextjs";
 
 import { Brand } from "@/components/layout/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
+import { InstallButton } from "@/components/pwa/install-button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { requireSpace } from "@/lib/auth/guards";
 import { NOTIFICATIONS_PATH, NOTIFIED_ROLES } from "@/lib/notifications";
@@ -26,6 +27,7 @@ export default async function PartenaireLayout({
       <header className="flex h-16 items-center justify-between px-4">
         <Brand className="text-foreground" />
         <div className="flex items-center gap-1">
+          <InstallButton />
           <ThemeToggle />
           {unreadCount !== undefined && (
             <NotificationBell
