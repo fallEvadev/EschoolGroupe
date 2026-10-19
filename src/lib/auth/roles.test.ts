@@ -84,6 +84,16 @@ describe("canAccessPath", () => {
     }
   });
 
+  it("réserve /admin/documents à la Direction pédagogique, aux RH et au Super-Admin", () => {
+    for (const role of ROLES) {
+      expect(canAccessPath(role, "/admin/documents")).toBe(
+        role === "admin_pedagogie" ||
+          role === "admin_rh" ||
+          role === "super_admin",
+      );
+    }
+  });
+
   it("réserve /admin/parc à l'Admin Maintenance et au Super-Admin", () => {
     for (const role of ROLES) {
       expect(canAccessPath(role, "/admin/parc")).toBe(

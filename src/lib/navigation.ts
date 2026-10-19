@@ -142,7 +142,7 @@ export const ADMIN_NAV: NavSection[] = [
         href: "/admin/documents",
         icon: FolderOpen,
         lot: 2,
-        available: false,
+        available: true,
         roles: ["admin_pedagogie", "admin_rh", "super_admin"],
       },
       {
@@ -225,7 +225,7 @@ export const MAINTENANCE_NAV: NavItem[] = [
     href: "/maintenance/equipements",
     icon: Monitor,
     lot: 5,
-    available: false,
+    available: true,
   },
   {
     label: "Profil",
