@@ -9,6 +9,7 @@ import { submitDeparture } from "@/app/(formateur)/formateur/pointage/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form";
 import { CODE_LENGTH, isCodeFormat } from "@/lib/daily-codes";
 
 /**
@@ -85,11 +86,7 @@ export function DepartureForm({ attendanceId }: { attendanceId: string }) {
         </p>
       </div>
 
-      {error && (
-        <p role="alert" className="text-destructive text-sm font-medium">
-          {error}
-        </p>
-      )}
+      <FormError>{error}</FormError>
 
       <Button
         type="submit"

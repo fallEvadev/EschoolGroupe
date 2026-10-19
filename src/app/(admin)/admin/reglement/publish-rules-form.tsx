@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Field, FormActions } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   publishRulesSchema,
@@ -14,16 +14,6 @@ import {
 } from "@/lib/validations/rules";
 
 import { publishRules } from "./actions";
-
-/** Message d'erreur sous un champ. */
-function FieldError({ id, message }: { id: string; message?: string }) {
-  if (!message) return null;
-  return (
-    <p id={id} className="text-destructive text-sm">
-      {message}
-    </p>
-  );
-}
 
 /** Publication d'une nouvelle version (pré-remplie avec la version en vigueur). */
 export function PublishRulesForm({ initial }: { initial: PublishRulesInput }) {
@@ -55,48 +45,28 @@ export function PublishRulesForm({ initial }: { initial: PublishRulesInput }) {
       className="flex flex-col gap-4"
       noValidate
     >
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="rules-title">Titre</Label>
+      <Field id="rules-title" label="Titre" error={errors.title?.message}>
         <Input
-          id="rules-title"
           placeholder="Règlement intérieur du personnel"
           disabled={isSubmitting}
-          aria-invalid={!!errors.title}
-          aria-describedby="rules-title-error"
           {...register("title")}
         />
-        <FieldError id="rules-title-error" message={errors.title?.message} />
-      </div>
+      </Field>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="rules-content">Texte du règlement</Label>
-        <Textarea
-          id="rules-content"
-          rows={14}
-          disabled={isSubmitting}
-          aria-invalid={!!errors.content}
-          aria-describedby="rules-content-error"
-          {...register("content")}
-        />
-        <FieldError
-          id="rules-content-error"
-          message={errors.content?.message}
-        />
-        <p className="text-muted-foreground text-xs">
-          Texte brut : les retours à la ligne sont conservés. Une version
-          publiée ne peut plus être modifiée.
-        </p>
-      </div>
+      <Field
+        id="rules-content"
+        label="Texte du règlement"
+        error={errors.content?.message}
+        hint="Texte brut : les retours à la ligne sont conservés. Une version publiée ne peut plus être modifiée."
+      >
+        <Textarea rows={14} disabled={isSubmitting} {...register("content")} />
+      </Field>
 
-      <div>
-        <Button
-          className="w-full sm:w-auto"
-          type="submit"
-          disabled={isSubmitting}
-        >
+      <FormActions>
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Publication…" : "Publier cette version"}
         </Button>
-      </div>
+      </FormActions>
     </form>
   );
 }

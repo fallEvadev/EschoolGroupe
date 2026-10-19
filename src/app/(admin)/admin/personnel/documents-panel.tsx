@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FormError } from "@/components/ui/form";
 import {
   ACCEPTED_TYPES,
   DOCUMENT_KINDS,
@@ -371,14 +372,12 @@ export function DocumentsPanel({
                   placeholder="Photo floue, document illisible, pièce expirée…"
                 />
               </div>
-              {reviewError && (
-                <p role="alert" className="text-destructive text-sm">
-                  {reviewError}
-                </p>
-              )}
+              {reviewError && <FormError>{reviewError}</FormError>}
 
               <AlertDialogFooter>
-                <AlertDialogCancel disabled={reviewing}>Annuler</AlertDialogCancel>
+                <AlertDialogCancel disabled={reviewing}>
+                  Annuler
+                </AlertDialogCancel>
                 <AlertDialogAction
                   variant="destructive"
                   disabled={reviewing}

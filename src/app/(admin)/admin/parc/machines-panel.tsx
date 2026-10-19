@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SELECT_CLASS } from "@/components/ui/select";
+import { FormError } from "@/components/ui/form";
 import {
   MACHINE_KIND_LABELS,
   MACHINE_KINDS,
@@ -284,11 +285,7 @@ function MachineFields({
         </div>
       </div>
 
-      {error && (
-        <p role="alert" className="text-destructive text-sm font-medium">
-          {error}
-        </p>
-      )}
+      <FormError>{error}</FormError>
 
       <div className="flex gap-2">
         <Button type="submit" disabled={pending}>

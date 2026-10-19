@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form";
 
 import { acceptRules } from "./actions";
 
@@ -54,11 +55,7 @@ export function AcceptRulesForm({
         </Label>
       </div>
 
-      {error && (
-        <p role="alert" className="text-destructive text-sm">
-          {error}
-        </p>
-      )}
+      {error && <FormError>{error}</FormError>}
 
       <div>
         <Button onClick={submit} disabled={!checked || pending}>

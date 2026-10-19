@@ -4,8 +4,8 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Field, FormError } from "@/components/ui/form";
 import { resolveTicketSchema } from "@/lib/validations/tickets";
 
 import { resolveTicket, startTicket } from "../../actions";
@@ -64,20 +64,16 @@ export function TicketWorkForm({
       )}
 
       <form onSubmit={resolve} className="flex flex-col gap-3" noValidate>
-        <Label htmlFor="resolution-note">Note d&apos;intervention</Label>
-        <Textarea
-          id="resolution-note"
-          value={note}
-          maxLength={500}
-          placeholder="Ce que vous avez fait (ex. : câble d'alimentation remplacé)"
-          disabled={pending}
-          onChange={(event) => setNote(event.target.value)}
-        />
-        {error && (
-          <p role="alert" className="text-destructive text-sm font-medium">
-            {error}
-          </p>
-        )}
+        <Field id="resolution-note" label="Note d'intervention">
+          <Textarea
+            value={note}
+            maxLength={500}
+            placeholder="Ce que vous avez fait (ex. : câble d'alimentation remplacé)"
+            disabled={pending}
+            onChange={(event) => setNote(event.target.value)}
+          />
+        </Field>
+        <FormError>{error}</FormError>
         <Button
           type="submit"
           size="lg"

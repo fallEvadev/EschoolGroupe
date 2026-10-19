@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Field, FormActions } from "@/components/ui/form";
 import { staffNoteSchema } from "@/lib/validations/staff";
 
 import { saveStaffNote } from "./actions";
@@ -45,28 +45,30 @@ export function NoteForm({
       className="flex flex-col gap-3"
       noValidate
     >
-      <Label htmlFor="content">
-        Note de suivi{" "}
-        <span className="text-muted-foreground font-normal">
-          (visible par la direction uniquement)
-        </span>
-      </Label>
-      <Textarea
+      <Field
         id="content"
-        rows={4}
-        placeholder="Entretien, évaluation pédagogique, besoins en formation…"
-        disabled={isSubmitting}
-        aria-invalid={!!errors.content}
-        {...register("content")}
-      />
-      {errors.content && (
-        <p className="text-destructive text-sm">{errors.content.message}</p>
-      )}
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+        label={
+          <>
+            Note de suivi{" "}
+            <span className="text-muted-foreground font-normal">
+              (visible par la direction uniquement)
+            </span>
+          </>
+        }
+        error={errors.content?.message}
+      >
+        <Textarea
+          rows={4}
+          placeholder="Entretien, évaluation pédagogique, besoins en formation…"
+          disabled={isSubmitting}
+          {...register("content")}
+        />
+      </Field>
+      <FormActions className="sm:justify-end">
         <Button type="submit" disabled={isSubmitting || !isDirty}>
           {isSubmitting ? "Enregistrement…" : "Enregistrer la note"}
         </Button>
-      </div>
+      </FormActions>
     </form>
   );
 }

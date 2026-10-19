@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FormActions, FormStatus } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   schoolSchema,
   type SchoolData,
@@ -58,9 +57,6 @@ export function SchoolForm({ schoolId, initial }: SchoolFormProps) {
       router.push(`/admin/ecoles?ecole=${response.id}`);
     }
   }
-
-  const describedBy = (field: keyof SchoolFormValues) =>
-    errors[field] ? `${field}-error` : undefined;
 
   return (
     <form

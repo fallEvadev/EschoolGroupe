@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SELECT_CLASS } from "@/components/ui/select";
+import { FormError } from "@/components/ui/form";
 import {
   shouldOfferDraft,
   shouldSaveDraft,
@@ -480,11 +481,7 @@ export function ReportForm({
           )}
         </fieldset>
 
-        {error && (
-          <p role="alert" className="text-destructive text-sm font-medium">
-            {error}
-          </p>
-        )}
+        <FormError>{error}</FormError>
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button type="submit" size="lg" disabled={busy}>

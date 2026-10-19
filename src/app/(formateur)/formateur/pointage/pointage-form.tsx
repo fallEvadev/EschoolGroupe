@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FormError } from "@/components/ui/form";
 import {
   ATTENDANCE_BADGE,
   ATTENDANCE_LABELS,
@@ -165,11 +166,7 @@ export function PointageForm({
           localisation quand le téléphone le demande.
         </p>
 
-        {error && (
-          <p role="alert" className="text-destructive text-sm font-medium">
-            {error}
-          </p>
-        )}
+        <FormError>{error}</FormError>
 
         {problem && (
           <div

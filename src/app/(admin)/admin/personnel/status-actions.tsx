@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FormError } from "@/components/ui/form";
 import {
   needsReason,
   STATUS_ACTION_LABELS,
@@ -120,14 +121,12 @@ export function StatusActions({
                   />
                 </div>
               )}
-              {error && (
-                <p role="alert" className="text-destructive text-sm">
-                  {error}
-                </p>
-              )}
+              {error && <FormError>{error}</FormError>}
 
               <AlertDialogFooter>
-                <AlertDialogCancel disabled={pending}>Annuler</AlertDialogCancel>
+                <AlertDialogCancel disabled={pending}>
+                  Annuler
+                </AlertDialogCancel>
                 <AlertDialogAction
                   variant={open === "reactivate" ? "default" : "destructive"}
                   disabled={pending}

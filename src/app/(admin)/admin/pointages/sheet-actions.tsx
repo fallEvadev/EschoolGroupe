@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SELECT_CLASS } from "@/components/ui/select";
+import { FormError } from "@/components/ui/form";
 import { formatDate } from "@/lib/dates";
 import type { FollowUpResult } from "@/lib/validations/attendance-follow-up";
 
@@ -114,11 +115,7 @@ function ReasonDialog({
             onChange={(event) => setReason(event.target.value)}
           />
         </div>
-        {error && (
-          <p role="alert" className="text-destructive text-sm">
-            {error}
-          </p>
-        )}
+        {error && <FormError>{error}</FormError>}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>Annuler</AlertDialogCancel>
           <AlertDialogAction

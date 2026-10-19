@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form";
 import {
   BILAN_PDF_MIME,
   BILANS_BUCKET,
@@ -231,11 +232,7 @@ export function BilanRow({ bilan }: { bilan: BilanRowData }) {
           <p className="text-muted-foreground text-xs">
             PDF uniquement, {formatFileSize(MAX_BILAN_PDF_BYTES)} au maximum.
           </p>
-          {error && (
-            <p role="alert" className="text-destructive text-sm font-medium">
-              {error}
-            </p>
-          )}
+          <FormError>{error}</FormError>
         </form>
       )}
 

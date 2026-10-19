@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FormError } from "@/components/ui/form";
 import { parseCoordinatePair } from "@/lib/schools";
 import { schoolPositionSchema } from "@/lib/validations/schools";
 
@@ -76,34 +76,26 @@ export function SchoolPositionPanel({ schoolId }: { schoolId: string }) {
           pour les copier, et collez-les dans le champ Latitude.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="manual-latitude">Latitude</Label>
+          <Field id="manual-latitude" label="Latitude">
             <Input
-              id="manual-latitude"
               inputMode="decimal"
               placeholder="14.692800"
               value={latitude}
               disabled={pending}
               onChange={(event) => changeLatitude(event.target.value)}
             />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="manual-longitude">Longitude</Label>
+          </Field>
+          <Field id="manual-longitude" label="Longitude">
             <Input
-              id="manual-longitude"
               inputMode="decimal"
               placeholder="-17.446700"
               value={longitude}
               disabled={pending}
               onChange={(event) => setLongitude(event.target.value)}
             />
-          </div>
+          </Field>
         </div>
-        {error && (
-          <p role="alert" className="text-destructive text-sm font-medium">
-            {error}
-          </p>
-        )}
+        <FormError>{error}</FormError>
         <div>
           <Button
             className="w-full sm:w-auto"

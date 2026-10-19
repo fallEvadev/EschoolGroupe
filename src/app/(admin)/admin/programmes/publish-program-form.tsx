@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form";
 import { formatMonthLabel, isIsoMonth } from "@/lib/dates";
 import {
   defaultProgramTitle,
@@ -182,11 +183,7 @@ export function PublishProgramForm({ defaultMonth }: { defaultMonth: string }) {
           />
         </div>
 
-        {error && (
-          <p role="alert" className="text-destructive text-sm font-medium">
-            {error}
-          </p>
-        )}
+        <FormError>{error}</FormError>
 
         <div>
           <Button className="w-full sm:w-auto" type="submit" disabled={busy}>

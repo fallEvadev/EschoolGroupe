@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { FormError } from "@/components/ui/form";
 import { checkSchoolPosition } from "@/lib/attendance";
 import { getDevicePosition } from "@/lib/geolocation";
 
@@ -123,11 +124,7 @@ export function SchoolPositionCard({
         demande.
       </p>
 
-      {error && (
-        <p role="alert" className="text-destructive text-sm font-medium">
-          {error}
-        </p>
-      )}
+      <FormError>{error}</FormError>
 
       <AlertDialog
         open={confirming}
@@ -146,11 +143,7 @@ export function SchoolPositionCard({
               l&apos;ancienne : tous les pointages y seront comparés.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {error && (
-            <p role="alert" className="text-destructive text-sm">
-              {error}
-            </p>
-          )}
+          {error && <FormError>{error}</FormError>}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={busy}>Annuler</AlertDialogCancel>
             <AlertDialogAction

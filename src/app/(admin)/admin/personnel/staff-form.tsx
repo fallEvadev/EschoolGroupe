@@ -11,7 +11,6 @@ import { InvitationShare } from "@/components/invitation-share";
 import { Button } from "@/components/ui/button";
 import { Field, FormActions, FormStatus } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { SELECT_CLASS } from "@/components/ui/select";
 import { ROLE_LABELS, type Role } from "@/lib/auth/roles";
 import { CONTRACT_LABELS, CONTRACT_TYPES } from "@/lib/staff";

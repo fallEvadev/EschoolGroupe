@@ -8,8 +8,9 @@ import { useForm } from "react-hook-form";
 import { InvitationShare } from "@/components/invitation-share";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Field, FormActions, FormStatus } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { ROLES, ROLE_LABELS } from "@/lib/auth/roles";
 import {
   grantAccessSchema,
@@ -26,16 +27,6 @@ const EMPTY: GrantAccessValues = {
   phone: "",
   role: "formateur",
 };
-
-/** Message d'erreur sous un champ. */
-function FieldError({ id, message }: { id: string; message?: string }) {
-  if (!message) return null;
-  return (
-    <p id={id} className="text-destructive text-sm">
-      {message}
-    </p>
-  );
-}
 
 /**
  * « Donner un accès » : crée la fiche, envoie l'invitation par e-mail,
@@ -101,7 +92,7 @@ export function GrantAccessForm() {
             l&apos;invitation par e-mail a été envoyée.
           </p>
         )}
-        <div className="flex flex-col gap-2 border-t pt-4 sm:flex-row">
+        <FormActions className="border-t pt-4">
           <Button variant="outline" onClick={restart}>
             Donner un autre accès
           </Button>
@@ -114,7 +105,7 @@ export function GrantAccessForm() {
           >
             Fermer
           </Button>
-        </div>
+        </FormActions>
       </Card>
     );
   }
@@ -134,79 +125,63 @@ export function GrantAccessForm() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="grant-fullName">Nom complet</Label>
+        <Field
+          id="grant-fullName"
+          label="Nom complet"
+          error={errors.fullName?.message}
+          hint="Prénom(s) puis nom : le dernier mot est le nom de famille."
+        >
           <Input
-            id="grant-fullName"
             autoComplete="off"
             placeholder="Ex. : Awa Fall"
             disabled={isSubmitting}
-            aria-invalid={!!errors.fullName}
-            aria-describedby="grant-fullName-error"
             {...register("fullName")}
           />
-          <FieldError
-            id="grant-fullName-error"
-            message={errors.fullName?.message}
-          />
-          <p className="text-muted-foreground text-sm">
-            Prénom(s) puis nom : le dernier mot est le nom de famille.
-          </p>
-        </div>
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="grant-email">Adresse e-mail</Label>
+          <Field
+            id="grant-email"
+            label="Adresse e-mail"
+            error={errors.email?.message}
+          >
             <Input
-              id="grant-email"
               type="email"
               autoComplete="off"
               disabled={isSubmitting}
-              aria-invalid={!!errors.email}
-              aria-describedby="grant-email-error"
               {...register("email")}
             />
-            <FieldError
-              id="grant-email-error"
-              message={errors.email?.message}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="grant-phone">Numéro WhatsApp (facultatif)</Label>
+          </Field>
+          <Field
+            id="grant-phone"
+            label="Numéro WhatsApp (facultatif)"
+            error={errors.phone?.message}
+          >
             <Input
-              id="grant-phone"
               type="tel"
               inputMode="tel"
               placeholder="77 123 45 67"
               disabled={isSubmitting}
-              aria-invalid={!!errors.phone}
-              aria-describedby="grant-phone-error"
               {...register("phone")}
             />
-            <FieldError
-              id="grant-phone-error"
-              message={errors.phone?.message}
-            />
-          </div>
+          </Field>
         </div>
 
-        <div className="flex flex-col gap-2 sm:max-w-xs">
-          <Label htmlFor="grant-role">Rôle</Label>
-          <select
-            id="grant-role"
-            disabled={isSubmitting}
-            className="border-input bg-card focus-visible:ring-ring h-11 rounded-lg border px-3 text-base focus-visible:ring-2 focus-visible:outline-none md:text-sm"
-            {...register("role")}
-          >
+        <Field id="grant-role" label="Rôle" className="sm:max-w-xs">
+          <Select disabled={isSubmitting} {...register("role")}>
             {ROLES.map((role) => (
               <option key={role} value={role}>
                 {ROLE_LABELS[role]}
               </option>
             ))}
-          </select>
-        </div>
+          </Select>
+        </Field>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <FormStatus ok={false}>
+          {result && !result.ok ? result.message : null}
+        </FormStatus>
+
+        <FormActions>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Création…" : "Créer l'accès et envoyer"}
           </Button>
@@ -221,12 +196,7 @@ export function GrantAccessForm() {
           >
             Annuler
           </Button>
-          {result && !result.ok && (
-            <p role="status" className="text-destructive text-sm">
-              {result.message}
-            </p>
-          )}
-        </div>
+        </FormActions>
       </form>
     </Card>
   );

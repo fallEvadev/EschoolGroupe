@@ -20,7 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SELECT_CLASS } from "@/components/ui/select";
+import { SELECT_CLASS, Select } from "@/components/ui/select";
+import { Field, FormActions } from "@/components/ui/form";
 import {
   formatSlot,
   formatTime,
@@ -305,7 +306,6 @@ function AddSlotForm({ schoolId }: { schoolId: string }) {
     if (result.ok) reset({ ...getValues(), label: "" });
   }
 
-  const dayError = errors.weekday?.message;
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -315,12 +315,9 @@ function AddSlotForm({ schoolId }: { schoolId: string }) {
       <h4 className="font-semibold">Ajouter un créneau</h4>
       <input type="hidden" {...register("schoolId")} />
       <div className="grid gap-4 sm:grid-cols-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="slot-weekday">Jour</Label>
-          <select
-            id="slot-weekday"
+        <Field id="slot-weekday" label="Jour" error={errors.weekday?.message}>
+          <Select
             disabled={isSubmitting}
-            className={SELECT_CLASS}
             {...register("weekday", { valueAsNumber: true })}
           >
             {WEEKDAYS.map((day) => (
@@ -328,61 +325,36 @@ function AddSlotForm({ schoolId }: { schoolId: string }) {
                 {WEEKDAY_LABELS[day]}
               </option>
             ))}
-          </select>
-          {dayError && <p className="text-destructive text-sm">{dayError}</p>}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="slot-start">Début</Label>
+          </Select>
+        </Field>
+        <Field id="slot-start" label="Début" error={errors.startsAt?.message}>
           <Input
-            id="slot-start"
             type="time"
             disabled={isSubmitting}
-            aria-invalid={!!errors.startsAt}
             {...register("startsAt")}
           />
-          {errors.startsAt && (
-            <p className="text-destructive text-sm">
-              {errors.startsAt.message}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="slot-end">Fin</Label>
+        </Field>
+        <Field id="slot-end" label="Fin" error={errors.endsAt?.message}>
+          <Input type="time" disabled={isSubmitting} {...register("endsAt")} />
+        </Field>
+        <Field
+          id="slot-label"
+          label="Libellé (facultatif)"
+          error={errors.label?.message}
+        >
           <Input
-            id="slot-end"
-            type="time"
-            disabled={isSubmitting}
-            aria-invalid={!!errors.endsAt}
-            {...register("endsAt")}
-          />
-          {errors.endsAt && (
-            <p className="text-destructive text-sm">{errors.endsAt.message}</p>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="slot-label">Libellé (facultatif)</Label>
-          <Input
-            id="slot-label"
             placeholder="Matin"
             disabled={isSubmitting}
-            aria-invalid={!!errors.label}
             {...register("label")}
           />
-          {errors.label && (
-            <p className="text-destructive text-sm">{errors.label.message}</p>
-          )}
-        </div>
+        </Field>
       </div>
-      <div>
-        <Button
-          className="w-full sm:w-auto"
-          type="submit"
-          disabled={isSubmitting}
-        >
+      <FormActions>
+        <Button type="submit" disabled={isSubmitting}>
           <CalendarPlus aria-hidden />
           {isSubmitting ? "Ajout…" : "Ajouter le créneau"}
         </Button>
-      </div>
+      </FormActions>
     </form>
   );
 }

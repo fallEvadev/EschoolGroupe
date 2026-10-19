@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FormError } from "@/components/ui/form";
 import { emptyIssue, MAX_ISSUES, type ReportContent } from "@/lib/reports";
 import type { ReviewDecision } from "@/lib/validations/reports";
 
@@ -221,11 +222,7 @@ export function ReviewPanel({
         </div>
       )}
 
-      {error && (
-        <p role="alert" className="text-destructive text-sm font-medium">
-          {error}
-        </p>
-      )}
+      <FormError>{error}</FormError>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         {mode === "idle" ? (

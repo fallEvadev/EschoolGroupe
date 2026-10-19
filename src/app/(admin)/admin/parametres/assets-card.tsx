@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/ui/form";
 import {
   ASSET_KINDS,
   ASSET_LABELS,
@@ -101,11 +102,7 @@ function AssetUploader({ kind, url }: { kind: AssetKind; url: string | null }) {
         />
       </div>
 
-      {error && (
-        <p role="alert" className="text-destructive text-sm font-medium">
-          {error}
-        </p>
-      )}
+      <FormError>{error}</FormError>
 
       <div>
         <Button

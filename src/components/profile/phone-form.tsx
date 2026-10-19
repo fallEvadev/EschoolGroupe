@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ui/form";
 import { updateMyPhone } from "@/lib/profile-actions";
 import { myPhoneSchema } from "@/lib/validations/profile";
 
@@ -32,23 +32,17 @@ export function PhoneForm({ initialPhone }: { initialPhone: string | null }) {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3" noValidate>
-      <Label htmlFor="my-phone">Téléphone</Label>
-      <Input
-        id="my-phone"
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel"
-        value={phone}
-        placeholder="77 123 45 67"
-        disabled={pending}
-        aria-invalid={!!error}
-        onChange={(event) => setPhone(event.target.value)}
-      />
-      {error && (
-        <p role="alert" className="text-destructive text-sm font-medium">
-          {error}
-        </p>
-      )}
+      <Field id="my-phone" label="Téléphone" error={error ?? undefined}>
+        <Input
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          value={phone}
+          placeholder="77 123 45 67"
+          disabled={pending}
+          onChange={(event) => setPhone(event.target.value)}
+        />
+      </Field>
       <Button
         type="submit"
         variant="outline"
