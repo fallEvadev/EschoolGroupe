@@ -52,6 +52,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Next.js génère lui-même les types des pages (PageProps, LayoutProps) :
+      # sur un dépôt neuf ils n'existent pas, d'où cette étape avant « Types ».
+      - name: Générer les types des routes
+        run: npx next typegen
+
       - name: Types
         run: npx tsc --noEmit
 
