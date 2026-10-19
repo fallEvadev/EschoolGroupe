@@ -59,7 +59,7 @@ export function MobileShell({
               const Icon = item.icon;
               const style =
                 "flex h-11 items-center gap-2 rounded-lg px-4 text-sm font-medium";
-              return item.available ? (
+              return (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -75,19 +75,6 @@ export function MobileShell({
                   <Icon className="size-4" aria-hidden />
                   {item.label}
                 </Link>
-              ) : (
-                <span
-                  key={item.href}
-                  aria-disabled="true"
-                  title="Bientôt disponible"
-                  className={cn(
-                    style,
-                    "text-muted-foreground cursor-not-allowed opacity-45",
-                  )}
-                >
-                  <Icon className="size-4" aria-hidden />
-                  {item.label}
-                </span>
               );
             })}
           </nav>
@@ -125,7 +112,7 @@ export function MobileShell({
 
             return (
               <li key={item.href}>
-                {item.available ? (
+                {
                   <Link
                     href={item.href}
                     aria-current={active ? "page" : undefined}
@@ -139,19 +126,7 @@ export function MobileShell({
                     <Icon className="size-6" aria-hidden />
                     {item.label}
                   </Link>
-                ) : (
-                  <span
-                    aria-disabled="true"
-                    title="Bientôt disponible"
-                    className={cn(
-                      style,
-                      "text-muted-foreground cursor-not-allowed opacity-45",
-                    )}
-                  >
-                    <Icon className="size-6" aria-hidden />
-                    {item.label}
-                  </span>
-                )}
+                }
               </li>
             );
           })}

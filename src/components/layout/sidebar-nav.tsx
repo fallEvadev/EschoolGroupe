@@ -5,11 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useId } from "react";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import type { Role } from "@/lib/auth/roles";
 import { sectionsForRole, type NavSection } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -58,29 +53,6 @@ export function SidebarNav({ sections, role, onNavigate }: SidebarNavProps) {
             )}
             {section.items.map((item) => {
               const Icon = item.icon;
-
-              if (!item.available) {
-                return (
-                  <Tooltip key={item.href}>
-                    <TooltipTrigger asChild>
-                      <span
-                        tabIndex={0}
-                        aria-disabled="true"
-                        className="focus-visible:ring-sidebar-accent flex h-11 cursor-not-allowed items-center gap-3 rounded-xl px-3 text-[15px] font-medium opacity-45 outline-none focus-visible:ring-2"
-                      >
-                        <Icon className="size-5 shrink-0" aria-hidden />
-                        <span className="flex-1">{item.label}</span>
-                        <span className="bg-sidebar-hover rounded-full px-2 py-0.5 text-[10px] font-semibold">
-                          Bientôt
-                        </span>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      Bientôt disponible
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              }
 
               const active = isActive(pathname, item.href, rootHref);
               return (
