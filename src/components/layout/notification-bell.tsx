@@ -65,6 +65,7 @@ export function NotificationBell({
   return (
     <Link
       href={href}
+      data-tour="cloche"
       aria-label={bellLabel(count)}
       className="text-foreground focus-visible:ring-ring relative flex size-11 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
     >

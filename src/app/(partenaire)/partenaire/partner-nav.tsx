@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { navTourId } from "@/lib/tour";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -26,6 +27,7 @@ export function PartnerNav() {
             <li key={link.href}>
               <Link
                 href={link.href}
+                data-tour={navTourId(link.href)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "-mb-px block border-b-2 px-4 py-3 text-base font-medium md:text-sm",

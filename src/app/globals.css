@@ -196,3 +196,61 @@
   --whatsapp: #0e7c45;
   --whatsapp-foreground: #ffffff;
 }
+
+/*
+ * Guide interactif (src/components/tour) : main qui pointe, et anneau qui
+ * pulse autour de l'élément montré. Les animations sont coupées pour les
+ * personnes qui demandent moins de mouvement.
+ */
+@keyframes tour-hand-up {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+@keyframes tour-hand-down {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(9px);
+  }
+}
+
+@keyframes tour-ring {
+  0% {
+    outline-offset: 0;
+    outline-color: color-mix(in srgb, var(--primary) 90%, transparent);
+  }
+  70%,
+  100% {
+    outline-offset: 10px;
+    outline-color: color-mix(in srgb, var(--primary) 0%, transparent);
+  }
+}
+
+.tour-hand-up {
+  animation: tour-hand-up 1s ease-in-out infinite;
+}
+
+.tour-hand-down {
+  animation: tour-hand-down 1s ease-in-out infinite;
+}
+
+.tour-spot {
+  outline: 3px solid var(--primary);
+  animation: tour-ring 1.6s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-hand-up,
+  .tour-hand-down,
+  .tour-spot {
+    animation: none;
+  }
+}

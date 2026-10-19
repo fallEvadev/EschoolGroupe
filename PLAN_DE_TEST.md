@@ -134,6 +134,19 @@ Contrôle après les 5 : Clerk → Webhooks → *Message Attempts* : 5 envois ve
 5. **Publier** : ❓ message « Bilan publié. E-mails : … » (sans Resend : « L'e-mail n'est pas configuré »). Régénère : ❓ le bilan publié est ignoré.
 6. `+directeur` : ❓ cloche « bilan publié », `/partenaire/bilans` : PDF téléchargeable.
 
+## Acte 9 bis — Le guide interactif (10 min)
+
+*À faire avec chaque compte actif (formateur, directeur, admin), dans une fenêtre où le guide n'a jamais été vu.*
+
+1. Arrive sur la page d'accueil de l'espace. ❓ Après environ 1 seconde, **le guide démarre tout seul** : écran assombri, bulle « Étape 1 sur N ».
+2. Avance avec **Suivant**. ❓ Chaque étape **éclaire un vrai bouton du menu**, une **main** le pointe, la progression avance (« Étape 3 sur 7 »).
+3. **Précédent**, puis **Passer** à mi-parcours. ❓ Le guide se ferme et **ne revient pas** au prochain chargement de l'accueil.
+4. Appuie sur le bouton **« ? »** de l'en-tête. ❓ Le guide **redémarre** à l'étape 1.
+5. Va jusqu'à **Terminer** (dernière étape, bouton « ? »). ❓ Le guide se ferme.
+6. **Téléphone, espace admin** : ❓ le **menu coulissant s'ouvre tout seul**, les pages de ton rôle sont montrées une à une, puis le menu se referme avant la cloche.
+7. **Clavier** (ordinateur) : flèche droite et gauche avancent et reculent, **Échap** ferme.
+8. ❓ Sur un rôle qui ne voit pas certaines pages (formateur n'a pas « Pointages »), **l'étape correspondante n'apparaît pas** et le compteur reste juste.
+
 ## Acte 10 — Admin RH et contrôles de sécurité (10 min)
 
 1. Crée une adresse `+rh` en Admin RH depuis `/admin/acces`, active-la, connecte-toi. ❓ Menu : Personnel et Règlement uniquement.

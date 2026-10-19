@@ -2,13 +2,15 @@
 
 import { UserButton } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { BrandCard } from "@/components/layout/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { InstallButton } from "@/components/pwa/install-button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { HelpButton } from "@/components/tour/help-button";
+import { TourProvider } from "@/components/tour/tour-provider";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -20,6 +22,7 @@ import { ROLE_LABELS, type Role } from "@/lib/auth/roles";
 import { ADMIN_NAV } from "@/lib/navigation";
 import { NOTIFICATIONS_PATH } from "@/lib/notifications";
 import { initials } from "@/lib/staff";
+import { TOUR_MENU_EVENT } from "@/lib/tour";
 
 export type AdminShellProps = {
   role: Role;
@@ -49,6 +52,20 @@ export function AdminShell({
 }: AdminShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Le guide ouvre le menu coulissant (téléphone) pour le montrer, puis le referme.
+  // Sur grand écran le menu est déjà affiché : on ne l'ouvre pas une seconde fois.
+  useEffect(() => {
+    function onMenu(event: Event) {
+      const open = Boolean(
+        (event as CustomEvent<{ open: boolean }>).detail?.open,
+      );
+      if (open && window.matchMedia("(min-width: 1024px)").matches) return;
+      setMenuOpen(open);
+    }
+    window.addEventListener(TOUR_MENU_EVENT, onMenu);
+    return () => window.removeEventListener(TOUR_MENU_EVENT, onMenu);
+  }, []);
+
   const sidebar = (
     <div className="bg-sidebar text-sidebar-foreground flex h-full w-64 flex-col gap-6 overflow-y-auto p-4">
       <div className="flex flex-col gap-3">
@@ -77,84 +94,89 @@ export function AdminShell({
   );
 
   return (
-    <div className="flex min-h-screen">
-      {/* Grand écran : barre fixe */}
-      <aside className="sticky top-0 hidden h-screen lg:block">{sidebar}</aside>
-
-      {/* Téléphone : menu coulissant (focus gardé dans le menu, Échap ferme) */}
-      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent
-          side="left"
-          className="[&>button]:text-foreground w-64 border-none p-0 sm:max-w-64 [&>button]:top-6 [&>button]:right-6"
-        >
-          <SheetTitle className="sr-only">Menu</SheetTitle>
-          <SheetDescription className="sr-only">
-            Navigation de l&apos;espace administration
-          </SheetDescription>
+    <TourProvider space="admin">
+      <div className="flex min-h-screen">
+        {/* Grand écran : barre fixe */}
+        <aside className="sticky top-0 hidden h-screen lg:block">
           {sidebar}
-        </SheetContent>
-      </Sheet>
+        </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="bg-card sticky top-0 z-40 flex h-16 items-center gap-3 border-b px-4 sm:px-8 lg:h-20">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setMenuOpen(true)}
-            aria-label="Ouvrir le menu"
+        {/* Téléphone : menu coulissant (focus gardé dans le menu, Échap ferme) */}
+        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+          <SheetContent
+            side="left"
+            className="[&>button]:text-foreground w-64 border-none p-0 sm:max-w-64 [&>button]:top-6 [&>button]:right-6"
           >
-            <Menu />
-          </Button>
-          <span className="font-heading truncate font-semibold lg:hidden">
-            {organizationName}
-          </span>
+            <SheetTitle className="sr-only">Menu</SheetTitle>
+            <SheetDescription className="sr-only">
+              Navigation de l&apos;espace administration
+            </SheetDescription>
+            {sidebar}
+          </SheetContent>
+        </Sheet>
 
-          <div className="ml-auto flex items-center gap-2 sm:gap-4">
-            <InstallButton />
-            <ThemeToggle />
-            {unreadCount !== undefined && (
-              <NotificationBell
-                initialCount={unreadCount}
-                href={NOTIFICATIONS_PATH.admin}
-              />
-            )}
-            {period && (
-              <>
-                <div className="hidden text-right md:block">
-                  <p className="font-heading text-sm font-bold">
-                    Année {period.academicYear}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    Semestre {period.currentSemester} · {today}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="bg-card sticky top-0 z-40 flex h-16 items-center gap-3 border-b px-4 sm:px-8 lg:h-20">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Ouvrir le menu"
+            >
+              <Menu />
+            </Button>
+            <span className="font-heading truncate font-semibold lg:hidden">
+              {organizationName}
+            </span>
+
+            <div className="ml-auto flex items-center gap-2 sm:gap-4">
+              <InstallButton />
+              <ThemeToggle />
+              <HelpButton />
+              {unreadCount !== undefined && (
+                <NotificationBell
+                  initialCount={unreadCount}
+                  href={NOTIFICATIONS_PATH.admin}
+                />
+              )}
+              {period && (
+                <>
+                  <div className="hidden text-right md:block">
+                    <p className="font-heading text-sm font-bold">
+                      Année {period.academicYear}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      Semestre {period.currentSemester} · {today}
+                    </p>
+                  </div>
+                  <span
+                    className="bg-border hidden h-10 w-px md:block"
+                    aria-hidden
+                  />
+                </>
+              )}
+
+              <div className="flex items-center gap-3">
+                <span
+                  aria-hidden
+                  className="bg-accent text-accent-foreground hidden size-10 items-center justify-center rounded-full text-sm font-bold sm:flex"
+                >
+                  {initials(userName)}
+                </span>
+                <div className="hidden min-w-0 sm:block">
+                  <p className="truncate text-sm font-semibold">{userName}</p>
+                  <p className="text-muted-foreground truncate text-xs">
+                    {ROLE_LABELS[role]}
                   </p>
                 </div>
-                <span
-                  className="bg-border hidden h-10 w-px md:block"
-                  aria-hidden
-                />
-              </>
-            )}
-
-            <div className="flex items-center gap-3">
-              <span
-                aria-hidden
-                className="bg-accent text-accent-foreground hidden size-10 items-center justify-center rounded-full text-sm font-bold sm:flex"
-              >
-                {initials(userName)}
-              </span>
-              <div className="hidden min-w-0 sm:block">
-                <p className="truncate text-sm font-semibold">{userName}</p>
-                <p className="text-muted-foreground truncate text-xs">
-                  {ROLE_LABELS[role]}
-                </p>
+                <UserButton />
               </div>
-              <UserButton />
             </div>
-          </div>
-        </header>
-        <div className="mx-auto w-full max-w-[1600px] flex-1">{children}</div>
+          </header>
+          <div className="mx-auto w-full max-w-[1600px] flex-1">{children}</div>
+        </div>
       </div>
-    </div>
+    </TourProvider>
   );
 }

@@ -4,6 +4,8 @@ import { Brand } from "@/components/layout/brand";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { InstallButton } from "@/components/pwa/install-button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { HelpButton } from "@/components/tour/help-button";
+import { TourProvider } from "@/components/tour/tour-provider";
 import { requireSpace } from "@/lib/auth/guards";
 import { NOTIFICATIONS_PATH, NOTIFIED_ROLES } from "@/lib/notifications";
 import { countUnread } from "@/lib/notifications-data";
@@ -23,23 +25,26 @@ export default async function PartenaireLayout({
     : undefined;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col">
-      <header className="flex h-16 items-center justify-between px-4 md:h-[72px] md:px-8">
-        <Brand className="text-foreground" />
-        <div className="flex items-center gap-1">
-          <InstallButton />
-          <ThemeToggle />
-          {unreadCount !== undefined && (
-            <NotificationBell
-              initialCount={unreadCount}
-              href={NOTIFICATIONS_PATH.partenaire}
-            />
-          )}
-          <UserButton />
-        </div>
-      </header>
-      <PartnerNav />
-      <div className="flex-1">{children}</div>
-    </div>
+    <TourProvider space="partenaire">
+      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col">
+        <header className="flex h-16 items-center justify-between px-4 md:h-[72px] md:px-8">
+          <Brand className="text-foreground" />
+          <div className="flex items-center gap-1">
+            <InstallButton />
+            <ThemeToggle />
+            <HelpButton />
+            {unreadCount !== undefined && (
+              <NotificationBell
+                initialCount={unreadCount}
+                href={NOTIFICATIONS_PATH.partenaire}
+              />
+            )}
+            <UserButton />
+          </div>
+        </header>
+        <PartnerNav />
+        <div className="flex-1">{children}</div>
+      </div>
+    </TourProvider>
   );
 }

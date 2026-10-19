@@ -7,6 +7,7 @@ import { useId } from "react";
 
 import type { Role } from "@/lib/auth/roles";
 import { sectionsForRole, type NavSection } from "@/lib/navigation";
+import { navTourId } from "@/lib/tour";
 import { cn } from "@/lib/utils";
 
 type SidebarNavProps = {
@@ -40,7 +41,11 @@ export function SidebarNav({ sections, role, onNavigate }: SidebarNavProps) {
 
   return (
     <LayoutGroup id={groupId}>
-      <nav aria-label="Navigation principale" className="flex flex-col gap-7">
+      <nav
+        aria-label="Navigation principale"
+        data-tour="menu"
+        className="flex flex-col gap-7"
+      >
         {visible.map((section) => (
           <div
             key={section.title ?? "principal"}
@@ -59,6 +64,7 @@ export function SidebarNav({ sections, role, onNavigate }: SidebarNavProps) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  data-tour={navTourId(item.href)}
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className={cn(
