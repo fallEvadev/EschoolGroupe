@@ -1,0 +1,62 @@
+# Contrôle automatique à chaque publication : lint, types, tests et build.
+#
+# Il tourne sur GitHub dès qu'un commit arrive sur `main` ou qu'une demande de
+# fusion est ouverte. Un voyant rouge signale un problème AVANT que le site en
+# ligne ne soit touché (Vercel construit de son côté).
+#
+# Aucune clé réelle n'est nécessaire : le build n'appelle ni Clerk ni Supabase
+# (les pages protégées sont rendues à la demande). Les valeurs ci-dessous ont
+# seulement le bon format pour que Next.js accepte de construire.
+
+name: Contrôle
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Un nouveau commit annule le contrôle précédent de la même branche.
+concurrency:
+  group: controle-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  controle:
+    name: Lint, types, tests et build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Valeurs factices (jamais de vraie clé ici).
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+      CLERK_SECRET_KEY: sk_test_factice
+      NEXT_PUBLIC_SUPABASE_URL: https://exemple.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: cle-anonyme-factice
+      SUPABASE_SERVICE_ROLE_KEY: cle-service-factice
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Types
+        run: npx tsc --noEmit
+
+      - name: Tests
+        run: npm run test
+
+      - name: Build de production
+        run: npm run build

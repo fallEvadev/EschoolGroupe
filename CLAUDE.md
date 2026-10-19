@@ -31,7 +31,7 @@ supabase migration new <nom>                                    # nouvelle migra
 supabase gen types typescript --local > src/types/database.ts   # après chaque migration
 ```
 
-Après une modification : lancer `npm run lint` et `npm run build`, et les tests concernés.
+Après une modification : lancer `npm run lint` et `npm run build`, et les tests concernés. Le **contrôle automatique** (`.github/workflows/ci.yml` : lint, types, tests, build, avec des clés factices) tourne sur GitHub à chaque commit poussé sur `main` ; un voyant rouge signale un problème. **Ne jamais appliquer une migration ni publier le code seul quand l'un dépend de l'autre** : publier les deux ensemble.
 
 ## Architecture
 
@@ -70,6 +70,7 @@ Rôles : `formateur`, `maintenancier`, `directeur_partenaire`, `admin_pedagogie`
 
 - TypeScript strict, pas de `any`. Utiliser les types générés de `src/types/database.ts`.
 - Valider toute entrée utilisateur avec Zod, côté client **et** serveur.
+- **Formulaires** : utiliser `src/components/ui/form.tsx` (`Field`, `FormError`, `FormStatus`, `FormActions`) et `ui/select.tsx` ; ne pas réécrire un libellé, un message d'erreur ou une rangée de boutons à la main. Le résultat d'une action se place **au-dessus** des boutons (visible sur téléphone). Le nom d'une personne se saisit dans **un seul champ « Nom complet »** (au moins deux mots, le dernier est le nom de famille : `splitFullName`).
 - Composants en PascalCase, fichiers de composants en kebab-case, hooks préfixés `use`.
 - Style avec Tailwind uniquement ; couleurs de la charte (Bleu / Blanc / Gris) via les variables de thème, pas de valeurs codées en dur.
 - Mobile d'abord : tester à 360 px de large. Penser connexion lente (images compressées, pas de chargements inutiles).
