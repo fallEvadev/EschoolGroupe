@@ -4,19 +4,13 @@ import { CODE_LENGTH } from "@/lib/daily-codes";
 import type { AttendanceStatus, LocationResult } from "@/lib/attendance";
 
 /**
- * Pointage envoyé par le téléphone du formateur : le créneau, le code saisi et
- * la position relevée (ou la raison pour laquelle elle manque). Le formateur
+ * Pointage d'arrivée envoyé par le téléphone du formateur : le créneau et la
+ * position relevée (ou la raison pour laquelle elle manque). Pas de code à
+ * l'arrivée : le code du directeur sert à valider la DESCENTE. Le formateur
  * n'est JAMAIS désigné ici : son identité vient de son jeton de connexion.
  */
 export const attendanceSchema = z.object({
   slotId: z.uuid("Créneau invalide."),
-  code: z
-    .string()
-    .trim()
-    .regex(
-      new RegExp(`^\\d{${CODE_LENGTH}}$`),
-      `Le code a ${CODE_LENGTH} chiffres.`,
-    ),
   position: z.discriminatedUnion(
     "status",
     [
@@ -35,7 +29,7 @@ export const attendanceSchema = z.object({
 
 export type AttendanceInput = z.input<typeof attendanceSchema>;
 
-/** Réponse du serveur à un pointage. */
+/** Réponse du serveur à un pointage d'arrivée. */
 export type AttendanceResult =
   | {
       ok: true;
@@ -49,4 +43,26 @@ export type AttendanceResult =
       /** Phrase expliquant un pointage « à vérifier », sinon `null`. */
       explanation: string | null;
     }
+  | { ok: false; message: string };
+
+/**
+ * Descente : le pointage concerné et le code donné par le directeur après le
+ * cours. Là encore, le formateur n'est jamais désigné : il vient du jeton.
+ */
+export const departureSchema = z.object({
+  attendanceId: z.uuid("Pointage invalide."),
+  code: z
+    .string()
+    .trim()
+    .regex(
+      new RegExp(`^\\d{${CODE_LENGTH}}$`),
+      `Le code a ${CODE_LENGTH} chiffres.`,
+    ),
+});
+
+export type DepartureInput = z.input<typeof departureSchema>;
+
+/** Réponse du serveur à une descente. */
+export type DepartureResult =
+  | { ok: true; message: string; departedAt: string }
   | { ok: false; message: string };

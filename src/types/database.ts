@@ -165,6 +165,9 @@ export type Database = {
         Row: {
           accuracy_m: number | null
           attendance_date: string
+          departed_at: string | null
+          departure_reason: string | null
+          departure_source: string | null
           distance_m: number | null
           id: string
           late_minutes: number
@@ -173,6 +176,7 @@ export type Database = {
           longitude: number | null
           profile_id: string
           recorded_at: string
+          requires_departure: boolean
           school_id: string
           slot_id: string
           status: string
@@ -180,6 +184,9 @@ export type Database = {
         Insert: {
           accuracy_m?: number | null
           attendance_date: string
+          departed_at?: string | null
+          departure_reason?: string | null
+          departure_source?: string | null
           distance_m?: number | null
           id?: string
           late_minutes?: number
@@ -188,6 +195,7 @@ export type Database = {
           longitude?: number | null
           profile_id: string
           recorded_at?: string
+          requires_departure?: boolean
           school_id: string
           slot_id: string
           status: string
@@ -195,6 +203,9 @@ export type Database = {
         Update: {
           accuracy_m?: number | null
           attendance_date?: string
+          departed_at?: string | null
+          departure_reason?: string | null
+          departure_source?: string | null
           distance_m?: number | null
           id?: string
           late_minutes?: number
@@ -203,6 +214,7 @@ export type Database = {
           longitude?: number | null
           profile_id?: string
           recorded_at?: string
+          requires_departure?: boolean
           school_id?: string
           slot_id?: string
           status?: string
@@ -1398,6 +1410,16 @@ export type Database = {
           out_path: string
         }[]
       }
+      partner_codes_today: {
+        Args: never
+        Returns: {
+          out_code: string
+          out_first_end: string
+          out_has_code: boolean
+          out_school_id: string
+          out_school_name: string
+        }[]
+      }
       partner_bilans: {
         Args: never
         Returns: {
@@ -1423,6 +1445,15 @@ export type Database = {
         }[]
       }
       publish_bilan: { Args: { p_bilan_id: string }; Returns: undefined }
+      record_departure: {
+        Args: { p_attendance_id: string; p_code: string; p_profile_id: string }
+        Returns: {
+          out_departed_at: string
+          out_minutes_left: number
+          out_outcome: string
+          out_remaining: number
+        }[]
+      }
       replace_daily_code: {
         Args: { p_code: string; p_code_date: string; p_school_id: string }
         Returns: string
@@ -1452,6 +1483,10 @@ export type Database = {
           p_report_id: string
         }
         Returns: number
+      }
+      set_departure_by_direction: {
+        Args: { p_attendance_id: string; p_reason: string }
+        Returns: undefined
       }
       set_my_phone: { Args: { p_phone: string }; Returns: undefined }
       set_school_position: {

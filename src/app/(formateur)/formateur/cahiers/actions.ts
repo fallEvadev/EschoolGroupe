@@ -199,6 +199,10 @@ function mapWriteError(error: {
     return fail("Un rapport existe déjà pour ce pointage. Rechargez la page.");
   }
   if (error.code === CHECK_VIOLATION) {
+    // Règles du pointage en deux temps (fonction SQL guard_report_window).
+    if (error.message.includes("s'ouvre")) {
+      return fail("Le rapport s'ouvre 10 minutes avant la fin du cours.");
+    }
     return fail("Ce rapport n'est plus modifiable.");
   }
   if (error.code === RLS_VIOLATION) {

@@ -60,34 +60,46 @@ Contrôle après les 5 : Clerk → Webhooks → *Message Attempts* : 5 envois ve
 *Connecte-toi avec l'adresse `+pedago`.*
 
 1. `/admin/ecoles` → crée l'école **« École Test »**. Rattache le directeur (`+directeur`).
-2. Crée un **créneau** qui couvre l'heure actuelle, pour **le jour d'aujourd'hui** (ex. de 30 minutes avant maintenant à 2 h après). Affecte le formateur.
-   *Le pointage n'est possible que de 30 min avant le début jusqu'à la fin du créneau.*
+2. Crée un **créneau** pour **le jour d'aujourd'hui**, qui se termine **dans 25 minutes environ** (ex. de 30 minutes avant maintenant à maintenant + 25 min). Affecte le formateur.
+   *L'arrivée se pointe de 30 min avant le début jusqu'à la fin du créneau. Le rapport s'ouvre 10 min avant la fin. Le code de descente n'est accepté qu'à la fin exacte.*
 3. `/admin/codes` → génère le code du jour. ❓ Un code à 6 chiffres pour « École Test ».
 4. Teste « Régénérer » : ❓ le nouveau code remplace l'ancien. Note le code final.
+5. Bouton **« Prévenir le directeur »** (WhatsApp) : ❓ le message ne contient **pas** le code.
 
-## Acte 5 — Directeur partenaire : position de l'école (5 min)
+## Acte 5 — Directeur partenaire : position de l'école et code de descente (5 min)
 
 *Connecte-toi avec `+directeur`, depuis chez toi (ton « école » sera ta position).*
 
-1. `/partenaire` : ❓ tu vois le code du jour de « École Test » et le bouton **Copier**.
+1. `/partenaire` (**« Code de descente »**) : ❓ **avant la fin du cours**, le code est **caché** : « Le code s'affichera à HH:MM, à la fin du premier cours ».
 2. Enregistre la **position de l'école** (autorise la localisation). ❓ Position enregistrée.
 3. `/partenaire/bilans` : ❓ liste vide (normal).
+4. **À la fin du cours** (plus tard, acte 6) : ❓ le code apparaît, avec **Copier** et **Partager par WhatsApp**.
 
-## Acte 6 — Formateur : pointage et rapport (20 min)
+## Acte 6 — Formateur : arrivée, rapport, descente (25 min)
 
 *Connecte-toi avec `+formateur`, de préférence sur ton téléphone, au même endroit que l'étape 5.*
 
-1. `/formateur` : ❓ le créneau du jour apparaît avec « 📍 Je suis arrivé à l'école ».
-2. **Essai raté** : saisis 5 codes faux. ❓ Blocage de 15 min (tu peux sauter cet essai et le faire à la fin).
-3. **Pointage réussi** : saisis le bon code, autorise la localisation. ❓ « Pointage enregistré avec succès. »
-4. Pointe encore une fois le même créneau. ❓ Refus.
-5. Menu **Cahiers** → ouvre le rapport du jour. ❓ Le formulaire a : Classe(s), Thème du cours, matériel et pannes.
-   ⚠️ Les **heures d'arrivée et de descente** n'y sont pas : note-le comme écart connu.
-6. Remplis « Classe : 3e A », « Thème : les tableaux Excel ». Clique **Enregistrer le brouillon**. ❓ Brouillon gardé.
-7. Ajoute une **panne** (« Autre équipement » : « Projecteur », description « ne s'allume plus »).
-8. Coupe le Wi-Fi/les données, modifie le thème. ❓ Message « Pas de connexion… saisie gardée », aucun envoi automatique. Remets le réseau.
-9. Clique **Envoyer à la Direction**. ❓ Statut « soumis ». Tente de modifier : ❓ impossible.
-10. Cloche : ❓ pas de notification (c'est la Direction qui est prévenue).
+**Arrivée (sans code)**
+
+1. `/formateur` : ❓ le créneau du jour apparaît avec le bouton « Pointer ma présence ».
+2. **Pointage réussi** : touche « 📍 Je suis arrivé à l'école », autorise la localisation. ❓ « Pointage enregistré avec succès. » et **aucun code demandé**.
+3. Pointe encore une fois le même créneau. ❓ Refus.
+
+**Le rapport s'ouvre 10 minutes avant la fin**
+
+4. Menu **Cahiers** → ouvre le rapport du jour **avant** ce moment. ❓ Message « Le rapport s'ouvre à HH:MM, 10 minutes avant la fin du cours », **aucun formulaire**.
+5. Dès l'heure : ❓ le formulaire s'ouvre (Classe(s), Thème du cours, matériel et pannes). Remplis « Classe : 3e A », « Thème : les tableaux Excel », puis **Enregistrer le brouillon**. ❓ Brouillon gardé.
+6. Ajoute une **panne** (« Autre équipement » : « Projecteur », description « ne s'allume plus »).
+7. Coupe le Wi-Fi/les données, modifie le thème. ❓ Message « Pas de connexion… saisie gardée », aucun envoi automatique. Remets le réseau.
+8. Clique **Envoyer à la Direction** (**sans avoir validé la descente**). ❓ Statut « soumis » : **l'envoi n'est jamais bloqué**. Tente de modifier : ❓ impossible.
+
+**Descente avec le code, après le cours**
+
+9. **Avant la fin exacte du créneau** : accueil → « Valider ma descente » n'apparaît pas encore. Saisis quand même le code (adresse `/formateur/descente/…`) : ❓ « Le code n'est pas encore accepté : le cours se termine dans N minutes », et **aucun essai n'est compté**.
+10. **À la fin du créneau** : ❓ le bouton **« Valider ma descente »** apparaît sur l'accueil.
+11. **Mauvais code** ×5 : ❓ « Code incorrect… », puis blocage de 15 minutes (tu peux sauter cet essai).
+12. **Bon code** (celui du directeur, visible sur son espace à la fin du cours) : ❓ « Descente enregistrée à HH:MM. »
+13. Accueil : ❓ « Descente validée ». Cloche : ❓ pas de notification (c'est la Direction qui est prévenue).
 
 ## Acte 7 — Admin Pédagogie : valider le rapport (10 min)
 
@@ -99,7 +111,8 @@ Contrôle après les 5 : Clerk → Webhooks → *Message Attempts* : 5 envois ve
 4. Reconnecte-toi en **formateur** : ❓ cloche + rapport « à modifier » avec le commentaire. Corrige le thème, **renvoie**. ❓ Aucun doublon de panne.
 5. Retour en **pédago** : **valide** le rapport. ❓ Il est verrouillé.
 6. Formateur : ❓ notification « validé », rapport impossible à modifier.
-7. `/admin/pointages` : ❓ le pointage du jour apparaît. Teste « Marquer sans cours » sur un autre jour si tu veux.
+7. `/admin/pointages` : ❓ le pointage du jour apparaît avec **« Pointé à HH:MM »** et **« Descente à HH:MM · durée H h MM »**. Teste « Marquer sans cours » sur un autre jour si tu veux.
+8. **Descente non validée** (un autre formateur, ou ne saisis pas le code) : ❓ « Descente non validée » en orange et un bouton **« Valider la descente »** : saisis un motif (3 caractères minimum). ❓ « Descente validée par la Direction : motif ».
 
 ## Acte 8 — Maintenance : le ticket de la panne (15 min)
 
@@ -152,4 +165,4 @@ Contrôle après les 5 : Clerk → Webhooks → *Message Attempts* : 5 envois ve
 | 9 Bilan | | |
 | 10 RH / sécurité | | |
 
-**Écarts déjà connus** : heures d'arrivée et de descente absentes du rapport · e-mail Resend non testable sans clé et domaine.
+**Écarts déjà connus** : e-mail Resend non testable sans clé et domaine.

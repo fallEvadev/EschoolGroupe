@@ -117,7 +117,7 @@ export async function loadBilanDocument(
     ? await supabase
         .from("daily_reports")
         .select(
-          "id, report_date, profile_id, slot_id, classes, course_theme, equipment_ok, equipment_issues",
+          "id, report_date, profile_id, slot_id, attendance_id, classes, course_theme, equipment_ok, equipment_issues",
         )
         .in("id", reportIds)
         .limit(2000)
@@ -142,6 +142,24 @@ export async function loadBilanDocument(
     };
   }
 
+  // Heures réelles d'arrivée et de descente (pointage en deux temps).
+  const attendanceIds = [
+    ...new Set(reportsResult.data.map((r) => r.attendance_id)),
+  ];
+  const attendancesResult = attendanceIds.length
+    ? await supabase
+        .from("attendances")
+        .select("id, recorded_at, departed_at")
+        .in("id", attendanceIds)
+    : { data: [], error: null };
+  if (attendancesResult.error) {
+    return {
+      error: describeSupabaseError("attendances", attendancesResult.error)
+        .message,
+    };
+  }
+  const attendances = new Map(attendancesResult.data.map((a) => [a.id, a]));
+
   const names = new Map((directory.data ?? []).map((p) => [p.id, p.full_name]));
   const slots = new Map(slotsResult.data.map((s) => [s.id, s]));
 
@@ -151,6 +169,8 @@ export async function loadBilanDocument(
       date: r.report_date,
       startsAt: slot?.starts_at ?? null,
       endsAt: slot?.ends_at ?? null,
+      arrivedAt: attendances.get(r.attendance_id)?.recorded_at ?? null,
+      departedAt: attendances.get(r.attendance_id)?.departed_at ?? null,
       formateur: names.get(r.profile_id) ?? "Formateur",
       classes: r.classes,
       courseTheme: r.course_theme,

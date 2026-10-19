@@ -2,6 +2,7 @@ import { Clock, MapPin } from "lucide-react";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { DepartureBlock } from "@/components/departure-block";
 import { OpenProgramButton } from "@/components/open-program-button";
 import { PointedStatus } from "@/components/pointed-status";
 import { Badge } from "@/components/ui/badge";
@@ -138,7 +139,14 @@ function TodaySlots({
                 </div>
 
                 {availability.kind === "pointed" && (
-                  <PointedStatus attendance={availability} />
+                  <>
+                    <PointedStatus attendance={availability} />
+                    <DepartureBlock
+                      attendance={availability}
+                      endsAt={slot.endsAt}
+                      nowMinutes={nowMinutes}
+                    />
+                  </>
                 )}
                 {availability.kind === "open" && (
                   <Button asChild size="lg">

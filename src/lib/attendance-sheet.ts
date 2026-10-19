@@ -45,6 +45,14 @@ export type SheetAttendance = {
   /** Position GPS du formateur au pointage (vide si le téléphone n'en a pas donné). */
   latitude: number | null;
   longitude: number | null;
+  /** Pointage en deux temps : la descente est attendue (faux pour les anciens pointages). */
+  requiresDeparture: boolean;
+  /** Instant de la descente (ISO), `null` tant qu'elle n'est pas validée. */
+  departedAt: string | null;
+  /** « code » ou « direction » une fois la descente validée. */
+  departureSource: string | null;
+  /** Motif donné par la Direction quand elle a validé la descente. */
+  departureReason: string | null;
 };
 
 /** Décision de la Direction sur un pointage « à vérifier ». */

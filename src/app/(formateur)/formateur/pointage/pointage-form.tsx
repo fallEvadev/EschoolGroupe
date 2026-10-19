@@ -8,15 +8,12 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   ATTENDANCE_BADGE,
   ATTENDANCE_LABELS,
   locationProblemMessage,
   type DevicePosition,
 } from "@/lib/attendance";
-import { CODE_LENGTH, isCodeFormat } from "@/lib/daily-codes";
 import { formatClock } from "@/lib/dates";
 import { getDevicePosition } from "@/lib/geolocation";
 import type { AttendanceResult } from "@/lib/validations/attendance";
@@ -26,9 +23,10 @@ import { submitAttendance } from "./actions";
 type Confirmed = Extract<AttendanceResult, { ok: true }>;
 
 /**
- * Saisie du code du jour et envoi du pointage avec la position du téléphone.
- * Le nom du formateur est affiché d'abord (identité confirmée), puis sur
- * l'écran de confirmation.
+ * Pointage d'arrivée : un seul bouton, qui relève la position du téléphone au
+ * moment du clic. Pas de code à l'arrivée (le code du directeur valide la
+ * descente). Le nom du formateur est affiché d'abord (identité confirmée), puis
+ * sur l'écran de confirmation.
  */
 export function PointageForm({
   slotId,
@@ -43,7 +41,6 @@ export function PointageForm({
   timeLabel: string;
 }) {
   const router = useRouter();
-  const [code, setCode] = useState("");
   const [phase, setPhase] = useState<"idle" | "locating" | "sending">("idle");
   const [error, setError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState<Confirmed | null>(null);
@@ -55,10 +52,10 @@ export function PointageForm({
 
   const busy = phase !== "idle";
 
-  /** Envoie le pointage au serveur, qui vérifie le code, l'heure et la position. */
+  /** Envoie le pointage au serveur, qui vérifie l'heure et la position. */
   async function send(position: DevicePosition) {
     setPhase("sending");
-    const response = await submitAttendance({ slotId, code, position });
+    const response = await submitAttendance({ slotId, position });
     setPhase("idle");
 
     if (response.ok) {
@@ -90,10 +87,6 @@ export function PointageForm({
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!isCodeFormat(code)) {
-      setError(`Le code a ${CODE_LENGTH} chiffres.`);
-      return;
-    }
     void locateAndSend();
   }
 
@@ -143,6 +136,10 @@ export function PointageForm({
             {confirmed.explanation}
           </p>
         )}
+        <p className="text-muted-foreground text-sm">
+          À la fin du cours, le directeur vous donnera un code pour valider
+          votre descente. Votre rapport s&apos;ouvre 10 minutes avant la fin.
+        </p>
         <Button asChild size="lg" className="w-full sm:w-auto">
           <Link href="/formateur">Retour à l&apos;accueil</Link>
         </Button>
@@ -163,31 +160,10 @@ export function PointageForm({
           </p>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="code">Code du jour</Label>
-          <Input
-            id="code"
-            value={code}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={CODE_LENGTH}
-            placeholder="000000"
-            disabled={busy}
-            aria-invalid={!!error}
-            aria-describedby="code-help"
-            // Chiffres seulement, au fil de la saisie.
-            onChange={(event) =>
-              setCode(
-                event.target.value.replace(/\D/g, "").slice(0, CODE_LENGTH),
-              )
-            }
-            className="h-14 text-center text-3xl font-bold tracking-[0.3em] tabular-nums"
-          />
-          <p id="code-help" className="text-muted-foreground text-sm">
-            Le directeur de l&apos;école vous donne ce code. Autorisez la
-            localisation quand le téléphone le demande.
-          </p>
-        </div>
+        <p className="text-muted-foreground text-sm">
+          Touchez le bouton en arrivant à l&apos;école et autorisez la
+          localisation quand le téléphone le demande.
+        </p>
 
         {error && (
           <p role="alert" className="text-destructive text-sm font-medium">
@@ -226,11 +202,7 @@ export function PointageForm({
           </div>
         )}
 
-        <Button
-          type="submit"
-          size="lg"
-          disabled={busy || code.length !== CODE_LENGTH}
-        >
+        <Button type="submit" size="lg" disabled={busy}>
           {phase === "locating"
             ? "Localisation en cours…"
             : phase === "sending"

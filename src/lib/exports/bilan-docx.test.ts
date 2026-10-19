@@ -6,6 +6,7 @@ import {
   buildBilanDocx,
   sortReports,
   summarizeReports,
+  timeRange,
   type BilanDocData,
   type BilanDocReport,
   type DocImage,
@@ -152,5 +153,30 @@ describe("buildBilanDocx", () => {
       reports: [],
     });
     expect(isZip(bytes)).toBe(true);
+  });
+});
+
+describe("timeRange", () => {
+  it("affiche l'horaire prévu pour un ancien pointage", () => {
+    expect(timeRange(report())).toBe("08:00 – 10:00");
+  });
+
+  it("affiche les heures réelles d'arrivée et de descente quand elles existent", () => {
+    expect(
+      timeRange(
+        report({
+          arrivedAt: "2026-10-05T08:03:00Z",
+          departedAt: "2026-10-05T10:04:00Z",
+        }),
+      ),
+    ).toBe("08:03 – 10:04");
+  });
+
+  it("garde l'horaire prévu tant que la descente n'est pas validée", () => {
+    expect(
+      timeRange(
+        report({ arrivedAt: "2026-10-05T08:03:00Z", departedAt: null }),
+      ),
+    ).toBe("08:00 – 10:00");
   });
 });

@@ -143,9 +143,10 @@ export default async function CodesPage() {
         title="Codes du jour"
         description={
           <>
-            Codes de pointage de <strong>{dateLabel}</strong>, un par école.
-            Envoyez chaque code uniquement au directeur de l&apos;école : il le
-            donne aux formateurs présents.
+            Codes de descente de <strong>{dateLabel}</strong>, un par école.
+            Générez-les le matin : le directeur ne les voit sur son espace
+            qu&apos;à la fin du premier cours, et les donne aux formateurs une
+            fois leur cours terminé.
           </>
         }
         actions={
@@ -223,7 +224,6 @@ export default async function CodesPage() {
                     <DirectorsSend
                       schoolId={school.id}
                       schoolName={school.name}
-                      code={school.code}
                       dateLabel={dateLabel}
                       directors={school.directors}
                     />
@@ -242,20 +242,18 @@ export default async function CodesPage() {
 function DirectorsSend({
   schoolId,
   schoolName,
-  code,
   dateLabel,
   directors,
 }: {
   schoolId: string;
   schoolName: string;
-  code: string;
   dateLabel: string;
   directors: DirectorContact[];
 }) {
   return (
     <div className="flex flex-col gap-3 border-t pt-4">
       <h3 className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
-        Envoyer au directeur
+        Prévenir le directeur
       </h3>
 
       {directors.length === 0 ? (
@@ -277,7 +275,6 @@ function DirectorsSend({
               firstName,
               schoolName,
               dateLabel,
-              code: formatCode(code),
             });
             return (
               <li key={director.id} className="flex flex-col gap-1">
@@ -288,7 +285,7 @@ function DirectorsSend({
                     rel="noopener noreferrer"
                   >
                     <MessageCircle aria-hidden />
-                    Envoyer à {director.fullName}
+                    Prévenir {director.fullName}
                   </a>
                 </Button>
                 {!director.phone && (

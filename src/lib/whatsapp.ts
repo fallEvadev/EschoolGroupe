@@ -42,28 +42,29 @@ export function programMessage({
   ].join("\n");
 }
 
-/** Message de la Direction pédagogique au directeur d'une école, avec le code du jour. */
+/**
+ * Message de la Direction pédagogique au directeur d'une école, le matin. Il ne
+ * contient PAS le code : le directeur ne le voit sur son espace qu'à la fin du
+ * premier cours, et le donne aux formateurs une fois leur cours terminé.
+ */
 export function directorCodeMessage({
   firstName,
   schoolName,
   dateLabel,
-  code,
 }: {
   firstName: string;
   schoolName: string;
   /** Jour en toutes lettres, ex. « mercredi 7 octobre ». */
   dateLabel: string;
-  /** Code déjà mis en forme pour la lecture, ex. « 428 105 ». */
-  code: string;
 }): string {
   return [
     `Bonjour ${firstName},`,
-    `Code de pointage du ${dateLabel} pour ${schoolName} : ${code}`,
-    "À donner uniquement aux formateurs présents aujourd'hui. Merci de ne pas le diffuser.",
+    `Le code de descente du ${dateLabel} pour ${schoolName} sera disponible sur votre espace E-School à la fin du premier cours.`,
+    "Donnez-le aux formateurs une fois leur cours terminé, pas avant. Merci de ne pas le diffuser.",
   ].join("\n");
 }
 
-/** Message du directeur aux formateurs de son école, avec le code du jour. */
+/** Message du directeur aux formateurs de son école, avec le code de descente. */
 export function trainersCodeMessage({
   schoolName,
   dateLabel,
@@ -74,8 +75,8 @@ export function trainersCodeMessage({
   code: string;
 }): string {
   return [
-    `Code de pointage du ${dateLabel} pour ${schoolName} : ${code}`,
-    "Valable aujourd'hui seulement.",
+    `Code de descente du ${dateLabel} pour ${schoolName} : ${code}`,
+    "À saisir une fois le cours terminé. Valable aujourd'hui seulement.",
   ].join("\n");
 }
 

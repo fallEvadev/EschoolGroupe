@@ -33,6 +33,14 @@ export function groupByWeekday(
 
 /** Pointage déjà enregistré pour un créneau aujourd'hui. */
 export type SlotAttendance = {
+  /** Identifiant du pointage (pour ouvrir le rapport ou valider la descente). */
+  attendanceId: string;
+  /** Pointage d'arrivée sans code : la descente se valide avec le code du directeur. */
+  requiresDeparture: boolean;
+  /** Instant de la descente (ISO), `null` tant qu'elle n'est pas validée. */
+  departedAt: string | null;
+  /** « code » ou « direction » une fois la descente validée. */
+  departureSource: string | null;
   status: AttendanceStatus;
   recordedAt: string;
   /** Minutes après le début (0 si à l'heure). Absent : 0. */

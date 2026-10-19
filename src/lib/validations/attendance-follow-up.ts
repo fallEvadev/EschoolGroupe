@@ -33,6 +33,16 @@ export const excuseAbsenceSchema = z.object({
     .max(500, "Le motif ne doit pas dépasser 500 caractères."),
 });
 
+/** La Direction valide la descente d'un formateur (directeur absent, code non donné). */
+export const validateDepartureSchema = z.object({
+  attendanceId: z.uuid("Pointage invalide."),
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Le motif est obligatoire (3 caractères minimum).")
+    .max(300, "Le motif ne doit pas dépasser 300 caractères."),
+});
+
 export const excuseIdSchema = z.object({
   excuseId: z.uuid("Excuse invalide."),
 });

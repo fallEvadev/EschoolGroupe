@@ -54,6 +54,7 @@ const ACTION_LABELS: Record<string, string> = {
   report_submitted: "Rapport envoyé",
   report_reviewed: "Rapport traité",
   phone_updated: "Téléphone modifié",
+  departure_validated: "Descente validée par la Direction",
   machine_created: "Machine ajoutée",
   machine_updated: "Machine modifiée",
   ticket_assigned: "Ticket affecté",

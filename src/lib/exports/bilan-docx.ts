@@ -22,7 +22,7 @@ import {
   periodLabel,
   type BilanKind,
 } from "@/lib/bilans";
-import { formatDate } from "@/lib/dates";
+import { formatClock, formatDate } from "@/lib/dates";
 import { fitInBox, type ImageSize } from "@/lib/image-size";
 import { formatTime } from "@/lib/schools";
 
@@ -52,6 +52,10 @@ export type BilanDocReport = {
   date: string;
   startsAt: string | null;
   endsAt: string | null;
+  /** Heure réelle d'arrivée (ISO), `null` si le pointage n'est pas connu. */
+  arrivedAt?: string | null;
+  /** Heure réelle de descente (ISO), `null` tant qu'elle n'est pas validée. */
+  departedAt?: string | null;
   formateur: string;
   classes: string;
   courseTheme: string;
@@ -125,7 +129,14 @@ function day(iso: string): string {
   return formatDate(`${iso}T12:00:00Z`);
 }
 
-function timeRange(report: BilanDocReport): string {
+/**
+ * Horaire du cours : les heures RÉELLES (arrivée et descente) quand elles sont
+ * connues, sinon l'horaire prévu du créneau (anciens pointages).
+ */
+export function timeRange(report: BilanDocReport): string {
+  if (report.arrivedAt && report.departedAt) {
+    return `${formatClock(report.arrivedAt)} – ${formatClock(report.departedAt)}`;
+  }
   return report.startsAt && report.endsAt
     ? `${formatTime(report.startsAt)} – ${formatTime(report.endsAt)}`
     : "—";

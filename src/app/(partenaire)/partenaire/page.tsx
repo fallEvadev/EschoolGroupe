@@ -1,4 +1,4 @@
-import { KeyRound, MessageCircle } from "lucide-react";
+import { Clock, KeyRound, MessageCircle } from "lucide-react";
 
 import { CopyButton } from "@/components/copy-button";
 import { PageHeader } from "@/components/layout/page-header";
@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireSpace } from "@/lib/auth/guards";
 import { formatCode } from "@/lib/daily-codes";
-import { dakarIsoDate, formatDate, formatLongDate } from "@/lib/dates";
+import { formatDate, formatLongDate } from "@/lib/dates";
 import { getOwnProfileId } from "@/lib/internal-rules";
+import { formatTime } from "@/lib/schools";
 import { describeSupabaseError } from "@/lib/supabase/errors";
 import {
   createServerSupabase,
@@ -21,24 +22,31 @@ import {
   type SchoolPositionInfo,
 } from "./school-position-card";
 
-export const metadata = { title: "Codes du jour · E-School Groupe" };
+export const metadata = { title: "Code de descente · E-School Groupe" };
 
 type PartnerSchool = {
   id: string;
   name: string;
   address: string | null;
+  /** Le code du jour, seulement une fois le premier cours terminé ; sinon `null`. */
   code: string | null;
+  /** Un code existe pour aujourd'hui (même s'il n'est pas encore montré). */
+  hasCode: boolean;
+  /** Fin du premier cours d'aujourd'hui (« HH:MM »), `null` s'il n'y a aucun cours. */
+  firstEnd: string | null;
   position: SchoolPositionInfo;
 };
 
 /**
- * Écoles du directeur connecté et leur code du jour. Lu avec SON jeton : la RLS
- * ne lui montre que ses écoles et leurs codes. On filtre aussi sur sa fiche,
- * car un Super-Admin verrait sinon toutes les écoles.
+ * Écoles du directeur connecté et leur code du jour. Lues avec SON jeton : la
+ * RLS ne lui montre que ses écoles. Le code, lui, ne vient PAS de la table : la
+ * fonction SQL `partner_codes_today` ne le donne qu'à partir de la fin du
+ * premier cours du jour (il le donne aux formateurs une fois leur cours terminé).
+ * On filtre aussi sur sa fiche, car un Super-Admin verrait sinon toutes les écoles.
  */
-async function loadMySchools(
-  today: string,
-): Promise<{ schools: PartnerSchool[] } | { error: string }> {
+async function loadMySchools(): Promise<
+  { schools: PartnerSchool[] } | { error: string }
+> {
   if (!isSupabaseConfigured()) {
     return {
       error:
@@ -71,12 +79,7 @@ async function loadMySchools(
       .in("id", schoolIds)
       .eq("status", "actif")
       .order("name"),
-    supabase
-      .from("daily_codes")
-      .select("school_id, code")
-      .in("school_id", schoolIds)
-      .eq("code_date", today)
-      .eq("status", "actif"),
+    supabase.rpc("partner_codes_today"),
   ]);
   if (schoolsResult.error) {
     return {
@@ -85,19 +88,22 @@ async function loadMySchools(
   }
   if (codesResult.error) {
     return {
-      error: describeSupabaseError("daily_codes", codesResult.error).message,
+      error: describeSupabaseError("partner_codes_today", codesResult.error)
+        .message,
     };
   }
 
   const codes = new Map(
-    codesResult.data.map((row) => [row.school_id, row.code]),
+    codesResult.data.map((row) => [row.out_school_id, row]),
   );
   return {
     schools: schoolsResult.data.map((school) => ({
       id: school.id,
       name: school.name,
       address: school.address,
-      code: codes.get(school.id) ?? null,
+      code: codes.get(school.id)?.out_code ?? null,
+      hasCode: codes.get(school.id)?.out_has_code ?? false,
+      firstEnd: codes.get(school.id)?.out_first_end ?? null,
       position: {
         defined: school.latitude !== null && school.longitude !== null,
         setOn: school.position_set_at
@@ -117,18 +123,18 @@ async function loadMySchools(
 export default async function PartenairePage() {
   await requireSpace("partenaire");
   const dateLabel = formatLongDate(new Date());
-  const loaded = await loadMySchools(dakarIsoDate());
+  const loaded = await loadMySchools();
 
   return (
     <main className="flex w-full flex-col gap-6 p-4 sm:p-8">
       <PageHeader
         eyebrow="Espace partenaire"
-        title="Codes du jour"
+        title="Code de descente"
         description={
           <>
-            Code de pointage de <strong>{dateLabel}</strong>. Donnez-le
-            uniquement aux formateurs présents aujourd&apos;hui dans votre école
-            : il ne sert qu&apos;aujourd&apos;hui.
+            Code de descente de <strong>{dateLabel}</strong>. Il s&apos;affiche
+            à la fin du premier cours : donnez-le aux formateurs une fois leur
+            cours terminé, pas avant. Il ne sert qu&apos;aujourd&apos;hui.
           </>
         }
       />
@@ -159,7 +165,11 @@ export default async function PartenairePage() {
                     </p>
                   </div>
                   <Badge variant={school.code ? "success" : "warning"}>
-                    {school.code ? "Code du jour" : "Pas encore de code"}
+                    {school.code
+                      ? "Code de descente"
+                      : school.hasCode
+                        ? "Pas encore"
+                        : "Pas de code"}
                   </Badge>
                 </div>
 
@@ -192,6 +202,18 @@ export default async function PartenairePage() {
                       </Button>
                     </div>
                   </>
+                ) : school.hasCode && school.firstEnd ? (
+                  <p className="text-muted-foreground flex items-center gap-2 text-sm">
+                    <Clock className="size-4 shrink-0" aria-hidden />
+                    Le code s&apos;affichera à {formatTime(school.firstEnd)}, à
+                    la fin du premier cours.
+                  </p>
+                ) : school.hasCode ? (
+                  <p className="text-muted-foreground flex items-center gap-2 text-sm">
+                    <Clock className="size-4 shrink-0" aria-hidden />
+                    Aucun cours n&apos;est prévu aujourd&apos;hui dans votre
+                    école.
+                  </p>
                 ) : (
                   <p className="text-muted-foreground flex items-center gap-2 text-sm">
                     <KeyRound className="size-4 shrink-0" aria-hidden />

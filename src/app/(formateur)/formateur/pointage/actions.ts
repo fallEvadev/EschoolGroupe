@@ -22,7 +22,9 @@ import { isWeekday, WEEKDAY_LABELS } from "@/lib/schools";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import {
   attendanceSchema,
+  departureSchema,
   type AttendanceResult,
+  type DepartureResult,
 } from "@/lib/validations/attendance";
 
 /** Code PostgreSQL d'une valeur en double (ici : déjà pointé). */
@@ -38,15 +40,14 @@ function fail(message: string): AttendanceResult {
 }
 
 /**
- * Enregistre le pointage du formateur connecté.
+ * Enregistre le pointage d'arrivée du formateur connecté.
  *
  * Le serveur écrit avec la clé de service : la base interdit toute écriture
  * directe (voir la migration), donc TOUTES les règles sont contrôlées ici, dans
  * l'ordre, et rien n'est enregistré tant qu'elles ne sont pas toutes passées :
  * identité (jeton), créneau et affectation, jour, fenêtre horaire, doublon,
- * puis code. Le contrôle du code et la limite des essais se font dans une seule
- * transaction SQL (`verify_attendance_code`) : des requêtes simultanées ne
- * peuvent pas multiplier les essais.
+ * puis position. L'arrivée se pointe sans code ; la descente, elle, exige le
+ * code du directeur (voir `submitDeparture`).
  */
 export async function submitAttendance(
   input: unknown,
@@ -58,7 +59,7 @@ export async function submitAttendance(
   if (!parsed.success) {
     return fail(parsed.error.issues[0]?.message ?? "Données invalides.");
   }
-  const { slotId, code, position } = parsed.data;
+  const { slotId, position } = parsed.data;
 
   try {
     const admin = createAdminSupabase();
@@ -141,34 +142,8 @@ export async function submitAttendance(
       );
     }
 
-    // 7. Limite des essais ET contrôle du code, en une seule transaction SQL.
-    // Le code du jour n'est jamais envoyé au navigateur. En cas d'erreur, on
-    // REFUSE le pointage (jamais « on laisse passer ») : sinon une panne
-    // désactiverait la limite sans que personne ne le voie.
-    const { data: check, error: checkError } = await admin.rpc(
-      "verify_attendance_code",
-      {
-        p_profile_id: profile.id,
-        p_school_id: slot.school_id,
-        p_code_date: today,
-        p_code: code,
-      },
-    );
-    const verdict = check?.[0];
-    if (checkError || !verdict || !isCodeOutcome(verdict.outcome)) {
-      console.error(
-        "verify_attendance_code :",
-        checkError?.message ?? "réponse inattendue",
-      );
-      return ERREUR_GENERIQUE;
-    }
-    const codeProblem = codeOutcomeMessage(verdict.outcome, {
-      remaining: verdict.remaining,
-      minutesLeft: verdict.minutes_left,
-    });
-    if (codeProblem) return fail(codeProblem);
-
-    // 8. Code juste : contrôle de position et statut final.
+    // 7. Contrôle de position et statut final. Pas de code à l'arrivée : le code
+    // du directeur valide la DESCENTE (voir `submitDeparture`).
     const evaluation = evaluateLocation(
       {
         latitude: school.latitude,
@@ -222,5 +197,116 @@ export async function submitAttendance(
   } catch (error) {
     console.error("submitAttendance :", error);
     return ERREUR_GENERIQUE;
+  }
+}
+
+const ERREUR_DESCENTE: DepartureResult = {
+  ok: false,
+  message: "Une erreur est survenue. Réessayez dans un instant.",
+};
+
+function failDeparture(message: string): DepartureResult {
+  return { ok: false, message };
+}
+
+/**
+ * Valide la descente du formateur connecté avec le code que le directeur donne
+ * APRÈS le cours. Le formateur vient du jeton, jamais d'un champ envoyé.
+ *
+ * Tout se décide dans la fonction SQL `record_departure`, en une transaction :
+ * le pointage doit être le sien et d'aujourd'hui, le code n'est pas accepté
+ * avant la fin exacte du créneau (et un code donné trop tôt n'use pas les 5
+ * essais), puis le code et la limite des essais sont contrôlés. Une erreur
+ * REFUSE la descente (jamais « on laisse passer »). La clé de service sert
+ * seulement à appeler cette fonction, réservée au serveur.
+ */
+export async function submitDeparture(
+  input: unknown,
+): Promise<DepartureResult> {
+  const caller = await requireActionRole(["formateur"]);
+  if (!caller.ok) return failDeparture(caller.message);
+
+  const parsed = departureSchema.safeParse(input);
+  if (!parsed.success) {
+    return failDeparture(
+      parsed.error.issues[0]?.message ?? "Données invalides.",
+    );
+  }
+  const { attendanceId, code } = parsed.data;
+
+  try {
+    const admin = createAdminSupabase();
+
+    // Identité : la fiche liée au jeton.
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("id, status")
+      .eq("clerk_user_id", caller.actorId)
+      .eq("role", "formateur")
+      .maybeSingle();
+    if (!profile || profile.status !== "actif") {
+      return failDeparture(
+        "Votre compte n'est pas actif. Contactez l'administration.",
+      );
+    }
+
+    const { data, error } = await admin.rpc("record_departure", {
+      p_profile_id: profile.id,
+      p_attendance_id: attendanceId,
+      p_code: code,
+    });
+    const verdict = data?.[0];
+    if (error || !verdict) {
+      console.error(
+        "record_departure :",
+        error?.message ?? "réponse inattendue",
+      );
+      return ERREUR_DESCENTE;
+    }
+
+    revalidatePath("/formateur");
+    revalidatePath(`/formateur/cahiers/${attendanceId}`);
+
+    const outcome = verdict.out_outcome;
+    if (outcome === "ok" || outcome === "already") {
+      const at = formatClock(verdict.out_departed_at);
+      return {
+        ok: true,
+        departedAt: verdict.out_departed_at,
+        message:
+          outcome === "ok"
+            ? `Descente enregistrée à ${at}. Vous pouvez envoyer votre rapport.`
+            : `Votre descente est déjà enregistrée (${at}).`,
+      };
+    }
+    if (outcome === "too_early") {
+      const minutes = verdict.out_minutes_left;
+      return failDeparture(
+        `Le code n'est pas encore accepté : le cours se termine dans ${minutes} minute${minutes > 1 ? "s" : ""}.`,
+      );
+    }
+    if (outcome === "expired") {
+      return failDeparture(
+        "Le jour du cours est passé : contactez la Direction pédagogique pour valider votre descente.",
+      );
+    }
+    if (outcome === "not_required") {
+      return failDeparture("Ce pointage n'a pas de descente à valider.");
+    }
+    if (outcome === "not_found") {
+      return failDeparture("Pointage introuvable.");
+    }
+    if (isCodeOutcome(outcome)) {
+      const problem = codeOutcomeMessage(outcome, {
+        remaining: verdict.out_remaining,
+        minutesLeft: verdict.out_minutes_left,
+      });
+      return failDeparture(problem ?? "Code refusé.");
+    }
+    console.error("record_departure : issue inconnue", outcome);
+    return ERREUR_DESCENTE;
+  } catch (error) {
+    console.error("submitDeparture :", error);
+    return ERREUR_DESCENTE;
   }
 }

@@ -37,12 +37,14 @@ import {
   createServerSupabase,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
+import { formatDuration } from "@/lib/departure";
 import { cn } from "@/lib/utils";
 
 import { requirePedagogyManager } from "../ecoles/access";
 import {
   CancelExcuseButton,
   ClosedDayControl,
+  DepartureAction,
   ExcuseAction,
   ReviewActions,
 } from "./sheet-actions";
@@ -458,6 +460,35 @@ function SheetRowCard({
           )}
         </p>
       )}
+      {attendance?.requiresDeparture && (
+        <p className="text-sm">
+          {attendance.departedAt ? (
+            <>
+              Descente à {formatClock(attendance.departedAt)}
+              {formatDuration(attendance.recordedAt, attendance.departedAt) && (
+                <span className="text-muted-foreground">
+                  {" "}
+                  · durée{" "}
+                  {formatDuration(attendance.recordedAt, attendance.departedAt)}
+                </span>
+              )}
+              {attendance.departureSource === "direction" && (
+                <span className="text-muted-foreground">
+                  {" "}
+                  · validée par la Direction
+                  {attendance.departureReason
+                    ? ` : ${attendance.departureReason}`
+                    : ""}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-warning font-medium">
+              Descente non validée
+            </span>
+          )}
+        </p>
+      )}
       {review && (
         <p className="text-sm">
           <span className="font-medium">
@@ -476,6 +507,9 @@ function SheetRowCard({
 
       {(attendance?.status === "a_verifier" ||
         (canExcuse(row.state) && row.date <= today) ||
+        (attendance?.requiresDeparture &&
+          !attendance.departedAt &&
+          row.date <= today) ||
         excuse) && (
         <div className="flex flex-wrap items-center gap-2">
           {attendance?.status === "a_verifier" && (
@@ -493,6 +527,14 @@ function SheetRowCard({
               formateurName={name}
             />
           )}
+          {attendance?.requiresDeparture &&
+            !attendance.departedAt &&
+            row.date <= today && (
+              <DepartureAction
+                attendanceId={attendance.id}
+                formateurName={name}
+              />
+            )}
           {excuse && <CancelExcuseButton excuseId={excuse.id} />}
         </div>
       )}

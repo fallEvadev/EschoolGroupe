@@ -87,7 +87,7 @@ export async function loadSheetData(
       supabase
         .from("attendances")
         .select(
-          "id, profile_id, slot_id, school_id, attendance_date, recorded_at, status, late_minutes, location_result, distance_m, accuracy_m, latitude, longitude",
+          "id, profile_id, slot_id, school_id, attendance_date, recorded_at, status, late_minutes, location_result, distance_m, accuracy_m, latitude, longitude, requires_departure, departed_at, departure_source, departure_reason",
         )
         .gte("attendance_date", from)
         .lte("attendance_date", to)
@@ -200,6 +200,10 @@ export async function loadSheetData(
               accuracyM: row.accuracy_m,
               latitude: row.latitude,
               longitude: row.longitude,
+              requiresDeparture: row.requires_departure,
+              departedAt: row.departed_at,
+              departureSource: row.departure_source,
+              departureReason: row.departure_reason,
             },
           ]
         : [],

@@ -27,6 +27,7 @@ import {
   excuseAbsence,
   reopenDay,
   reviewAttendance,
+  validateDeparture,
 } from "./actions";
 
 function notify(result: FollowUpResult) {
@@ -228,6 +229,34 @@ export function ExcuseAction({
         onConfirm={(reason) =>
           excuseAbsence({ profileId, slotId, date, reason })
         }
+      />
+    </>
+  );
+}
+
+/** La Direction valide la descente d'un formateur quand le directeur n'a pas pu donner le code. */
+export function DepartureAction({
+  attendanceId,
+  formateurName,
+}: {
+  attendanceId: string;
+  formateurName: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        Valider la descente
+      </Button>
+      <ReasonDialog
+        open={open}
+        onOpenChange={setOpen}
+        title={`Valider la descente de ${formateurName} ?`}
+        description="L'heure de descente retenue est la fin du créneau. Le motif reste consultable."
+        label="Motif (obligatoire)"
+        placeholder="Directeur absent, code non donné…"
+        confirmLabel="Valider la descente"
+        onConfirm={(reason) => validateDeparture({ attendanceId, reason })}
       />
     </>
   );

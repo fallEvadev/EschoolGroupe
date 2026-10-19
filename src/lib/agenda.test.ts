@@ -75,6 +75,10 @@ describe("slotAvailability (créneau 08:00–10:00)", () => {
 
   it("montre le pointage déjà enregistré, quelle que soit l'heure", () => {
     const attendance = {
+      attendanceId: "5f0c2c1e-6c1f-4a43-9a5b-3d1b2f6e8a10",
+      requiresDeparture: true,
+      departedAt: null,
+      departureSource: null,
       status: "retard" as const,
       recordedAt: "2026-10-07T08:20:00Z",
     };

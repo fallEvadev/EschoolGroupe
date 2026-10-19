@@ -57,6 +57,10 @@ const attendance = (
   accuracyM: 12,
   latitude: 14.6928,
   longitude: -17.4467,
+  requiresDeparture: false,
+  departedAt: null,
+  departureSource: null,
+  departureReason: null,
   ...overrides,
 });
 

@@ -45,7 +45,9 @@ export async function loadAgenda(): Promise<Agenda | { error: string }> {
       supabase.from("slot_assignments").select("slot_id").eq("status", "actif"),
       supabase
         .from("attendances")
-        .select("id, slot_id, status, recorded_at, late_minutes")
+        .select(
+          "id, slot_id, status, recorded_at, late_minutes, requires_departure, departed_at, departure_source",
+        )
         .eq("attendance_date", dakarIsoDate()),
     ]);
 
@@ -129,6 +131,10 @@ export async function loadAgenda(): Promise<Agenda | { error: string }> {
   for (const row of attendanceRows) {
     if (isAttendanceStatus(row.status)) {
       todayAttendances.set(row.slot_id, {
+        attendanceId: row.id,
+        requiresDeparture: row.requires_departure,
+        departedAt: row.departed_at,
+        departureSource: row.departure_source,
         status: row.status,
         recordedAt: row.recorded_at,
         lateMinutes: row.late_minutes,

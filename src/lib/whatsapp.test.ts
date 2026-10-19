@@ -33,18 +33,17 @@ describe("directorCodeMessage", () => {
     firstName: "Moussa",
     schoolName: "Campus Dakar-Plateau",
     dateLabel: "mercredi 7 octobre",
-    code: "428 105",
   });
 
-  it("contient le prénom, l'école, le jour et le code", () => {
+  it("contient le prénom, l'école et le jour, mais JAMAIS le code", () => {
     expect(text).toContain("Bonjour Moussa,");
     expect(text).toContain("Campus Dakar-Plateau");
     expect(text).toContain("mercredi 7 octobre");
-    expect(text).toContain("428 105");
+    expect(text).not.toMatch(/d{3} ?d{3}/);
   });
 
-  it("demande de ne le donner qu'aux formateurs présents", () => {
-    expect(text).toContain("formateurs présents");
+  it("demande de ne le donner qu'une fois le cours terminé", () => {
+    expect(text).toContain("une fois leur cours terminé");
     expect(text).toContain("ne pas le diffuser");
   });
 

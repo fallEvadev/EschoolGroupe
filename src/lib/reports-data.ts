@@ -245,6 +245,12 @@ export type ReportDetail = {
   endsAt: string;
   /** Le pointage a été refusé par la Direction : aucun rapport possible. */
   refused: boolean;
+  /** Descente (pointage en deux temps) : exigée ou non, et validée ou non. */
+  departure: {
+    required: boolean;
+    departedAt: string | null;
+    source: string | null;
+  };
   report: {
     id: string;
     status: ReportStatus;
@@ -267,7 +273,9 @@ export async function loadReportDetail(
 
   const attendanceResult = await supabase
     .from("attendances")
-    .select("id, slot_id, school_id, attendance_date")
+    .select(
+      "id, slot_id, school_id, attendance_date, requires_departure, departed_at, departure_source",
+    )
     .eq("id", attendanceId)
     .maybeSingle();
   if (attendanceResult.error) {
@@ -331,6 +339,11 @@ export async function loadReportDetail(
     startsAt: slotResult.data?.starts_at ?? "",
     endsAt: slotResult.data?.ends_at ?? "",
     refused: reviewResult.data?.decision === "refuse",
+    departure: {
+      required: attendance.requires_departure,
+      departedAt: attendance.departed_at,
+      source: attendance.departure_source,
+    },
     machines: sortMachines(machinesResult.data ?? []).map((m) => ({
       id: m.id,
       label: m.label,

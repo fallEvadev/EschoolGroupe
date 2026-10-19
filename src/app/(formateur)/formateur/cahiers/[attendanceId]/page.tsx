@@ -1,11 +1,18 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireSpace } from "@/lib/auth/guards";
-import { formatIsoLongDate } from "@/lib/dates";
+import { dakarIsoDate, dakarMinutes, formatIsoLongDate } from "@/lib/dates";
+import {
+  departureMessage,
+  departureStage,
+  reportIsOpen,
+} from "@/lib/departure";
 import {
   EMPTY_CONTENT,
   isEditable,
@@ -39,6 +46,18 @@ export default async function ReportPage({
   } else {
     const { report } = detail;
     const editable = report ? isEditable(report.status) : !detail.refused;
+    // Pointage en deux temps : le rapport s'ouvre 10 minutes avant la fin du
+    // cours et ne peut partir qu'une fois la descente validée.
+    const stage = departureStage({
+      requiresDeparture: detail.departure.required,
+      departedAt: detail.departure.departedAt,
+      departureSource: detail.departure.source,
+      endsAt: detail.endsAt,
+      isToday: detail.date === dakarIsoDate(),
+      nowMinutes: dakarMinutes(),
+    });
+    const closed = !report && !reportIsOpen(stage);
+    const stageMessage = departureMessage(stage);
 
     content = (
       <>
@@ -72,7 +91,29 @@ export default async function ReportPage({
           </p>
         )}
 
-        {editable ? (
+        {stageMessage && (stage.stage !== "closed" || closed) && (
+          <p
+            role="status"
+            className="bg-accent text-accent-foreground rounded-lg p-3 text-sm"
+          >
+            {stageMessage}
+          </p>
+        )}
+
+        {stage.stage === "awaiting_code" && editable && (
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="w-full sm:w-auto"
+          >
+            <Link href={`/formateur/descente/${detail.attendanceId}`}>
+              Valider ma descente
+            </Link>
+          </Button>
+        )}
+
+        {closed ? null : editable ? (
           <ReportForm
             attendanceId={detail.attendanceId}
             initial={report?.content ?? EMPTY_CONTENT}

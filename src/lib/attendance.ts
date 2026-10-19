@@ -323,7 +323,7 @@ export function codeOutcomeMessage(
     case "wrong":
       return remaining > 0
         ? `Code incorrect. Il vous reste ${remaining} tentative${remaining > 1 ? "s" : ""}.`
-        : `Code incorrect. Pointage bloqué pendant ${LOCK_MINUTES} minutes après ${MAX_FAILED_ATTEMPTS} essais.`;
+        : `Code incorrect. Saisie bloquée pendant ${LOCK_MINUTES} minutes après ${MAX_FAILED_ATTEMPTS} essais.`;
   }
 }
 

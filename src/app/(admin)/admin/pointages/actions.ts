@@ -14,6 +14,7 @@ import {
   excuseAbsenceSchema,
   excuseIdSchema,
   reviewAttendanceSchema,
+  validateDepartureSchema,
   type FollowUpResult,
 } from "@/lib/validations/attendance-follow-up";
 
@@ -345,6 +346,56 @@ export async function reopenDay(input: unknown): Promise<FollowUpResult> {
     };
   } catch (error) {
     console.error("reopenDay :", error);
+    return ERREUR_GENERIQUE;
+  }
+}
+
+/**
+ * La Direction valide la descente d'un formateur quand le directeur n'a pas pu
+ * lui donner le code. La fonction SQL `set_departure_by_direction` revérifie le
+ * rôle, le motif et l'état du pointage ; le pointage d'origine n'est jamais
+ * modifié autrement (l'heure retenue est la fin du créneau). Le motif reste
+ * dans la base, jamais dans le journal d'audit.
+ */
+export async function validateDeparture(
+  input: unknown,
+): Promise<FollowUpResult> {
+  const caller = await requireActionRole(PEDAGOGY_ROLES);
+  if (!caller.ok) return { ok: false, message: caller.message };
+
+  const parsed = validateDepartureSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const { attendanceId, reason } = parsed.data;
+
+  try {
+    const supabase = await createServerSupabase();
+    const { error } = await supabase.rpc("set_departure_by_direction", {
+      p_attendance_id: attendanceId,
+      p_reason: reason,
+    });
+    if (error) {
+      if (error.code === CHECK_VIOLATION) {
+        return {
+          ok: false,
+          message:
+            "Cette descente est déjà validée ou n'a pas lieu d'être. Actualisez la page.",
+        };
+      }
+      console.error("set_departure_by_direction :", error.message);
+      return ERREUR_GENERIQUE;
+    }
+
+    await writeAudit({
+      actorId: caller.actorId,
+      action: "departure_validated",
+      entity: "attendances",
+      entityId: attendanceId,
+      details: {},
+    });
+    refresh();
+    return { ok: true, message: "Descente validée." };
+  } catch (error) {
+    console.error("validateDeparture :", error);
     return ERREUR_GENERIQUE;
   }
 }
