@@ -128,28 +128,22 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
       className="flex flex-col gap-5"
       noValidate
     >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="firstName" label="Prénom" error={errors.firstName?.message}>
-          <Input
-            id="firstName"
-            autoComplete="off"
-            disabled={isSubmitting}
-            aria-invalid={!!errors.firstName}
-            aria-describedby={describedBy("firstName")}
-            {...register("firstName")}
-          />
-        </Field>
-        <Field id="lastName" label="Nom" error={errors.lastName?.message}>
-          <Input
-            id="lastName"
-            autoComplete="off"
-            disabled={isSubmitting}
-            aria-invalid={!!errors.lastName}
-            aria-describedby={describedBy("lastName")}
-            {...register("lastName")}
-          />
-        </Field>
-      </div>
+      <Field
+        id="fullName"
+        label="Nom complet"
+        error={errors.fullName?.message}
+        hint="Prénom(s) puis nom : le dernier mot est le nom de famille."
+      >
+        <Input
+          id="fullName"
+          autoComplete="off"
+          placeholder="Ex. : Awa Fall"
+          disabled={isSubmitting}
+          aria-invalid={!!errors.fullName}
+          aria-describedby={describedBy("fullName")}
+          {...register("fullName")}
+        />
+      </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field

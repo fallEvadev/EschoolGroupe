@@ -28,18 +28,28 @@ export const phoneSchema = z
   )
   .transform((value) => value || null);
 
+/**
+ * Nom complet « prénom(s) puis nom » : espaces nettoyés ; le dernier mot est le
+ * nom de famille (voir `splitFullName`). Au moins deux mots sont demandés : un
+ * seul mot est presque toujours un oubli.
+ */
+export const fullNameSchema = z
+  .string()
+  .transform((value) => value.trim().replace(/\s+/g, " "))
+  .pipe(
+    z
+      .string()
+      .min(1, "Le nom complet est obligatoire.")
+      .max(120, "Le nom complet ne doit pas dépasser 120 caractères.")
+      .refine(
+        (value) => value === "" || value.includes(" "),
+        "Indiquez le prénom puis le nom (ex. Awa Fall).",
+      ),
+  );
+
 /** Fiche d'un membre du personnel (création et modification). */
 export const staffSchema = z.object({
-  firstName: z
-    .string()
-    .trim()
-    .min(1, "Le prénom est obligatoire.")
-    .max(60, "Le prénom ne doit pas dépasser 60 caractères."),
-  lastName: z
-    .string()
-    .trim()
-    .min(1, "Le nom est obligatoire.")
-    .max(60, "Le nom ne doit pas dépasser 60 caractères."),
+  fullName: fullNameSchema,
   email: z
     .string()
     .trim()
@@ -114,8 +124,7 @@ export type StaffResult = {
 
 /** Accès donné depuis « Accès & rôles » : l'essentiel de la fiche. */
 export const grantAccessSchema = staffSchema.pick({
-  firstName: true,
-  lastName: true,
+  fullName: true,
   email: true,
   phone: true,
   role: true,

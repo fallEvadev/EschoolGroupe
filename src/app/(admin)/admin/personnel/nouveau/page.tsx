@@ -23,8 +23,7 @@ export default async function NouvellePersonnePage() {
         <StaffForm
           roles={assignableRoles(role)}
           initial={{
-            firstName: "",
-            lastName: "",
+            fullName: "",
             email: "",
             phone: "",
             role: "formateur",

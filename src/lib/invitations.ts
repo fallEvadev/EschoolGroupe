@@ -44,7 +44,7 @@ async function appUrl(): Promise<string> {
 /** Colonnes de `profiles` correspondant aux champs du formulaire. */
 export function toProfileRow(data: StaffData) {
   return {
-    full_name: `${data.firstName} ${data.lastName}`,
+    full_name: data.fullName,
     phone: data.phone,
     role: data.role,
     job_title: data.jobTitle,

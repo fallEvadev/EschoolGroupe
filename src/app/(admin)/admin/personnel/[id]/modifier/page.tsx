@@ -5,7 +5,7 @@ import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { assignableRoles } from "@/lib/auth/roles";
-import { isContractType, splitFullName } from "@/lib/staff";
+import { isContractType } from "@/lib/staff";
 import { createServerSupabase } from "@/lib/supabase/server";
 
 import { requireStaffManager } from "../../access";
@@ -30,7 +30,6 @@ export default async function ModifierPersonnePage({
 
   const ficheHref = `/admin/personnel?fiche=${profile.id}`;
   const roles = assignableRoles(role);
-  const { firstName, lastName } = splitFullName(profile.full_name);
 
   return (
     <main className="flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-8">
@@ -46,8 +45,7 @@ export default async function ModifierPersonnePage({
             profileId={profile.id}
             roles={roles}
             initial={{
-              firstName,
-              lastName,
+              fullName: profile.full_name,
               email: profile.email,
               phone: profile.phone ?? "",
               role: profile.role,

@@ -21,8 +21,7 @@ import {
 import { grantAccess } from "./actions";
 
 const EMPTY: GrantAccessValues = {
-  firstName: "",
-  lastName: "",
+  fullName: "",
   email: "",
   phone: "",
   role: "formateur",
@@ -135,37 +134,24 @@ export function GrantAccessForm() {
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="grant-firstName">Prénom</Label>
-            <Input
-              id="grant-firstName"
-              autoComplete="off"
-              disabled={isSubmitting}
-              aria-invalid={!!errors.firstName}
-              aria-describedby="grant-firstName-error"
-              {...register("firstName")}
-            />
-            <FieldError
-              id="grant-firstName-error"
-              message={errors.firstName?.message}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="grant-lastName">Nom</Label>
-            <Input
-              id="grant-lastName"
-              autoComplete="off"
-              disabled={isSubmitting}
-              aria-invalid={!!errors.lastName}
-              aria-describedby="grant-lastName-error"
-              {...register("lastName")}
-            />
-            <FieldError
-              id="grant-lastName-error"
-              message={errors.lastName?.message}
-            />
-          </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="grant-fullName">Nom complet</Label>
+          <Input
+            id="grant-fullName"
+            autoComplete="off"
+            placeholder="Ex. : Awa Fall"
+            disabled={isSubmitting}
+            aria-invalid={!!errors.fullName}
+            aria-describedby="grant-fullName-error"
+            {...register("fullName")}
+          />
+          <FieldError
+            id="grant-fullName-error"
+            message={errors.fullName?.message}
+          />
+          <p className="text-muted-foreground text-sm">
+            Prénom(s) puis nom : le dernier mot est le nom de famille.
+          </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
