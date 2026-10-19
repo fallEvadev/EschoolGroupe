@@ -31,7 +31,7 @@ async function loadBilans(
   if (!isSupabaseConfigured()) {
     return {
       error:
-        "Configuration Supabase incomplète : vérifiez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY dans .env.local.",
+        "Le service n'est pas encore configuré. Contactez l'administrateur technique.",
     };
   }
   const supabase = await createServerSupabase();

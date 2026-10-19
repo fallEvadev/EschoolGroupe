@@ -37,7 +37,7 @@ import { TicketActions, type MaintenancierOption } from "./ticket-actions";
 export const metadata = { title: "Maintenance · E-School Groupe" };
 
 const CONFIG_ERROR =
-  "Configuration Supabase incomplète : vérifiez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY dans .env.local.";
+  "Le service n'est pas encore configuré. Contactez l'administrateur technique.";
 
 type TicketItem = {
   id: string;

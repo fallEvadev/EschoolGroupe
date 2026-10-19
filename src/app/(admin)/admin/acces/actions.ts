@@ -87,7 +87,7 @@ export async function updateUserRole(input: unknown): Promise<AccessResult> {
       return {
         ok: false,
         message:
-          "Rôle modifié dans Clerk, mais la synchronisation du profil a échoué. Réessayez.",
+          "Rôle modifié, mais la mise à jour de la fiche a échoué. Réessayez.",
       };
     }
     return {
@@ -154,7 +154,7 @@ export async function setUserActive(input: unknown): Promise<AccessResult> {
       return {
         ok: false,
         message:
-          "Compte mis à jour dans Clerk, mais la synchronisation du profil a échoué.",
+          "Compte mis à jour, mais la mise à jour de la fiche a échoué. Réessayez.",
       };
     }
     return {

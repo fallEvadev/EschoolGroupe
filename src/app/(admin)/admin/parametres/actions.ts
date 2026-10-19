@@ -62,7 +62,7 @@ export async function updateOrganizationSettings(
       return {
         ok: false,
         message:
-          "Modification refusée par la base : vérifiez la liaison Clerk ↔ Supabase.",
+          "Modification refusée. Reconnectez-vous puis réessayez ; si le problème continue, contactez l'administrateur technique.",
       };
     }
 
@@ -155,7 +155,7 @@ export async function uploadOrganizationAsset(
       return {
         ok: false,
         message:
-          "Modification refusée par la base : vérifiez la liaison Clerk ↔ Supabase.",
+          "Modification refusée. Reconnectez-vous puis réessayez ; si le problème continue, contactez l'administrateur technique.",
       };
     }
 

@@ -21,7 +21,7 @@ export const metadata = { title: "Parc informatique · E-School Groupe" };
 type SchoolItem = { id: string; name: string; archived: boolean };
 
 const CONFIG_ERROR =
-  "Configuration Supabase incomplète : vérifiez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY dans .env.local.";
+  "Le service n'est pas encore configuré. Contactez l'administrateur technique.";
 
 /**
  * Écoles via la fonction `maintenance_schools` (nom et statut seulement) : la

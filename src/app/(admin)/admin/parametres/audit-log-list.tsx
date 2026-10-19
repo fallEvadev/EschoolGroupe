@@ -171,7 +171,7 @@ function describe(action: string, details: Json): string | null {
     return `${details.email}`;
   }
   if (action === "account_archived" && details.source === "clerk_webhook") {
-    return "Compte supprimé dans Clerk";
+    return "Compte supprimé du service de connexion";
   }
   if (typeof details.reason === "string" && details.reason) {
     return `Motif : ${details.reason}`;

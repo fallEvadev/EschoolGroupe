@@ -27,7 +27,7 @@ export const metadata = { title: "Paramètres · E-School Groupe" };
 
 /** Configuration Supabase absente (variables d'environnement). */
 const CONFIG_MESSAGE =
-  "Configuration Supabase incomplète : vérifiez NEXT_PUBLIC_SUPABASE_URL (doit commencer par https://) et NEXT_PUBLIC_SUPABASE_ANON_KEY dans .env.local.";
+  "Le service n'est pas encore configuré. Contactez l'administrateur technique.";
 
 type SettingsLoad =
   | {
