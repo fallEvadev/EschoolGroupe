@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Field, FormActions, FormStatus } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -23,36 +24,6 @@ type SchoolFormProps = {
   schoolId?: string;
   initial: SchoolFormValues;
 };
-
-/** Un champ : libellé, contrôle, aide et message d'erreur. */
-function Field({
-  id,
-  label,
-  error,
-  hint,
-  children,
-}: {
-  id: string;
-  label: string;
-  error?: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-      {hint && !error && (
-        <p className="text-muted-foreground text-sm">{hint}</p>
-      )}
-      {error && (
-        <p id={`${id}-error`} className="text-destructive text-sm">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
 
 /**
  * Formulaire d'une école (création ou modification). La position GPS n'y figure
@@ -103,8 +74,6 @@ export function SchoolForm({ schoolId, initial }: SchoolFormProps) {
             id="name"
             autoComplete="off"
             disabled={isSubmitting}
-            aria-invalid={!!errors.name}
-            aria-describedby={describedBy("name")}
             {...register("name")}
           />
         </Field>
@@ -118,8 +87,6 @@ export function SchoolForm({ schoolId, initial }: SchoolFormProps) {
             autoComplete="off"
             placeholder="Quartier, ville"
             disabled={isSubmitting}
-            aria-invalid={!!errors.address}
-            aria-describedby={describedBy("address")}
             {...register("address")}
           />
         </Field>
@@ -139,8 +106,6 @@ export function SchoolForm({ schoolId, initial }: SchoolFormProps) {
             min={0}
             max={180}
             disabled={isSubmitting}
-            aria-invalid={!!errors.lateToleranceMinutes}
-            aria-describedby={describedBy("lateToleranceMinutes")}
             {...register("lateToleranceMinutes", { valueAsNumber: true })}
           />
         </Field>
@@ -154,7 +119,11 @@ export function SchoolForm({ schoolId, initial }: SchoolFormProps) {
         relevée automatiquement et comparée à celle-ci.
       </p>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <FormStatus ok={false}>
+        {result && !result.ok ? result.message : null}
+      </FormStatus>
+
+      <FormActions>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting
             ? "Enregistrement…"
@@ -170,16 +139,7 @@ export function SchoolForm({ schoolId, initial }: SchoolFormProps) {
         >
           Annuler
         </Button>
-        <p
-          role="status"
-          aria-live="polite"
-          className={
-            result?.ok ? "text-success text-sm" : "text-destructive text-sm"
-          }
-        >
-          {result && !result.ok ? result.message : null}
-        </p>
-      </div>
+      </FormActions>
     </form>
   );
 }

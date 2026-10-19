@@ -1,0 +1,5 @@
+Réalise un audit complet de toute la plateforme : performances, sécurité, failles potentielles, bugs, architecture et qualité du code. Corrige les problèmes identifiés et refactorise lorsque nécessaire pour obtenir un écosystème propre, robuste, performant et maintenable.
+
+Harmonise toute l’interface : mêmes formulaires, champs, boutons, espacements et comportements sur toutes les pages. Supprime les éléments superflus et simplifie les parcours. Par exemple, fusionne les champs « Prénom » et « Nom » en un seul champ « Nom complet », avec une logique qui récupère automatiquement le nom de famille comme dernier mot saisi.
+
+Prends les initiatives nécessaires pour éliminer les incohérences, corriger les erreurs et garantir une plateforme cohérente, sécurisée et optimisée de bout en bout, sans casser les fonctionnalités existantes.

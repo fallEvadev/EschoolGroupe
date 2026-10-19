@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 
 import { InvitationShare } from "@/components/invitation-share";
 import { Button } from "@/components/ui/button";
+import { Field, FormActions, FormStatus } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SELECT_CLASS } from "@/components/ui/select";
@@ -30,36 +31,6 @@ type StaffFormProps = {
   /** Rôles que l'utilisateur connecté peut attribuer. */
   roles: readonly Role[];
 };
-
-/** Un champ : libellé, contrôle et message d'erreur. */
-function Field({
-  id,
-  label,
-  error,
-  hint,
-  children,
-}: {
-  id: string;
-  label: string;
-  error?: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-      {hint && !error && (
-        <p className="text-muted-foreground text-sm">{hint}</p>
-      )}
-      {error && (
-        <p id={`${id}-error`} className="text-destructive text-sm">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
 
 /** Formulaire d'une fiche du personnel (création ou modification). */
 export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
@@ -119,9 +90,6 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
     );
   }
 
-  const describedBy = (field: keyof StaffFormValues) =>
-    errors[field] ? `${field}-error` : undefined;
-
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -139,8 +107,6 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
           autoComplete="off"
           placeholder="Ex. : Awa Fall"
           disabled={isSubmitting}
-          aria-invalid={!!errors.fullName}
-          aria-describedby={describedBy("fullName")}
           {...register("fullName")}
         />
       </Field>
@@ -162,8 +128,6 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
             autoComplete="off"
             readOnly={editing}
             disabled={isSubmitting}
-            aria-invalid={!!errors.email}
-            aria-describedby={describedBy("email")}
             {...register("email")}
           />
         </Field>
@@ -178,8 +142,6 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
             inputMode="tel"
             placeholder="77 123 45 67"
             disabled={isSubmitting}
-            aria-invalid={!!errors.phone}
-            aria-describedby={describedBy("phone")}
             {...register("phone")}
           />
         </Field>
@@ -209,8 +171,6 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
             id="jobTitle"
             placeholder="Développement web"
             disabled={isSubmitting}
-            aria-invalid={!!errors.jobTitle}
-            aria-describedby={describedBy("jobTitle")}
             {...register("jobTitle")}
           />
         </Field>
@@ -245,14 +205,14 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
             id="hireDate"
             type="date"
             disabled={isSubmitting}
-            aria-invalid={!!errors.hireDate}
-            aria-describedby={describedBy("hireDate")}
             {...register("hireDate")}
           />
         </Field>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <FormStatus ok={result?.ok}>{result?.message}</FormStatus>
+
+      <FormActions>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting
             ? "Enregistrement…"
@@ -268,16 +228,7 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
         >
           Annuler
         </Button>
-        <p
-          role="status"
-          aria-live="polite"
-          className={
-            result?.ok ? "text-success text-sm" : "text-destructive text-sm"
-          }
-        >
-          {result?.message}
-        </p>
-      </div>
+      </FormActions>
     </form>
   );
 }
