@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SELECT_CLASS } from "@/components/ui/select";
-import { FormError } from "@/components/ui/form";
+import { Field, FormError } from "@/components/ui/form";
 import { formatDate } from "@/lib/dates";
 import type { FollowUpResult } from "@/lib/validations/attendance-follow-up";
 
@@ -350,8 +350,7 @@ export function ClosedDayControl({
           closeDay({ date, schoolId: schoolId || null, reason })
         }
       >
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="closed-school">École concernée</Label>
+        <Field id="closed-school" label="École concernée">
           <select
             id="closed-school"
             value={schoolId}
@@ -365,7 +364,7 @@ export function ClosedDayControl({
               </option>
             ))}
           </select>
-        </div>
+        </Field>
       </ReasonDialog>
     </div>
   );

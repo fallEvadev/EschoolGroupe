@@ -8,9 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { SELECT_CLASS } from "@/components/ui/select";
-import { FormError } from "@/components/ui/form";
+import { Field, FormError } from "@/components/ui/form";
 import {
   MACHINE_KIND_LABELS,
   MACHINE_KINDS,
@@ -240,8 +239,7 @@ function MachineFields({
   return (
     <form onSubmit={submit} className="flex flex-col gap-3" noValidate>
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={id("label")}>Nom</Label>
+        <Field id={id("label")} label="Nom">
           <Input
             id={id("label")}
             value={values.label}
@@ -252,9 +250,8 @@ function MachineFields({
               setValues({ ...values, label: event.target.value })
             }
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={id("kind")}>Type</Label>
+        </Field>
+        <Field id={id("kind")} label="Type">
           <select
             id={id("kind")}
             className={SELECT_CLASS}
@@ -270,9 +267,8 @@ function MachineFields({
               </option>
             ))}
           </select>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={id("serial")}>N° de série (facultatif)</Label>
+        </Field>
+        <Field id={id("serial")} label="N° de série (facultatif)">
           <Input
             id={id("serial")}
             value={values.serialNumber}
@@ -282,7 +278,7 @@ function MachineFields({
               setValues({ ...values, serialNumber: event.target.value })
             }
           />
-        </div>
+        </Field>
       </div>
 
       <FormError>{error}</FormError>

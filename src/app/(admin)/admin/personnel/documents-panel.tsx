@@ -25,9 +25,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FormError } from "@/components/ui/form";
+import { Field, FormError } from "@/components/ui/form";
 import {
   ACCEPTED_TYPES,
   DOCUMENT_KINDS,
@@ -359,8 +358,7 @@ export function DocumentsPanel({
                 </AlertDialogDescription>
               </AlertDialogHeader>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="review-reason">Motif (obligatoire)</Label>
+              <Field id="review-reason" label="Motif (obligatoire)">
                 <Textarea
                   id="review-reason"
                   rows={3}
@@ -371,7 +369,7 @@ export function DocumentsPanel({
                   onChange={(event) => setReason(event.target.value)}
                   placeholder="Photo floue, document illisible, pièce expirée…"
                 />
-              </div>
+              </Field>
               {reviewError && <FormError>{reviewError}</FormError>}
 
               <AlertDialogFooter>

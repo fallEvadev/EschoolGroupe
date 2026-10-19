@@ -6,8 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { FormError } from "@/components/ui/form";
+import { Field, FormError } from "@/components/ui/form";
 import { formatMonthLabel, isIsoMonth } from "@/lib/dates";
 import {
   defaultProgramTitle,
@@ -148,8 +147,7 @@ export function PublishProgramForm({ defaultMonth }: { defaultMonth: string }) {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="program-month">Mois concerné</Label>
+          <Field id="program-month" label="Mois concerné">
             <Input
               id="program-month"
               type="month"
@@ -157,9 +155,8 @@ export function PublishProgramForm({ defaultMonth }: { defaultMonth: string }) {
               disabled={busy}
               onChange={(event) => changeMonth(event.target.value)}
             />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="program-title">Titre</Label>
+          </Field>
+          <Field id="program-title" label="Titre">
             <Input
               id="program-title"
               value={title}
@@ -169,11 +166,10 @@ export function PublishProgramForm({ defaultMonth }: { defaultMonth: string }) {
                 setTitleEdited(true);
               }}
             />
-          </div>
+          </Field>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="program-file">Fichier PDF (10 Mo maximum)</Label>
+        <Field id="program-file" label="Fichier PDF (10 Mo maximum)">
           <Input
             id="program-file"
             type="file"
@@ -181,7 +177,7 @@ export function PublishProgramForm({ defaultMonth }: { defaultMonth: string }) {
             disabled={busy}
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           />
-        </div>
+        </Field>
 
         <FormError>{error}</FormError>
 

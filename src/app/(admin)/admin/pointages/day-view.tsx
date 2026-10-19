@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { SELECT_CLASS } from "@/components/ui/select";
+import { Field } from "@/components/ui/form";
 import { type SheetData } from "@/lib/attendance-data";
 import { buildSheet, countRows } from "@/lib/attendance-sheet";
 import { formatIsoLongDate, shiftIsoDate } from "@/lib/dates";
@@ -110,12 +110,10 @@ export function DayView({
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
           role="search"
         >
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="date">Date</Label>
+          <Field id="date" label="Date">
             <Input id="date" name="date" type="date" defaultValue={view.date} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="ecole">École</Label>
+          </Field>
+          <Field id="ecole" label="École">
             <select
               id="ecole"
               name="ecole"
@@ -129,9 +127,8 @@ export function DayView({
                 </option>
               ))}
             </select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="formateur">Formateur</Label>
+          </Field>
+          <Field id="formateur" label="Formateur">
             <select
               id="formateur"
               name="formateur"
@@ -145,9 +142,8 @@ export function DayView({
                 </option>
               ))}
             </select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="statut">Statut</Label>
+          </Field>
+          <Field id="statut" label="Statut">
             <select
               id="statut"
               name="statut"
@@ -160,7 +156,7 @@ export function DayView({
                 </option>
               ))}
             </select>
-          </div>
+          </Field>
           <div className="flex items-end gap-2">
             <Button type="submit">Filtrer</Button>
             <Button variant="ghost" asChild>

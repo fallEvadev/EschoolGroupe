@@ -14,9 +14,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FormError } from "@/components/ui/form";
+import { Field, FormError } from "@/components/ui/form";
 import {
   needsReason,
   STATUS_ACTION_LABELS,
@@ -107,8 +106,7 @@ export function StatusActions({
               </AlertDialogHeader>
 
               {needsReason(open) && (
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="status-reason">Motif (obligatoire)</Label>
+                <Field id="status-reason" label="Motif (obligatoire)">
                   <Textarea
                     id="status-reason"
                     rows={3}
@@ -119,7 +117,7 @@ export function StatusActions({
                     onChange={(event) => setReason(event.target.value)}
                     placeholder="Fin de contrat, démission, absence prolongée…"
                   />
-                </div>
+                </Field>
               )}
               {error && <FormError>{error}</FormError>}
 

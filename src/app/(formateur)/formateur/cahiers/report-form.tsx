@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SELECT_CLASS } from "@/components/ui/select";
-import { FormError } from "@/components/ui/form";
+import { Field, FormError } from "@/components/ui/form";
 import {
   shouldOfferDraft,
   shouldSaveDraft,
@@ -318,8 +318,7 @@ export function ReportForm({
         className="flex flex-col gap-6"
         noValidate
       >
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="classes">Classe(s)</Label>
+        <Field id="classes" label="Classe(s)">
           <Input
             id="classes"
             value={content.classes}
@@ -328,10 +327,9 @@ export function ReportForm({
             disabled={busy}
             onChange={(event) => update({ classes: event.target.value })}
           />
-        </div>
+        </Field>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="theme">Thème du cours</Label>
+        <Field id="theme" label="Thème du cours">
           <Textarea
             id="theme"
             value={content.courseTheme}
@@ -340,7 +338,7 @@ export function ReportForm({
             disabled={busy}
             onChange={(event) => update({ courseTheme: event.target.value })}
           />
-        </div>
+        </Field>
 
         <fieldset className="flex flex-col gap-3">
           <legend className="text-sm font-medium">
