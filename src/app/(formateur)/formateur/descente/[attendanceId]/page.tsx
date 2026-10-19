@@ -17,6 +17,7 @@ export const metadata = { title: "Descente · E-School Groupe" };
  * Validation de la descente : le formateur saisit le code que le directeur lui
  * donne une fois le cours terminé. Le formulaire n'apparaît qu'à partir de la
  * fin du créneau ; le serveur refuse de toute façon un code donné trop tôt.
+ * C'est la validation de la descente qui ouvre le rapport journalier.
  */
 export default async function DeparturePage({
   params,
@@ -65,7 +66,7 @@ export default async function DeparturePage({
           <Card className="p-4 text-sm sm:p-6">
             {stage.stage === "legacy"
               ? "Ce pointage n'a pas de descente à valider."
-              : stage.stage === "closed" || stage.stage === "report_open"
+              : stage.stage === "closed"
                 ? `Le cours n'est pas terminé : le code de descente sera accepté à partir de ${formatTime(detail.endsAt)}.`
                 : departureMessage(stage)}
           </Card>

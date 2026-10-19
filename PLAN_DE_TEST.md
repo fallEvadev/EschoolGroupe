@@ -61,7 +61,7 @@ Contrôle après les 5 : Clerk → Webhooks → *Message Attempts* : 5 envois ve
 
 1. `/admin/ecoles` → crée l'école **« École Test »**. Rattache le directeur (`+directeur`).
 2. Crée un **créneau** pour **le jour d'aujourd'hui**, qui se termine **dans 25 minutes environ** (ex. de 30 minutes avant maintenant à maintenant + 25 min). Affecte le formateur.
-   *L'arrivée se pointe de 30 min avant le début jusqu'à la fin du créneau. Le rapport s'ouvre 10 min avant la fin. Le code de descente n'est accepté qu'à la fin exacte.*
+   *L'arrivée se pointe de 30 min avant le début jusqu'à la fin du créneau. Le code de descente n'est accepté qu'à la fin exacte, et c'est lui qui ouvre le rapport.*
 3. `/admin/codes` → génère le code du jour. ❓ Un code à 6 chiffres pour « École Test ».
 4. Teste « Régénérer » : ❓ le nouveau code remplace l'ancien. Note le code final.
 5. Bouton **« Prévenir le directeur »** (WhatsApp) : ❓ le message ne contient **pas** le code.
@@ -85,21 +85,28 @@ Contrôle après les 5 : Clerk → Webhooks → *Message Attempts* : 5 envois ve
 2. **Pointage réussi** : touche « 📍 Je suis arrivé à l'école », autorise la localisation. ❓ « Pointage enregistré avec succès. » et **aucun code demandé**.
 3. Pointe encore une fois le même créneau. ❓ Refus.
 
-**Le rapport s'ouvre 10 minutes avant la fin**
+**Pendant le cours : le rapport est fermé**
 
-4. Menu **Cahiers** → ouvre le rapport du jour **avant** ce moment. ❓ Message « Le rapport s'ouvre à HH:MM, 10 minutes avant la fin du cours », **aucun formulaire**.
-5. Dès l'heure : ❓ le formulaire s'ouvre (Classe(s), Thème du cours, matériel et pannes). Remplis « Classe : 3e A », « Thème : les tableaux Excel », puis **Enregistrer le brouillon**. ❓ Brouillon gardé.
-6. Ajoute une **panne** (« Autre équipement » : « Projecteur », description « ne s'allume plus »).
-7. Coupe le Wi-Fi/les données, modifie le thème. ❓ Message « Pas de connexion… saisie gardée », aucun envoi automatique. Remets le réseau.
-8. Clique **Envoyer à la Direction** (**sans avoir validé la descente**). ❓ Statut « soumis » : **l'envoi n'est jamais bloqué**. Tente de modifier : ❓ impossible.
+4. Menu **Cahiers** → ouvre le rapport du jour **avant la fin du cours**. ❓ Message « Le cours se termine à HH:MM. Ensuite, le directeur vous donne le code… », **aucun formulaire**.
+5. Saisis quand même le code (adresse `/formateur/descente/…`) : ❓ « Le code n'est pas encore accepté : le cours se termine dans N minutes », et **aucun essai n'est compté**.
 
-**Descente avec le code, après le cours**
+**Descente avec le code, après le cours : elle ouvre le rapport**
 
-9. **Avant la fin exacte du créneau** : accueil → « Valider ma descente » n'apparaît pas encore. Saisis quand même le code (adresse `/formateur/descente/…`) : ❓ « Le code n'est pas encore accepté : le cours se termine dans N minutes », et **aucun essai n'est compté**.
-10. **À la fin du créneau** : ❓ le bouton **« Valider ma descente »** apparaît sur l'accueil.
-11. **Mauvais code** ×5 : ❓ « Code incorrect… », puis blocage de 15 minutes (tu peux sauter cet essai).
-12. **Bon code** (celui du directeur, visible sur son espace à la fin du cours) : ❓ « Descente enregistrée à HH:MM. »
-13. Accueil : ❓ « Descente validée ». Cloche : ❓ pas de notification (c'est la Direction qui est prévenue).
+6. **À la fin du créneau** : ❓ le bouton **« Saisir le code de descente »** apparaît sur l'accueil.
+7. **Mauvais code** ×5 : ❓ « Code incorrect… », puis blocage de 15 minutes (tu peux sauter cet essai).
+8. **Bon code** (celui du directeur, visible sur son espace à la fin du cours) : ❓ « Descente enregistrée à HH:MM » et un bouton **« Ouvrir mon rapport »**.
+9. Accueil : ❓ « Descente validée : vous pouvez rédiger votre rapport » et le bouton **« Rédiger mon rapport »**. Cloche : ❓ pas de notification.
+
+**Le rapport**
+
+10. Ouvre le rapport : ❓ le formulaire s'ouvre (Classe(s), Thème du cours, matériel et pannes). Remplis « Classe : 3e A », « Thème : les tableaux Excel », puis **Enregistrer le brouillon**. ❓ Brouillon gardé.
+11. Ajoute une **panne** (« Autre équipement » : « Projecteur », description « ne s'allume plus »).
+12. Coupe le Wi-Fi/les données, modifie le thème. ❓ Message « Pas de connexion… saisie gardée », aucun envoi automatique. Remets le réseau.
+13. Clique **Envoyer à la Direction**. ❓ Statut « soumis » : **l'envoi n'est jamais bloqué**. Tente de modifier : ❓ impossible.
+
+**Directeur absent (cas de secours)**
+
+14. Avec un 2e pointage dont la descente n'a pas été validée : `/admin/pointages` (compte `+pedago`) → **« Valider la descente »** avec un motif. ❓ Le formateur voit alors « Descente validée par la Direction pédagogique » et peut ouvrir son rapport.
 
 ## Acte 7 — Admin Pédagogie : valider le rapport (10 min)
 

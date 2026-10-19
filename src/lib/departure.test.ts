@@ -17,7 +17,7 @@ const base = {
 const minutes = (h: number, m = 0) => h * 60 + m;
 
 describe("departureStage", () => {
-  it("un ancien pointage n'a ni descente ni fenêtre de rapport", () => {
+  it("un ancien pointage n'a pas de descente et son rapport reste libre", () => {
     const stage = departureStage({
       ...base,
       requiresDeparture: false,
@@ -27,25 +27,20 @@ describe("departureStage", () => {
     expect(reportIsOpen(stage)).toBe(true);
   });
 
-  it("le rapport est fermé jusqu'à 10 minutes avant la fin", () => {
-    const stage = departureStage({ ...base, nowMinutes: minutes(11, 49) });
-    expect(stage).toEqual({ stage: "closed", opensAtMinutes: minutes(11, 50) });
+  it("pendant le cours, le rapport est fermé", () => {
+    const stage = departureStage({ ...base, nowMinutes: minutes(11, 55) });
+    expect(stage).toEqual({ stage: "closed", endsAtMinutes: minutes(12) });
     expect(reportIsOpen(stage)).toBe(false);
-    expect(departureMessage(stage)).toContain("11:50");
+    expect(departureMessage(stage)).toContain("12:00");
   });
 
-  it("le rapport s'ouvre à fin - 10 min, inclus", () => {
-    const stage = departureStage({ ...base, nowMinutes: minutes(11, 50) });
-    expect(stage).toEqual({ stage: "report_open", endsAtMinutes: minutes(12) });
-    expect(reportIsOpen(stage)).toBe(true);
-  });
-
-  it("à la fin du cours, le code est attendu", () => {
+  it("à la fin du cours, le code est attendu et le rapport reste fermé", () => {
     const stage = departureStage({ ...base, nowMinutes: minutes(12) });
     expect(stage).toEqual({ stage: "awaiting_code" });
+    expect(reportIsOpen(stage)).toBe(false);
   });
 
-  it("descente validée par le code : le rapport peut partir", () => {
+  it("descente validée par le code : le rapport s'ouvre", () => {
     const stage = departureStage({
       ...base,
       departedAt: "2026-10-19T12:04:00Z",
@@ -53,9 +48,10 @@ describe("departureStage", () => {
       nowMinutes: minutes(12, 5),
     });
     expect(stage).toEqual({ stage: "done", source: "code" });
+    expect(reportIsOpen(stage)).toBe(true);
   });
 
-  it("descente validée par la Direction : le dit clairement", () => {
+  it("descente validée par la Direction : le rapport s'ouvre aussi", () => {
     const stage = departureStage({
       ...base,
       departedAt: "2026-10-19T12:00:00Z",
@@ -63,27 +59,18 @@ describe("departureStage", () => {
       nowMinutes: minutes(18),
     });
     expect(stage).toEqual({ stage: "done", source: "direction" });
+    expect(reportIsOpen(stage)).toBe(true);
     expect(departureMessage(stage)).toContain("Direction");
   });
 
-  it("un jour passé sans descente : plus de code possible, c'est à la Direction d'agir", () => {
+  it("un jour passé sans descente : rapport fermé, c'est à la Direction d'agir", () => {
     const stage = departureStage({
       ...base,
       isToday: false,
       nowMinutes: minutes(9),
     });
     expect(stage).toEqual({ stage: "expired" });
-    expect(reportIsOpen(stage)).toBe(true);
-  });
-
-  it("un cours qui finit juste après minuit ne fait pas « le tour » de l'horloge", () => {
-    const stage = departureStage({
-      ...base,
-      endsAt: "00:05:00",
-      nowMinutes: 2,
-    });
-    // fin - 10 min = -5 : le rapport est ouvert dès minuit (et jamais « fermé »)
-    expect(stage).toEqual({ stage: "report_open", endsAtMinutes: 5 });
+    expect(reportIsOpen(stage)).toBe(false);
   });
 });
 

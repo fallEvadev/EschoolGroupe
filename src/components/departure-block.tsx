@@ -6,9 +6,9 @@ import type { SlotAttendance } from "@/lib/agenda";
 import { departureMessage, departureStage } from "@/lib/departure";
 
 /**
- * Ce que le formateur doit faire après son arrivée, selon l'heure : attendre
- * l'ouverture du rapport, le rédiger, puis valider sa descente avec le code du
- * directeur. Vide pour un ancien pointage (sans descente).
+ * Ce que le formateur doit faire après son arrivée, selon l'heure : attendre la
+ * fin du cours, valider sa descente avec le code du directeur (ce qui ouvre le
+ * rapport), puis rédiger son rapport. Vide pour un ancien pointage.
  */
 export function DepartureBlock({
   attendance,
@@ -52,21 +52,16 @@ export function DepartureBlock({
         <Button asChild size="lg" className="w-full">
           <Link href={departureHref}>
             <LogOut aria-hidden />
-            Valider ma descente
+            Saisir le code de descente
           </Link>
         </Button>
       )}
 
-      {stage.stage !== "closed" && (
-        <Button
-          asChild
-          size="lg"
-          variant={stage.stage === "awaiting_code" ? "outline" : "default"}
-          className="w-full"
-        >
+      {stage.stage === "done" && (
+        <Button asChild size="lg" className="w-full">
           <Link href={reportHref}>
             <FileText aria-hidden />
-            {stage.stage === "done" ? "Voir mon rapport" : "Ouvrir mon rapport"}
+            Rédiger mon rapport
           </Link>
         </Button>
       )}

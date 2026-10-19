@@ -2,24 +2,18 @@ import { formatMinutes } from "@/lib/attendance";
 import { timeToMinutes } from "@/lib/schools";
 
 /**
- * Le rapport s'ouvre 10 minutes avant la fin du cours. Même valeur que dans la
- * base (`guard_report_window`) : à changer ensemble.
- */
-export const REPORT_OPENS_BEFORE_END_MINUTES = 10;
-
-/**
- * Où en est un pointage qui exige une descente.
- *  - `legacy` : ancien pointage, sans descente ni fenêtre de rapport ;
- *  - `closed` : le rapport n'est pas encore ouvert ;
- *  - `report_open` : le rapport est ouvert, le cours n'est pas fini ;
+ * Où en est un pointage qui exige une descente. Le rapport journalier ne
+ * s'ouvre qu'une fois la descente validée (code du directeur, ou Direction
+ * pédagogique si le directeur est absent).
+ *  - `legacy` : ancien pointage, sans descente : le rapport reste libre ;
+ *  - `closed` : le cours n'est pas fini, le code ne sera accepté qu'à sa fin ;
  *  - `awaiting_code` : le cours est fini, le code du directeur est attendu ;
  *  - `expired` : le jour est passé sans descente (c'est à la Direction d'agir) ;
- *  - `done` : descente validée.
+ *  - `done` : descente validée, le rapport est ouvert.
  */
 export type DepartureStage =
   | { stage: "legacy" }
-  | { stage: "closed"; opensAtMinutes: number }
-  | { stage: "report_open"; endsAtMinutes: number }
+  | { stage: "closed"; endsAtMinutes: number }
   | { stage: "awaiting_code" }
   | { stage: "expired" }
   | { stage: "done"; source: "code" | "direction" };
@@ -51,17 +45,13 @@ export function departureStage({
   if (!isToday) return { stage: "expired" };
 
   const end = timeToMinutes(endsAt);
-  const opensAt = end - REPORT_OPENS_BEFORE_END_MINUTES;
-  if (nowMinutes < opensAt) {
-    return { stage: "closed", opensAtMinutes: Math.max(0, opensAt) };
-  }
-  if (nowMinutes < end) return { stage: "report_open", endsAtMinutes: end };
+  if (nowMinutes < end) return { stage: "closed", endsAtMinutes: end };
   return { stage: "awaiting_code" };
 }
 
-/** Le formulaire du rapport peut-il être rempli à ce stade ? */
+/** Le formulaire du rapport peut-il être ouvert (créé) à ce stade ? */
 export function reportIsOpen(stage: DepartureStage): boolean {
-  return stage.stage !== "closed";
+  return stage.stage === "legacy" || stage.stage === "done";
 }
 
 /** Phrase courte décrivant le stage pour le formateur. */
@@ -70,17 +60,15 @@ export function departureMessage(stage: DepartureStage): string | null {
     case "legacy":
       return null;
     case "closed":
-      return `Le rapport s'ouvre à ${formatMinutes(stage.opensAtMinutes)}, 10 minutes avant la fin du cours.`;
-    case "report_open":
-      return `Vous pouvez rédiger votre rapport. Le cours se termine à ${formatMinutes(stage.endsAtMinutes)} : le directeur vous donnera ensuite le code de descente.`;
+      return `Le cours se termine à ${formatMinutes(stage.endsAtMinutes)}. Ensuite, le directeur vous donne le code : en le saisissant, vous validez votre descente et le rapport s'ouvre.`;
     case "awaiting_code":
-      return "Le cours est terminé. Saisissez le code donné par le directeur pour valider votre descente.";
+      return "Le cours est terminé. Saisissez le code donné par le directeur : votre descente sera validée et le rapport s'ouvrira.";
     case "expired":
-      return "La descente n'a pas été validée le jour du cours. Contactez la Direction pédagogique.";
+      return "La descente n'a pas été validée le jour du cours. Contactez la Direction pédagogique : le rapport s'ouvre une fois la descente validée.";
     case "done":
       return stage.source === "direction"
-        ? "Descente validée par la Direction pédagogique."
-        : "Descente validée.";
+        ? "Descente validée par la Direction pédagogique : vous pouvez rédiger votre rapport."
+        : "Descente validée : vous pouvez rédiger votre rapport.";
   }
 }
 

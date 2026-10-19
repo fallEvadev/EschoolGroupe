@@ -74,7 +74,7 @@ export const TOUR_STEPS: Record<TourSpace, readonly TourStep[]> = {
     nav(
       "/formateur/cahiers",
       "Cahiers",
-      "C'est ici que se rédigent vos rapports. Un rapport s'ouvre 10 minutes avant la fin du cours.",
+      "C'est ici que se rédigent vos rapports. Un rapport s'ouvre quand vous avez saisi le code de descente donné par le directeur.",
     ),
     nav(
       "/formateur/documents",

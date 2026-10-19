@@ -201,7 +201,9 @@ function mapWriteError(error: {
   if (error.code === CHECK_VIOLATION) {
     // Règles du pointage en deux temps (fonction SQL guard_report_window).
     if (error.message.includes("s'ouvre")) {
-      return fail("Le rapport s'ouvre 10 minutes avant la fin du cours.");
+      return fail(
+        "Le rapport s'ouvre quand vous avez saisi le code de descente.",
+      );
     }
     return fail("Ce rapport n'est plus modifiable.");
   }

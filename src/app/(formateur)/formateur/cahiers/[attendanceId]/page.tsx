@@ -46,8 +46,8 @@ export default async function ReportPage({
   } else {
     const { report } = detail;
     const editable = report ? isEditable(report.status) : !detail.refused;
-    // Pointage en deux temps : le rapport s'ouvre 10 minutes avant la fin du
-    // cours et ne peut partir qu'une fois la descente validée.
+    // Pointage en deux temps : le rapport s'ouvre quand la descente est validée
+    // (code du directeur, ou Direction pédagogique si le directeur est absent).
     const stage = departureStage({
       requiresDeparture: detail.departure.required,
       departedAt: detail.departure.departedAt,
@@ -91,7 +91,7 @@ export default async function ReportPage({
           </p>
         )}
 
-        {stageMessage && (stage.stage !== "closed" || closed) && (
+        {stageMessage && (closed || stage.stage === "done") && (
           <p
             role="status"
             className="bg-accent text-accent-foreground rounded-lg p-3 text-sm"
@@ -100,15 +100,14 @@ export default async function ReportPage({
           </p>
         )}
 
-        {stage.stage === "awaiting_code" && editable && (
+        {stage.stage === "awaiting_code" && closed && (
           <Button
             asChild
             size="lg"
-            variant="outline"
             className="w-full sm:w-auto"
           >
             <Link href={`/formateur/descente/${detail.attendanceId}`}>
-              Valider ma descente
+              Saisir le code de descente
             </Link>
           </Button>
         )}

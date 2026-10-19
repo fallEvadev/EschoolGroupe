@@ -138,8 +138,8 @@ export function PointageForm({
           </p>
         )}
         <p className="text-muted-foreground text-sm">
-          À la fin du cours, le directeur vous donnera un code pour valider
-          votre descente. Votre rapport s&apos;ouvre 10 minutes avant la fin.
+          À la fin du cours, le directeur vous donnera un code. En le saisissant
+          pour valider votre descente, vous ouvrez votre rapport du jour.
         </p>
         <Button asChild size="lg" className="w-full sm:w-auto">
           <Link href="/formateur">Retour à l&apos;accueil</Link>
