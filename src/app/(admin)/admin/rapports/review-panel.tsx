@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { CoursesEditor } from "@/components/courses-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,30 +70,14 @@ export function ReviewPanel({
     <div className="flex flex-col gap-4 border-t pt-4">
       {mode === "correct" && (
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`classes-${reportId}`}>Classe(s)</Label>
-            <Input
-              id={`classes-${reportId}`}
-              value={draft.classes}
-              maxLength={300}
-              disabled={busy}
-              onChange={(e) => setDraft({ ...draft, classes: e.target.value })}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`theme-${reportId}`}>Thème du cours</Label>
-            <Textarea
-              id={`theme-${reportId}`}
-              value={draft.courseTheme}
-              maxLength={1000}
-              disabled={busy}
-              onChange={(e) =>
-                setDraft({ ...draft, courseTheme: e.target.value })
-              }
-            />
-          </div>
+          <CoursesEditor
+            courses={draft.courses}
+            onChange={(courses) => setDraft({ ...draft, courses })}
+            disabled={busy}
+            idPrefix={`course-${reportId}`}
+          />
           <fieldset className="flex flex-col gap-3">
-            <legend className="text-sm font-medium">Matériel</legend>
+            <legend className="text-sm font-medium">Difficultés rencontrées</legend>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button
                 type="button"
@@ -121,7 +106,7 @@ export function ReviewPanel({
                   })
                 }
               >
-                Pannes signalées
+                Difficultés signalées
               </Button>
             </div>
             {!draft.equipmentOk &&

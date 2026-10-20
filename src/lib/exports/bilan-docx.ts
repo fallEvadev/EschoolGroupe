@@ -24,6 +24,7 @@ import {
 } from "@/lib/bilans";
 import { formatClock, formatDate } from "@/lib/dates";
 import { fitInBox, type ImageSize } from "@/lib/image-size";
+import { courseHours, headcountLabel, type Course } from "@/lib/reports";
 import { formatTime } from "@/lib/schools";
 
 /** Couleurs de la charte (variables de thème de l'application, reprises ici car Word ne les connaît pas). */
@@ -57,8 +58,12 @@ export type BilanDocReport = {
   /** Heure réelle de descente (ISO), `null` tant qu'elle n'est pas validée. */
   departedAt?: string | null;
   formateur: string;
+  /** Résumé des classes (rapports d'avant les cours multiples, ou secours). */
   classes: string;
+  /** Résumé des thèmes (idem). */
   courseTheme: string;
+  /** Cours de la journée : une ligne par cours dans le tableau. */
+  courses?: Course[];
   equipmentOk: boolean;
   issues: BilanDocIssue[];
 };
@@ -233,8 +238,43 @@ function cellText(
 }
 
 /** Largeurs des colonnes (en vingtièmes de point) : le total tient dans une page A4 paysage. */
-const COLUMNS = [1400, 1300, 2100, 1800, 4000, 4200] as const;
+const COLUMNS = [1300, 1200, 1900, 2900, 3900, 3600] as const;
 const TABLE_WIDTH = COLUMNS.reduce((sum, w) => sum + w, 0);
+
+/** Colonne « Classes » : heures, classe et effectif de chaque cours. */
+function classesCell(report: BilanDocReport): Paragraph[] {
+  const courses = report.courses ?? [];
+  if (courses.length === 0) return cellText(report.classes || "—");
+  return courses.map((course) =>
+    paragraph(
+      [
+        text(
+          [
+            courseHours(course),
+            course.classes || "—",
+            headcountLabel(course.headcount),
+          ]
+            .filter((part) => part !== "")
+            .join(" · "),
+          { color: COLORS.navy, size: 19 },
+        ),
+      ],
+      { after: 40 },
+    ),
+  );
+}
+
+/** Colonne « Thème du cours » : le thème de chaque cours, dans le même ordre. */
+function themesCell(report: BilanDocReport): Paragraph[] {
+  const courses = report.courses ?? [];
+  if (courses.length === 0) return cellText(report.courseTheme || "—");
+  return courses.map((course) =>
+    paragraph(
+      [text(course.theme || "—", { color: COLORS.navy, size: 19 })],
+      { after: 40 },
+    ),
+  );
+}
 
 function materialCell(report: BilanDocReport): Paragraph[] {
   if (report.equipmentOk) {
@@ -262,7 +302,7 @@ function reportsTable(reports: BilanDocReport[]): Table {
     "Formateur",
     "Classes",
     "Thème du cours",
-    "Matériel",
+    "Difficultés",
   ];
   return new Table({
     width: { size: TABLE_WIDTH, type: WidthType.DXA },
@@ -285,8 +325,8 @@ function reportsTable(reports: BilanDocReport[]): Table {
               cell(COLUMNS[0], cellText(day(report.date))),
               cell(COLUMNS[1], cellText(timeRange(report))),
               cell(COLUMNS[2], cellText(report.formateur)),
-              cell(COLUMNS[3], cellText(report.classes || "—")),
-              cell(COLUMNS[4], cellText(report.courseTheme || "—")),
+              cell(COLUMNS[3], classesCell(report)),
+              cell(COLUMNS[4], themesCell(report)),
               cell(COLUMNS[5], materialCell(report)),
             ],
           }),

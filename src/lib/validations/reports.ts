@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-import { MAX_ISSUES } from "@/lib/reports";
+import {
+  MAX_COURSES,
+  MAX_HEADCOUNT,
+  MAX_ISSUES,
+  missingInCourses,
+  TIME_FORMAT,
+} from "@/lib/reports";
 
 const issueSchema = z
   .object({
@@ -30,6 +36,41 @@ const issueSchema = z
     }
   });
 
+/**
+ * Un cours. Pour un brouillon, tout peut rester vide : c'est `missingInCourses`
+ * (appelée à l'envoi) qui exige un cours complet. Une heure saisie doit déjà
+ * être valide.
+ */
+const courseSchema = z.object({
+  startsAt: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || TIME_FORMAT.test(v), "Heure de début invalide."),
+  endsAt: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || TIME_FORMAT.test(v), "Heure de fin invalide."),
+  classes: z
+    .string()
+    .trim()
+    .max(100, "Le nom d'une classe ne doit pas dépasser 100 caractères."),
+  theme: z
+    .string()
+    .trim()
+    .max(500, "Le thème d'un cours ne doit pas dépasser 500 caractères."),
+  headcount: z
+    .number({ message: "L'effectif doit être un nombre." })
+    .int("L'effectif doit être un nombre entier.")
+    .min(0, "L'effectif ne peut pas être négatif.")
+    .max(MAX_HEADCOUNT, `L'effectif ne peut pas dépasser ${MAX_HEADCOUNT}.`)
+    .nullable(),
+});
+
+const coursesSchema = z
+  .array(courseSchema)
+  .min(1, "Ajoutez au moins un cours.")
+  .max(MAX_COURSES, `Au plus ${MAX_COURSES} cours par rapport.`);
+
 /** Vrai si une même machine de l'inventaire est signalée deux fois. */
 function hasDuplicateMachine(issues: { machineId: string | null }[]): boolean {
   const ids = issues.flatMap((i) => (i.machineId ? [i.machineId] : []));
@@ -45,14 +86,7 @@ function hasDuplicateMachine(issues: { machineId: string | null }[]): boolean {
 export const reportSchema = z
   .object({
     attendanceId: z.uuid("Pointage invalide."),
-    classes: z
-      .string()
-      .trim()
-      .max(300, "Les classes ne doivent pas dépasser 300 caractères."),
-    courseTheme: z
-      .string()
-      .trim()
-      .max(1000, "Le thème ne doit pas dépasser 1000 caractères."),
+    courses: coursesSchema,
     equipmentOk: z.boolean({ message: "Indiquez l'état du matériel." }),
     issues: z
       .array(issueSchema)
@@ -64,14 +98,14 @@ export const reportSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["issues"],
-        message: "Le matériel est indiqué en bon état : retirez les pannes.",
+        message: "Tout fonctionne est indiqué : retirez les difficultés.",
       });
     }
     if (!value.equipmentOk && value.issues.length === 0) {
       ctx.addIssue({
         code: "custom",
         path: ["issues"],
-        message: "Ajoutez au moins une panne.",
+        message: "Ajoutez au moins une difficulté.",
       });
     }
     if (hasDuplicateMachine(value.issues)) {
@@ -82,19 +116,9 @@ export const reportSchema = z
       });
     }
     if (!value.submit) return;
-    if (value.classes.length < 2) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["classes"],
-        message: "Indiquez la ou les classes.",
-      });
-    }
-    if (value.courseTheme.length < 3) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["courseTheme"],
-        message: "Indiquez le thème du cours.",
-      });
+    const missing = missingInCourses(value.courses);
+    if (missing) {
+      ctx.addIssue({ code: "custom", path: ["courses"], message: missing });
     }
   });
 
@@ -125,16 +149,7 @@ export const reviewReportSchema = z
       .max(500, "Le commentaire ne doit pas dépasser 500 caractères."),
     corrections: z
       .object({
-        classes: z
-          .string()
-          .trim()
-          .min(2, "Indiquez la ou les classes.")
-          .max(300, "Les classes ne doivent pas dépasser 300 caractères."),
-        courseTheme: z
-          .string()
-          .trim()
-          .min(3, "Indiquez le thème du cours.")
-          .max(1000, "Le thème ne doit pas dépasser 1000 caractères."),
+        courses: coursesSchema,
         equipmentOk: z.boolean({ message: "Indiquez l'état du matériel." }),
         issues: z
           .array(issueSchema)
@@ -165,18 +180,26 @@ export const reviewReportSchema = z
       });
     }
     const c = value.corrections;
+    const missingCourse = c ? missingInCourses(c.courses) : null;
+    if (missingCourse) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["corrections", "courses"],
+        message: missingCourse,
+      });
+    }
     if (c && c.equipmentOk && c.issues.length > 0) {
       ctx.addIssue({
         code: "custom",
         path: ["corrections", "issues"],
-        message: "Le matériel est indiqué en bon état : retirez les pannes.",
+        message: "Tout fonctionne est indiqué : retirez les difficultés.",
       });
     }
     if (c && !c.equipmentOk && c.issues.length === 0) {
       ctx.addIssue({
         code: "custom",
         path: ["corrections", "issues"],
-        message: "Ajoutez au moins une panne.",
+        message: "Ajoutez au moins une difficulté.",
       });
     }
     if (c && hasDuplicateMachine(c.issues)) {

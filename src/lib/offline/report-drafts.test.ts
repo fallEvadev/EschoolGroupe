@@ -6,6 +6,7 @@ import {
   sameContent,
   shouldOfferDraft,
   shouldSaveDraft,
+  upgradeContent,
   type ReportDraft,
 } from "@/lib/offline/report-drafts";
 import { EMPTY_CONTENT, type ReportContent } from "@/lib/reports";
@@ -14,8 +15,15 @@ const NOW = Date.UTC(2026, 9, 9, 12, 0, 0);
 const DAY = 24 * 60 * 60 * 1000;
 
 const content: ReportContent = {
-  classes: "3e A",
-  courseTheme: "Les tableurs",
+  courses: [
+    {
+      startsAt: "08:00",
+      endsAt: "09:00",
+      classes: "3e A",
+      theme: "Les tableurs",
+      headcount: 25,
+    },
+  ],
   equipmentOk: false,
   issues: [
     { machineId: "m-1", equipment: "PC 4", description: "Ne démarre plus" },
@@ -37,10 +45,24 @@ describe("sameContent", () => {
     expect(
       sameContent(content, {
         ...content,
-        classes: "  3e A ",
-        courseTheme: "Les tableurs  ",
+        courses: [
+          { ...content.courses[0], classes: "  3e A ", theme: "Les tableurs  " },
+        ],
       }),
     ).toBe(true);
+  });
+
+  it("voit un cours ajouté ou un effectif changé", () => {
+    const more = {
+      ...content,
+      courses: [...content.courses, { ...content.courses[0], classes: "CM1" }],
+    };
+    expect(sameContent(content, more)).toBe(false);
+    const other = {
+      ...content,
+      courses: [{ ...content.courses[0], headcount: 26 }],
+    };
+    expect(sameContent(content, other)).toBe(false);
   });
 
   it("voit une différence dans les pannes", () => {
@@ -124,5 +146,33 @@ describe("draftsToPurge", () => {
       "autre-compte",
       "expire",
     ]);
+  });
+});
+
+describe("upgradeContent", () => {
+  it("convertit un brouillon d'avant les cours multiples en un seul cours", () => {
+    const upgraded = upgradeContent({
+      classes: "3e A",
+      courseTheme: "Les tableurs",
+      equipmentOk: true,
+      issues: [],
+    });
+    expect(upgraded.courses).toEqual([
+      {
+        startsAt: "",
+        endsAt: "",
+        classes: "3e A",
+        theme: "Les tableurs",
+        headcount: null,
+      },
+    ]);
+  });
+
+  it("garde les cours d'un brouillon récent", () => {
+    expect(upgradeContent(content).courses).toEqual(content.courses);
+  });
+
+  it("repart d'un cours vide si rien n'est lisible", () => {
+    expect(upgradeContent(undefined).courses).toHaveLength(1);
   });
 });

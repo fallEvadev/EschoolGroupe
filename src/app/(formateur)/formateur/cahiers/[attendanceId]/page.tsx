@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BackLink } from "@/components/layout/back-link";
+import { ReportContentView } from "@/components/report-content-view";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import {
   reportIsOpen,
 } from "@/lib/departure";
 import {
-  EMPTY_CONTENT,
+  emptyContent,
   isEditable,
   REPORT_BADGE,
   REPORT_LABELS,
@@ -115,7 +116,9 @@ export default async function ReportPage({
         {closed ? null : editable ? (
           <ReportForm
             attendanceId={detail.attendanceId}
-            initial={report?.content ?? EMPTY_CONTENT}
+            initial={
+              report?.content ?? emptyContent(detail.startsAt, detail.endsAt)
+            }
             machines={detail.machines}
           />
         ) : report ? (
@@ -152,29 +155,7 @@ function ReadOnlyReport({
 }) {
   return (
     <Card className="flex flex-col gap-4 p-4 sm:p-6">
-      <div>
-        <p className="text-muted-foreground text-sm">Classe(s)</p>
-        <p>{content.classes}</p>
-      </div>
-      <div>
-        <p className="text-muted-foreground text-sm">Thème du cours</p>
-        <p className="whitespace-pre-wrap">{content.courseTheme}</p>
-      </div>
-      <div>
-        <p className="text-muted-foreground text-sm">Matériel</p>
-        {content.equipmentOk ? (
-          <p>Tout fonctionne.</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {content.issues.map((issue, index) => (
-              <li key={index}>
-                <span className="font-medium">{issue.equipment}</span> :{" "}
-                {issue.description}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <ReportContentView content={content} />
       {comment && (
         <div>
           <p className="text-muted-foreground text-sm">

@@ -1,4 +1,5 @@
-import type { ReportContent } from "@/lib/reports";
+import { emptyCourse, parseCourses, type ReportContent } from "@/lib/reports";
+import type { Json } from "@/types/database";
 
 /** Un brouillon gardé sur le téléphone expire au bout de 14 jours. */
 export const DRAFT_TTL_DAYS = 14;
@@ -20,8 +21,13 @@ export type ReportDraft = {
 /** Contenu comparable : les espaces autour des textes ne comptent pas. */
 function normalize(content: ReportContent) {
   return {
-    classes: content.classes.trim(),
-    courseTheme: content.courseTheme.trim(),
+    courses: content.courses.map((course) => ({
+      startsAt: course.startsAt,
+      endsAt: course.endsAt,
+      classes: course.classes.trim(),
+      theme: course.theme.trim(),
+      headcount: course.headcount ?? null,
+    })),
     equipmentOk: content.equipmentOk,
     issues: content.issues.map((issue) => ({
       // Un brouillon d'avant le Lot 5 n'a pas de machineId : on lit « aucune ».
@@ -29,6 +35,27 @@ function normalize(content: ReportContent) {
       equipment: issue.equipment.trim(),
       description: issue.description.trim(),
     })),
+  };
+}
+
+/**
+ * Relit un contenu gardé sur le téléphone. Un brouillon écrit avant les cours
+ * multiples a « classes » et « courseTheme » : il devient un seul cours.
+ */
+export function upgradeContent(raw: unknown): ReportContent {
+  const r = (raw ?? {}) as Partial<ReportContent> & {
+    classes?: string;
+    courseTheme?: string;
+  };
+  const courses = parseCourses(
+    (r.courses ?? []) as unknown as Json,
+    r.classes ?? "",
+    r.courseTheme ?? "",
+  );
+  return {
+    courses: courses.length > 0 ? courses : [emptyCourse()],
+    equipmentOk: r.equipmentOk ?? true,
+    issues: r.issues ?? [],
   };
 }
 

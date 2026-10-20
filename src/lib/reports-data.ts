@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   isReportStatus,
+  parseCourses,
   parseIssues,
   sortReportItems,
   type ReportContent,
@@ -117,7 +118,7 @@ const RECENT_DECISIONS = 30;
 const MAX_PENDING = 100;
 
 const REVIEW_COLUMNS =
-  "id, attendance_id, profile_id, school_id, slot_id, report_date, status, classes, course_theme, equipment_ok, equipment_issues, review_comment, submitted_at, reviewed_at";
+  "id, attendance_id, profile_id, school_id, slot_id, report_date, status, classes, course_theme, courses, equipment_ok, equipment_issues, review_comment, submitted_at, reviewed_at";
 
 /**
  * Rapports vus par la Direction pédagogique : ceux à traiter (envoyés, du plus
@@ -217,8 +218,11 @@ export async function loadReviewQueue(): Promise<
             endsAt: slots.get(row.slot_id)?.ends_at ?? "",
             status: row.status,
             content: {
-              classes: row.classes,
-              courseTheme: row.course_theme,
+              courses: parseCourses(
+                row.courses,
+                row.classes,
+                row.course_theme,
+              ),
               equipmentOk: row.equipment_ok,
               issues: parseIssues(row.equipment_issues),
             },
@@ -302,7 +306,7 @@ export async function loadReportDetail(
       supabase
         .from("daily_reports")
         .select(
-          "id, status, classes, course_theme, equipment_ok, equipment_issues, review_comment",
+          "id, status, classes, course_theme, courses, equipment_ok, equipment_issues, review_comment",
         )
         .eq("attendance_id", attendanceId)
         .maybeSingle(),
@@ -354,8 +358,11 @@ export async function loadReportDetail(
             id: row.id,
             status: row.status,
             content: {
-              classes: row.classes,
-              courseTheme: row.course_theme,
+              courses: parseCourses(
+                row.courses,
+                row.classes,
+                row.course_theme,
+              ),
               equipmentOk: row.equipment_ok,
               issues: parseIssues(row.equipment_issues),
             },

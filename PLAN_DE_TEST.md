@@ -99,8 +99,9 @@ Contrôle après les 5 : Clerk → Webhooks → *Message Attempts* : 5 envois ve
 
 **Le rapport**
 
-10. Ouvre le rapport : ❓ le formulaire s'ouvre (Classe(s), Thème du cours, matériel et pannes). Remplis « Classe : 3e A », « Thème : les tableaux Excel », puis **Enregistrer le brouillon**. ❓ Brouillon gardé.
-11. Ajoute une **panne** (« Autre équipement » : « Projecteur », description « ne s'allume plus »).
+10. Ouvre le rapport : ❓ le formulaire s'ouvre avec **un premier cours** déjà prérempli aux heures du créneau (Heure de début, Heure de fin, Classe enseignée, Thème du cours, Effectif des élèves présents). Remplis « 08:00–09:00, classe CI B, thème : les composants de l'ordinateur, effectif 28 ».
+11. Clique **« Ajouter un cours »**. ❓ Un 2e cours apparaît, son début reprend la fin du 1er. Remplis « 10:00–11:00, CM1, utilisation du clavier, effectif 18 ». ❓ « Retirer ce cours » apparaît dès qu'il y a deux cours. Essaie d'envoyer avec un effectif vide ou deux cours qui se chevauchent : ❓ message clair, rien n'est envoyé.
+11 bis. Section **« Difficultés rencontrées »** (en bas, une seule pour toute la journée) : ❓ « Signaler une difficulté » ajoute une panne (« Autre équipement » : « Projecteur », « ne s'allume plus »). ❓ Aucune panne n'est demandée cours par cours. **Enregistrer le brouillon** : ❓ brouillon gardé avec les 2 cours.
 12. Coupe le Wi-Fi/les données, modifie le thème. ❓ Message « Pas de connexion… saisie gardée », aucun envoi automatique. Remets le réseau.
 13. Clique **Envoyer à la Direction**. ❓ Statut « soumis » : **l'envoi n'est jamais bloqué**. Tente de modifier : ❓ impossible.
 

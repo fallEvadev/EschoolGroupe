@@ -10,7 +10,7 @@ import {
 } from "@/lib/exports/bilan-docx";
 import { readImageSize } from "@/lib/image-size";
 import { ORG_ASSETS_BUCKET } from "@/lib/org-assets";
-import { parseIssues } from "@/lib/reports";
+import { parseCourses, parseIssues } from "@/lib/reports";
 import { describeSupabaseError } from "@/lib/supabase/errors";
 import {
   createServerSupabase,
@@ -117,7 +117,7 @@ export async function loadBilanDocument(
     ? await supabase
         .from("daily_reports")
         .select(
-          "id, report_date, profile_id, slot_id, attendance_id, classes, course_theme, equipment_ok, equipment_issues",
+          "id, report_date, profile_id, slot_id, attendance_id, classes, course_theme, courses, equipment_ok, equipment_issues",
         )
         .in("id", reportIds)
         .limit(2000)
@@ -174,6 +174,7 @@ export async function loadBilanDocument(
       formateur: names.get(r.profile_id) ?? "Formateur",
       classes: r.classes,
       courseTheme: r.course_theme,
+      courses: parseCourses(r.courses),
       equipmentOk: r.equipment_ok,
       issues: parseIssues(r.equipment_issues).map((issue) => ({
         equipment: issue.equipment,

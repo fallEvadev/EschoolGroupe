@@ -1,5 +1,9 @@
 import { getOfflineDb } from "@/lib/offline/db";
-import { draftsToPurge, type ReportDraft } from "@/lib/offline/report-drafts";
+import {
+  draftsToPurge,
+  upgradeContent,
+  type ReportDraft,
+} from "@/lib/offline/report-drafts";
 import type { ReportContent } from "@/lib/reports";
 
 /**
@@ -29,7 +33,9 @@ export async function loadLocalDraft(
   attendanceId: string,
 ): Promise<ReportDraft | undefined> {
   try {
-    return await getOfflineDb().report_drafts.get(attendanceId);
+    const draft = await getOfflineDb().report_drafts.get(attendanceId);
+    // Un brouillon d'avant les cours multiples est converti à la lecture.
+    return draft && { ...draft, content: upgradeContent(draft.content) };
   } catch (error) {
     console.warn("Brouillon local illisible :", error);
     return undefined;

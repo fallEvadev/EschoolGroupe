@@ -1,20 +1,36 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  courseHours,
+  emptyContent,
+  headcountLabel,
   isEditable,
   isLocked,
   missingForSubmit,
+  missingInCourses,
+  parseCourses,
   parseIssues,
   sortReportItems,
+  summarizeCourses,
+  type Course,
   type ReportListItem,
 } from "./reports";
 import { reportSchema, reviewReportSchema } from "./validations/reports";
 
 const attendanceId = "5f0c2c1e-6c1f-4a43-9a5b-3d1b2f6e8a10";
+
+const course = (patch: Partial<Course> = {}): Course => ({
+  startsAt: "08:00",
+  endsAt: "09:00",
+  classes: "CI B",
+  theme: "Les composants de l'ordinateur",
+  headcount: 28,
+  ...patch,
+});
+
 const base = {
   attendanceId,
-  classes: " 3e A ",
-  courseTheme: " Les tableurs ",
+  courses: [course({ classes: " CI B ", theme: " Les tableurs " })],
   equipmentOk: true,
   issues: [],
   submit: true,
@@ -23,31 +39,119 @@ const base = {
 describe("reportSchema", () => {
   it("nettoie un rapport complet", () => {
     const parsed = reportSchema.parse(base);
-    expect(parsed.classes).toBe("3e A");
-    expect(parsed.courseTheme).toBe("Les tableurs");
+    expect(parsed.courses[0]?.classes).toBe("CI B");
+    expect(parsed.courses[0]?.theme).toBe("Les tableurs");
+  });
+
+  it("accepte plusieurs cours dans une même journée", () => {
+    const parsed = reportSchema.safeParse({
+      ...base,
+      courses: [
+        course(),
+        course({
+          startsAt: "10:00",
+          endsAt: "11:00",
+          classes: "CM1",
+          theme: "Utilisation du clavier",
+          headcount: 18,
+        }),
+      ],
+    });
+    expect(parsed.success).toBe(true);
   });
 
   it("accepte un brouillon incomplet", () => {
     expect(
       reportSchema.safeParse({
         ...base,
-        classes: "",
-        courseTheme: "",
+        courses: [
+          { startsAt: "", endsAt: "", classes: "", theme: "", headcount: null },
+        ],
         submit: false,
       }).success,
     ).toBe(true);
   });
 
-  it("refuse l'envoi d'un rapport incomplet", () => {
-    expect(reportSchema.safeParse({ ...base, classes: "" }).success).toBe(
-      false,
-    );
-    expect(reportSchema.safeParse({ ...base, courseTheme: "ab" }).success).toBe(
-      false,
-    );
+  it("refuse l'envoi d'un cours incomplet", () => {
+    for (const patch of [
+      { classes: "" },
+      { theme: "ab" },
+      { headcount: null },
+      { startsAt: "" },
+      { endsAt: "" },
+    ]) {
+      expect(
+        reportSchema.safeParse({ ...base, courses: [course(patch)] }).success,
+      ).toBe(false);
+    }
   });
 
-  it("exige des pannes quand le matériel n'est pas en bon état", () => {
+  it("refuse un cours qui finit avant de commencer, ou deux cours qui se chevauchent", () => {
+    expect(
+      reportSchema.safeParse({
+        ...base,
+        courses: [course({ startsAt: "09:00", endsAt: "08:00" })],
+      }).success,
+    ).toBe(false);
+    expect(
+      reportSchema.safeParse({
+        ...base,
+        courses: [
+          course(),
+          course({ startsAt: "08:30", endsAt: "09:30", classes: "CM1" }),
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepte deux cours qui se suivent sans pause", () => {
+    expect(
+      reportSchema.safeParse({
+        ...base,
+        courses: [course(), course({ startsAt: "09:00", endsAt: "10:00" })],
+      }).success,
+    ).toBe(true);
+  });
+
+  it("exige au moins un cours, et pas plus de 12", () => {
+    expect(reportSchema.safeParse({ ...base, courses: [] }).success).toBe(
+      false,
+    );
+    expect(
+      reportSchema.safeParse({
+        ...base,
+        courses: Array.from({ length: 13 }, () => course()),
+        submit: false,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("borne l'effectif à un entier de 0 à 500", () => {
+    for (const headcount of [-1, 501, 12.5]) {
+      expect(
+        reportSchema.safeParse({ ...base, courses: [course({ headcount })] })
+          .success,
+      ).toBe(false);
+    }
+    for (const headcount of [0, 28, 500]) {
+      expect(
+        reportSchema.safeParse({ ...base, courses: [course({ headcount })] })
+          .success,
+      ).toBe(true);
+    }
+  });
+
+  it("refuse une heure mal écrite", () => {
+    expect(
+      reportSchema.safeParse({
+        ...base,
+        courses: [course({ startsAt: "8h" })],
+        submit: false,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("exige des difficultés quand tout ne fonctionne pas", () => {
     expect(
       reportSchema.safeParse({ ...base, equipmentOk: false, issues: [] })
         .success,
@@ -61,7 +165,7 @@ describe("reportSchema", () => {
     ).toBe(true);
   });
 
-  it("refuse des pannes avec un matériel indiqué en bon état", () => {
+  it("refuse des difficultés quand tout fonctionne", () => {
     expect(
       reportSchema.safeParse({
         ...base,
@@ -72,8 +176,8 @@ describe("reportSchema", () => {
 
   it.each([
     { attendanceId: "abc" },
-    { classes: "x".repeat(301), submit: false },
-    { courseTheme: "x".repeat(1001), submit: false },
+    { courses: [course({ classes: "x".repeat(101) })], submit: false },
+    { courses: [course({ theme: "x".repeat(501) })], submit: false },
     { equipmentOk: undefined },
   ])("refuse %j", (override) => {
     expect(reportSchema.safeParse({ ...base, ...override }).success).toBe(
@@ -81,7 +185,7 @@ describe("reportSchema", () => {
     );
   });
 
-  it("refuse plus de 20 pannes", () => {
+  it("refuse plus de 20 difficultés", () => {
     const issues = Array.from({ length: 21 }, (_, i) => ({
       equipment: `PC ${i}`,
       description: "Panne",
@@ -95,8 +199,7 @@ describe("reportSchema", () => {
 describe("reviewReportSchema", () => {
   const reportId = attendanceId;
   const corrections = {
-    classes: "3e B",
-    courseTheme: "Les tableurs",
+    courses: [course({ classes: "CI A" })],
     equipmentOk: true,
     issues: [],
   };
@@ -135,7 +238,16 @@ describe("reviewReportSchema", () => {
     expect(
       reviewReportSchema.safeParse({
         ...input,
-        corrections: { ...corrections, classes: "" },
+        corrections: { ...corrections, courses: [course({ classes: "" })] },
+      }).success,
+    ).toBe(false);
+    expect(
+      reviewReportSchema.safeParse({
+        ...input,
+        corrections: {
+          ...corrections,
+          courses: [course({ headcount: null })],
+        },
       }).success,
     ).toBe(false);
   });
@@ -153,7 +265,7 @@ describe("reviewReportSchema", () => {
     }
   });
 
-  it("garde la cohérence matériel / pannes dans les corrections", () => {
+  it("garde la cohérence difficultés / état dans les corrections", () => {
     const input = {
       reportId,
       decision: "valide_avec_corrections",
@@ -204,22 +316,96 @@ describe("statuts", () => {
 
 describe("missingForSubmit", () => {
   it("signale le premier manque", () => {
+    expect(missingForSubmit(emptyContent())).toMatch(/heure de début/);
     expect(
       missingForSubmit({
-        classes: "",
-        courseTheme: "",
+        courses: [course({ classes: "" })],
         equipmentOk: true,
         issues: [],
       }),
-    ).toMatch(/classes/);
+    ).toMatch(/classe/);
     expect(
       missingForSubmit({
-        classes: "3e A",
-        courseTheme: "Tableurs",
+        courses: [course()],
         equipmentOk: true,
         issues: [],
       }),
     ).toBeNull();
+  });
+
+  it("nomme le cours en cause quand il y en a plusieurs", () => {
+    expect(
+      missingInCourses([
+        course(),
+        course({ startsAt: "10:00", endsAt: "11:00", headcount: null }),
+      ]),
+    ).toMatch(/cours 2/);
+  });
+});
+
+describe("cours", () => {
+  it("préremplit le premier cours avec les heures du créneau", () => {
+    const content = emptyContent("08:00:00", "13:00:00");
+    expect(content.courses).toHaveLength(1);
+    expect(content.courses[0]?.startsAt).toBe("08:00");
+    expect(content.courses[0]?.endsAt).toBe("13:00");
+  });
+
+  it("résume les classes et les thèmes pour les bilans", () => {
+    expect(summarizeCourses([course()])).toEqual({
+      classes: "CI B",
+      courseTheme: "Les composants de l'ordinateur",
+    });
+    const two = summarizeCourses([
+      course(),
+      course({
+        classes: "CM1",
+        theme: "Le clavier",
+        startsAt: "10:00",
+        endsAt: "11:00",
+      }),
+      course({
+        classes: "CI B",
+        theme: "La souris",
+        startsAt: "11:00",
+        endsAt: "12:00",
+      }),
+    ]);
+    expect(two.classes).toBe("CI B, CM1");
+    expect(two.courseTheme).toContain("CM1 : Le clavier");
+  });
+
+  it("garde le résumé dans les limites de la base", () => {
+    const big = Array.from({ length: 12 }, (_, i) =>
+      course({ classes: "C".repeat(100) + i, theme: "t".repeat(500) }),
+    );
+    const summary = summarizeCourses(big);
+    expect(summary.classes.length).toBeLessThanOrEqual(300);
+    expect(summary.courseTheme.length).toBeLessThanOrEqual(1000);
+  });
+
+  it("relit les cours stockés, et convertit un ancien rapport en un cours", () => {
+    expect(parseCourses([course(), "x", null, { startsAt: 3 }])).toHaveLength(
+      2,
+    );
+    expect(parseCourses([], "3e A", "Tableurs")).toEqual([
+      {
+        startsAt: "",
+        endsAt: "",
+        classes: "3e A",
+        theme: "Tableurs",
+        headcount: null,
+      },
+    ]);
+    expect(parseCourses([], "", "")).toEqual([]);
+  });
+
+  it("affiche heures et effectif", () => {
+    expect(courseHours(course())).toBe("08:00–09:00");
+    expect(courseHours(course({ startsAt: "", endsAt: "" }))).toBe("");
+    expect(headcountLabel(28)).toBe("28 élèves");
+    expect(headcountLabel(1)).toBe("1 élève");
+    expect(headcountLabel(null)).toBe("");
   });
 });
 

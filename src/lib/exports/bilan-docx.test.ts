@@ -145,6 +145,36 @@ describe("buildBilanDocx", () => {
     expect(withAll.length).toBeGreaterThan(without.length);
   });
 
+  it("détaille chaque cours du rapport (heures, classe, effectif, thème)", async () => {
+    const single = await buildBilanDocx(data);
+    const detailed = await buildBilanDocx({
+      ...data,
+      reports: [
+        report({
+          courses: [
+            {
+              startsAt: "08:00",
+              endsAt: "09:00",
+              classes: "CI B",
+              theme: "Les composants de l'ordinateur",
+              headcount: 28,
+            },
+            {
+              startsAt: "10:00",
+              endsAt: "11:00",
+              classes: "CM1",
+              theme: "Utilisation du clavier",
+              headcount: 18,
+            },
+          ],
+        }),
+      ],
+    });
+    expect(isZip(detailed)).toBe(true);
+    // Deux cours détaillés occupent plus de place qu'une ligne de résumé.
+    expect(detailed.length).toBeGreaterThan(single.length);
+  });
+
   it("produit un bilan mensuel sans rapport sans planter", async () => {
     const bytes = await buildBilanDocx({
       ...data,

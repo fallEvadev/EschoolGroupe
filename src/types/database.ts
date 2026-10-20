@@ -506,6 +506,7 @@ export type Database = {
           attendance_id: string
           classes: string
           course_theme: string
+          courses: Json
           created_at: string
           equipment_issues: Json
           equipment_ok: boolean
@@ -525,6 +526,7 @@ export type Database = {
           attendance_id: string
           classes?: string
           course_theme?: string
+          courses?: Json
           created_at?: string
           equipment_issues?: Json
           equipment_ok?: boolean
@@ -544,6 +546,7 @@ export type Database = {
           attendance_id?: string
           classes?: string
           course_theme?: string
+          courses?: Json
           created_at?: string
           equipment_issues?: Json
           equipment_ok?: boolean
@@ -1479,6 +1482,7 @@ export type Database = {
           p_course_theme?: string
           p_decision: string
           p_equipment_issues?: Json
+          p_courses?: Json
           p_equipment_ok?: boolean
           p_report_id: string
         }

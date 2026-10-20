@@ -6,13 +6,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 
+import { CoursesEditor } from "@/components/courses-editor";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SELECT_CLASS } from "@/components/ui/select";
-import { Field, FormError } from "@/components/ui/form";
+import { FormError } from "@/components/ui/form";
 import {
   shouldOfferDraft,
   shouldSaveDraft,
@@ -61,8 +62,9 @@ function useOnline(): boolean {
 }
 
 /**
- * Formulaire du rapport journalier : classes, thème du cours, état du matériel
- * (avec les pannes). « Enregistrer » garde un brouillon, « Envoyer » le passe à
+ * Formulaire du rapport journalier : les cours de la journée (heures, classe,
+ * thème, effectif), puis les difficultés rencontrées (pannes), regroupées à la
+ * fin et non déclarées cours par cours. « Enregistrer » garde un brouillon, « Envoyer » le passe à
  * la Direction. Le serveur revérifie tout.
  *
  * Hors ligne : la saisie est copiée en continu dans le navigateur (Dexie). Elle
@@ -318,32 +320,21 @@ export function ReportForm({
         className="flex flex-col gap-6"
         noValidate
       >
-        <Field id="classes" label="Classe(s)">
-          <Input
-            id="classes"
-            value={content.classes}
-            maxLength={300}
-            placeholder="Ex. : 3e A, 3e B"
-            disabled={busy}
-            onChange={(event) => update({ classes: event.target.value })}
-          />
-        </Field>
-
-        <Field id="theme" label="Thème du cours">
-          <Textarea
-            id="theme"
-            value={content.courseTheme}
-            maxLength={1000}
-            placeholder="Ce qui a été enseigné aujourd'hui"
-            disabled={busy}
-            onChange={(event) => update({ courseTheme: event.target.value })}
-          />
-        </Field>
+        <CoursesEditor
+          courses={content.courses}
+          onChange={(courses) => update({ courses })}
+          disabled={busy}
+          idPrefix="course"
+        />
 
         <fieldset className="flex flex-col gap-3">
-          <legend className="text-sm font-medium">
-            État du matériel informatique
+          <legend className="text-base font-semibold">
+            Difficultés rencontrées
           </legend>
+          <p className="text-muted-foreground text-sm">
+            Pour toute la journée : signalez ici les pannes, sans les répéter
+            cours par cours.
+          </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
               type="button"
@@ -361,7 +352,7 @@ export function ReportForm({
               disabled={busy}
               onClick={() => setEquipmentOk(false)}
             >
-              Signaler une panne
+              Signaler une difficulté
             </Button>
           </div>
 
@@ -373,7 +364,7 @@ export function ReportForm({
                   className="border-input flex flex-col gap-2 rounded-lg border p-3"
                 >
                   <Label htmlFor={`equipment-${index}`}>
-                    Équipement en panne
+                    Équipement concerné
                   </Label>
                   {machines.length > 0 && (
                     <select
@@ -436,7 +427,7 @@ export function ReportForm({
                     id={`issue-${index}`}
                     value={issue.description}
                     maxLength={300}
-                    placeholder="Ce qui ne marche pas"
+                    placeholder="Ce qui ne marche pas ou le problème rencontré"
                     className="min-h-16"
                     disabled={busy}
                     onChange={(event) =>
@@ -453,7 +444,7 @@ export function ReportForm({
                       onClick={() => removeIssue(index)}
                     >
                       <Trash2 aria-hidden />
-                      Retirer cette panne
+                      Retirer cette difficulté
                     </Button>
                   </div>
                 </div>
@@ -471,7 +462,7 @@ export function ReportForm({
                     }
                   >
                     <Plus aria-hidden />
-                    Ajouter une autre panne
+                    Ajouter une autre difficulté
                   </Button>
                 </div>
               )}

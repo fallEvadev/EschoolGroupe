@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { writeAudit } from "@/lib/audit";
 import { requireActionRole } from "@/lib/auth/action-guard";
+import { summarizeCourses } from "@/lib/reports";
 import { createServerSupabase } from "@/lib/supabase/server";
 import {
   reviewReportSchema,
@@ -56,12 +57,14 @@ export async function reviewReport(input: unknown): Promise<ReviewResult> {
       .maybeSingle();
     if (!report) return { ok: false, message: "Rapport introuvable." };
 
+    const summary = corrections ? summarizeCourses(corrections.courses) : null;
     const { error } = await supabase.rpc("review_daily_report", {
       p_report_id: reportId,
       p_decision: decision,
       p_comment: comment || undefined,
-      p_classes: corrections?.classes,
-      p_course_theme: corrections?.courseTheme,
+      p_courses: corrections?.courses,
+      p_classes: summary?.classes,
+      p_course_theme: summary?.courseTheme,
       p_equipment_ok: corrections?.equipmentOk,
       p_equipment_issues: corrections?.issues,
     });

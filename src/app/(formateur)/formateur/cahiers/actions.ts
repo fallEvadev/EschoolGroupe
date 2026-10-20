@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireActionRole } from "@/lib/auth/action-guard";
 import { writeAudit } from "@/lib/audit";
-import { isReportStatus, isEditable } from "@/lib/reports";
+import { isReportStatus, isEditable, summarizeCourses } from "@/lib/reports";
 import { createServerSupabase } from "@/lib/supabase/server";
 import {
   reportSchema,
@@ -71,9 +71,13 @@ export async function saveReport(input: unknown): Promise<ReportResult> {
     );
     if (!resolved.ok) return fail(resolved.message);
 
+    // « classes » et « course_theme » sont un résumé des cours, écrit ici par le
+    // serveur : le navigateur n'envoie que la liste des cours.
+    const summary = summarizeCourses(data.courses);
     const fields = {
-      classes: data.classes,
-      course_theme: data.courseTheme,
+      courses: data.courses,
+      classes: summary.classes,
+      course_theme: summary.courseTheme,
       equipment_ok: data.equipmentOk,
       equipment_issues: resolved.issues,
     };
