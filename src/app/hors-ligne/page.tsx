@@ -2,7 +2,7 @@ import { WifiOff } from "lucide-react";
 
 import { LogoMark } from "@/components/layout/logo-mark";
 
-export const metadata = { title: "Hors ligne · E-School Groupe" };
+export const metadata = { title: "Hors ligne · E-School" };
 
 /**
  * Page affichée quand le téléphone n'a plus de réseau (voir `public/sw.js`).

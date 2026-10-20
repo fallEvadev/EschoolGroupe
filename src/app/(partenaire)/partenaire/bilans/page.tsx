@@ -13,7 +13,7 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
 
-export const metadata = { title: "Bilans · E-School Groupe" };
+export const metadata = { title: "Bilans · E-School" };
 
 type PartnerBilan = {
   id: string;
@@ -71,7 +71,7 @@ export default async function PartnerBilansPage() {
       <PageHeader
         eyebrow="Portail partenaire"
         title="Bilans"
-        description="Les bilans de votre école, remis par E-School Groupe : un document par semaine ou par mois."
+        description="Les bilans de votre école, remis par E-School : un document par semaine ou par mois."
       />
 
       {"error" in loaded ? (

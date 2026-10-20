@@ -19,7 +19,7 @@ import { getCurrentRules } from "@/lib/internal-rules";
 import { splitPrograms } from "@/lib/programs";
 import { loadPrograms } from "@/lib/programs-data";
 
-export const metadata = { title: "Documents · E-School Groupe" };
+export const metadata = { title: "Documents · E-School" };
 
 function Block({
   title,

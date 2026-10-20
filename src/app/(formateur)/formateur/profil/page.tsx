@@ -4,7 +4,7 @@ import { ProfilePage } from "@/components/profile/profile-page";
 import { requireSpace } from "@/lib/auth/guards";
 import { loadMyProfile } from "@/lib/profile-data";
 
-export const metadata = { title: "Profil · E-School Groupe" };
+export const metadata = { title: "Profil · E-School" };
 
 export default async function FormateurProfilPage() {
   await requireSpace("formateur");

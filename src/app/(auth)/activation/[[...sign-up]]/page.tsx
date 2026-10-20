@@ -1,6 +1,6 @@
 import { SignUp } from "@clerk/nextjs";
 
-export const metadata = { title: "Activer mon compte · E-School Groupe" };
+export const metadata = { title: "Activer mon compte · E-School" };
 
 /**
  * Activation du compte d'une recrue : le lien de l'invitation envoyée par
@@ -12,8 +12,7 @@ export default function ActivationPage() {
       <div className="max-w-md text-center">
         <h1 className="text-2xl font-bold">Activer mon compte</h1>
         <p className="text-muted-foreground">
-          Choisissez votre mot de passe pour accéder à la plateforme E-School
-          Groupe.
+          Choisissez votre mot de passe pour accéder à la plateforme E-School.
         </p>
       </div>
       <SignUp signInUrl="/connexion" />

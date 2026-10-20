@@ -21,7 +21,7 @@ import { requirePedagogyManager } from "../ecoles/access";
 import { BilanRow, type BilanRowData } from "./bilan-row";
 import { GenerateButton } from "./generate-button";
 
-export const metadata = { title: "Bilans · E-School Groupe" };
+export const metadata = { title: "Bilans · E-School" };
 
 /** Bilans d'une période et nombre de rapports de chacun. Lus avec le jeton de l'utilisateur (RLS). */
 async function loadBilans(

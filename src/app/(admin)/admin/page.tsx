@@ -20,7 +20,7 @@ import {
 import { dakarIsoDate, formatDate } from "@/lib/dates";
 import { formatDuration, RECENT_DAYS } from "@/lib/ticket-stats";
 
-export const metadata = { title: "Tableau de bord · E-School Groupe" };
+export const metadata = { title: "Tableau de bord · E-School" };
 
 /** Qui voit quelle section : les mêmes droits que les pages détaillées. */
 const SECTION_ROLES = {

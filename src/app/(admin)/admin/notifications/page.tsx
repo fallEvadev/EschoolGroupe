@@ -8,7 +8,7 @@ import { loadNotifications } from "@/lib/notifications-data";
 import { requireSpace } from "@/lib/auth/guards";
 import { NOTIFIED_ROLES } from "@/lib/notifications";
 
-export const metadata = { title: "Notifications · E-School Groupe" };
+export const metadata = { title: "Notifications · E-School" };
 
 export default async function AdminNotificationsPage() {
   const role = await requireSpace("admin");

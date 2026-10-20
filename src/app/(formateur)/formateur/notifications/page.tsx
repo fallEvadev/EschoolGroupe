@@ -6,7 +6,7 @@ import { loadNotifications } from "@/lib/notifications-data";
 
 import { NotificationList } from "@/components/notification-list";
 
-export const metadata = { title: "Notifications · E-School Groupe" };
+export const metadata = { title: "Notifications · E-School" };
 
 export default async function NotificationsPage() {
   await requireSpace("formateur");

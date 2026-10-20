@@ -6,7 +6,7 @@ import { DEFAULT_LATE_TOLERANCE_MINUTES } from "@/lib/schools";
 import { requirePedagogyManager } from "../access";
 import { SchoolForm } from "../school-form";
 
-export const metadata = { title: "Ajouter une école · E-School Groupe" };
+export const metadata = { title: "Ajouter une école · E-School" };
 
 export default async function NouvelleEcolePage() {
   await requirePedagogyManager();

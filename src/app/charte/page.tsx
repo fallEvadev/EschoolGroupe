@@ -30,7 +30,7 @@ export default function Home() {
         <p className="text-primary text-xs font-semibold tracking-widest uppercase">
           Lot 1 · Socle
         </p>
-        <h1 className="text-3xl font-bold">E-School Groupe</h1>
+        <h1 className="text-3xl font-bold">E-School</h1>
         <p className="text-muted-foreground">
           Aperçu de la charte graphique (page temporaire).
         </p>

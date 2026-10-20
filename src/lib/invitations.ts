@@ -116,7 +116,7 @@ export async function buildShare({
   const settings = await getOrganizationSettings();
   const text = invitationMessage({
     firstName: splitFullName(fullName).firstName || fullName,
-    organizationName: settings?.organizationName ?? "E-School Groupe",
+    organizationName: settings?.organizationName ?? "E-School",
     roleLabel: ROLE_LABELS[role],
     url,
     validDays: INVITATION_VALID_DAYS,

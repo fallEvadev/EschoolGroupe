@@ -22,7 +22,7 @@ import { describeSupabaseError } from "@/lib/supabase/errors";
 import { requireStaffManager } from "../personnel/access";
 import { PublishRulesForm } from "./publish-rules-form";
 
-export const metadata = { title: "Règlement intérieur · E-School Groupe" };
+export const metadata = { title: "Règlement intérieur · E-School" };
 
 const HISTORY_LIMIT = 20;
 

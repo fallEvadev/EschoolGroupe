@@ -9,7 +9,7 @@ import { dakarIsoWeekday } from "@/lib/dates";
 import { loadAgenda } from "@/lib/formateur-agenda";
 import { formatTime, WEEKDAY_LABELS } from "@/lib/schools";
 
-export const metadata = { title: "Planning · E-School Groupe" };
+export const metadata = { title: "Planning · E-School" };
 
 export default async function PlanningPage() {
   await requireSpace("formateur");

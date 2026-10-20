@@ -193,7 +193,7 @@ export async function loadBilanDocument(
   return {
     fileName: bilanFileName(schoolName, kind, bilan.period_start),
     data: {
-      organizationName: settings?.organization_name ?? "E-School Groupe",
+      organizationName: settings?.organization_name ?? "E-School",
       academicYear: settings?.academic_year ?? "",
       schoolName,
       kind,

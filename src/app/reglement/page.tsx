@@ -11,7 +11,7 @@ import { getCurrentRules, hasAcceptedRules } from "@/lib/internal-rules";
 
 import { AcceptRulesForm } from "./accept-rules-form";
 
-export const metadata = { title: "Règlement intérieur · E-School Groupe" };
+export const metadata = { title: "Règlement intérieur · E-School" };
 
 /**
  * Lecture et acceptation du règlement intérieur. Accessible à toute personne

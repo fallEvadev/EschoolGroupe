@@ -11,7 +11,7 @@ import { formatTime, isWeekday, WEEKDAY_LABELS } from "@/lib/schools";
 
 import { PointageForm } from "./pointage-form";
 
-export const metadata = { title: "Pointer · E-School Groupe" };
+export const metadata = { title: "Pointer · E-School" };
 
 /** Carte d'information simple (pointage impossible, déjà fait…). */
 function Notice({ children }: { children: React.ReactNode }) {

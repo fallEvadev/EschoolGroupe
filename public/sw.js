@@ -1,5 +1,5 @@
 /*
- * Service worker d'E-School Groupe : rôle volontairement minimal.
+ * Service worker d'E-School : rôle volontairement minimal.
  *
  * Il ne garde en mémoire QUE la page « Vous êtes hors ligne » (et sa feuille
  * de style). Aucune page connectée, aucune réponse de l'API, aucune donnée

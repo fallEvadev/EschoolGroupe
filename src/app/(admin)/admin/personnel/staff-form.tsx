@@ -5,7 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { InvitationShare } from "@/components/invitation-share";
 import { Button } from "@/components/ui/button";
@@ -41,12 +41,18 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
     register,
     handleSubmit,
     getValues,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<StaffFormValues, unknown, StaffData>({
     // Même schéma Zod que le serveur, qui revérifie tout.
     resolver: zodResolver(staffSchema),
     defaultValues: initial,
   });
+
+  // Un directeur d'école partenaire n'a ni spécialité, ni contrat, ni date
+  // d'arrivée : ces champs ne lui servent pas, on ne les affiche pas.
+  const isDirector =
+    useWatch({ control, name: "role" }) === "directeur_partenaire";
 
   async function onSubmit() {
     // On envoie les valeurs saisies : le serveur les nettoie lui-même.
@@ -161,53 +167,57 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
             ))}
           </select>
         </Field>
-        <Field
-          id="jobTitle"
-          label="Spécialité (facultatif)"
-          error={errors.jobTitle?.message}
-        >
-          <Input
+        {!isDirector && (
+          <Field
             id="jobTitle"
-            placeholder="Développement web"
-            disabled={isSubmitting}
-            {...register("jobTitle")}
-          />
-        </Field>
+            label="Spécialité (facultatif)"
+            error={errors.jobTitle?.message}
+          >
+            <Input
+              id="jobTitle"
+              placeholder="Développement web"
+              disabled={isSubmitting}
+              {...register("jobTitle")}
+            />
+          </Field>
+        )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          id="contractType"
-          label="Type de contrat (facultatif)"
-          error={errors.contractType?.message}
-        >
-          <select
+      {!isDirector && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
             id="contractType"
-            disabled={isSubmitting}
-            className={SELECT_CLASS}
-            {...register("contractType")}
+            label="Type de contrat (facultatif)"
+            error={errors.contractType?.message}
           >
-            <option value="">Non renseigné</option>
-            {CONTRACT_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {CONTRACT_LABELS[type]}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field
-          id="hireDate"
-          label="Date d'arrivée (facultatif)"
-          error={errors.hireDate?.message}
-        >
-          <Input
+            <select
+              id="contractType"
+              disabled={isSubmitting}
+              className={SELECT_CLASS}
+              {...register("contractType")}
+            >
+              <option value="">Non renseigné</option>
+              {CONTRACT_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {CONTRACT_LABELS[type]}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field
             id="hireDate"
-            type="date"
-            disabled={isSubmitting}
-            {...register("hireDate")}
-          />
-        </Field>
-      </div>
+            label="Date d'arrivée (facultatif)"
+            error={errors.hireDate?.message}
+          >
+            <Input
+              id="hireDate"
+              type="date"
+              disabled={isSubmitting}
+              {...register("hireDate")}
+            />
+          </Field>
+        </div>
+      )}
 
       <FormStatus ok={result?.ok}>{result?.message}</FormStatus>
 

@@ -22,7 +22,7 @@ import {
   type SchoolPositionInfo,
 } from "./school-position-card";
 
-export const metadata = { title: "Code de descente · E-School Groupe" };
+export const metadata = { title: "Code de descente · E-School" };
 
 type PartnerSchool = {
   id: string;

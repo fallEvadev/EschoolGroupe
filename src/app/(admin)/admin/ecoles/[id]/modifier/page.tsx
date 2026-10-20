@@ -9,7 +9,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { requirePedagogyManager } from "../../access";
 import { SchoolForm } from "../../school-form";
 
-export const metadata = { title: "Modifier une école · E-School Groupe" };
+export const metadata = { title: "Modifier une école · E-School" };
 
 export default async function ModifierEcolePage({
   params,

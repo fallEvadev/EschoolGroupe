@@ -11,7 +11,7 @@ import { formatTime } from "@/lib/schools";
 
 import { DepartureForm } from "./departure-form";
 
-export const metadata = { title: "Descente · E-School Groupe" };
+export const metadata = { title: "Descente · E-School" };
 
 /**
  * Validation de la descente : le formateur saisit le code que le directeur lui

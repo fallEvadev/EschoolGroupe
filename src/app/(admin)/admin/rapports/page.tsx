@@ -15,7 +15,7 @@ import { formatTime } from "@/lib/schools";
 import { requirePedagogyManager } from "../ecoles/access";
 import { ReviewPanel } from "./review-panel";
 
-export const metadata = { title: "Rapports · E-School Groupe" };
+export const metadata = { title: "Rapports · E-School" };
 
 function ReportHeader({ item }: { item: ReviewItem }) {
   return (

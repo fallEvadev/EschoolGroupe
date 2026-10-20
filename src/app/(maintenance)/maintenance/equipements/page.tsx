@@ -7,7 +7,7 @@ import { requireSpace } from "@/lib/auth/guards";
 import { loadEquipment } from "@/lib/equipment-data";
 import { machineKindLabel } from "@/lib/machines";
 
-export const metadata = { title: "Équipements · E-School Groupe" };
+export const metadata = { title: "Équipements · E-School" };
 
 export default async function EquipementsPage() {
   await requireSpace("maintenance");

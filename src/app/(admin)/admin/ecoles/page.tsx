@@ -23,7 +23,7 @@ import { SchoolPositionPanel } from "./school-position-panel";
 import { SchoolStatusButton } from "./school-status-button";
 import { SlotsPanel, type SlotView } from "./slots-panel";
 
-export const metadata = { title: "Écoles · E-School Groupe" };
+export const metadata = { title: "Écoles · E-School" };
 
 type School = Tables<"schools">;
 

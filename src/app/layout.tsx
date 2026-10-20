@@ -32,7 +32,7 @@ const LOCALIZATION = {
     start: {
       ...frFR.signIn?.start,
       title: "Connexion",
-      subtitle: "Bienvenue sur E-School Groupe. Connectez-vous pour continuer.",
+      subtitle: "Bienvenue sur E-School. Connectez-vous pour continuer.",
     },
   },
   signUp: {
@@ -40,15 +40,15 @@ const LOCALIZATION = {
     start: {
       ...frFR.signUp?.start,
       title: "Créer mon mot de passe",
-      subtitle: "Dernière étape pour accéder à E-School Groupe.",
+      subtitle: "Dernière étape pour accéder à E-School.",
     },
   },
 };
 
 export const metadata: Metadata = {
-  title: "E-School Groupe",
+  title: "E-School",
   description:
-    "Suivi pédagogique, maintenance du parc informatique et gestion RH d'E-School Groupe.",
+    "Suivi pédagogique, maintenance du parc informatique et gestion RH d'E-School.",
 };
 
 /** Plein écran sur téléphone : permet de tenir compte de la zone de sécurité (encoche, barre du bas). */

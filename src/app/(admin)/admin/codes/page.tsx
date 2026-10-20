@@ -20,7 +20,7 @@ import { buildWhatsAppUrl, directorCodeMessage } from "@/lib/whatsapp";
 import { loadStaffDirectory, requirePedagogyManager } from "../ecoles/access";
 import { CodeActions, GenerateCodesButton } from "./codes-actions";
 
-export const metadata = { title: "Codes du jour · E-School Groupe" };
+export const metadata = { title: "Codes du jour · E-School" };
 
 type SchoolCode = {
   id: string;

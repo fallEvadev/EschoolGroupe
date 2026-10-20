@@ -4,7 +4,7 @@ import { requireSpace } from "@/lib/auth/guards";
 import { loadMyTickets } from "@/lib/maintenance-data";
 import { sortTickets } from "@/lib/tickets";
 
-export const metadata = { title: "Mes tickets · E-School Groupe" };
+export const metadata = { title: "Mes tickets · E-School" };
 
 export default async function MaintenancePage() {
   await requireSpace("maintenance");

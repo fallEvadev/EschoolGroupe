@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { requireMaintenanceManager } from "./access";
 import { MachinesPanel, type MachineView } from "./machines-panel";
 
-export const metadata = { title: "Parc informatique · E-School Groupe" };
+export const metadata = { title: "Parc informatique · E-School" };
 
 type SchoolItem = { id: string; name: string; archived: boolean };
 

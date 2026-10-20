@@ -111,7 +111,7 @@ describe("invitationMessage", () => {
   it("contient le prénom, le rôle et le lien", () => {
     const text = invitationMessage({
       firstName: "Awa",
-      organizationName: "E-School Groupe",
+      organizationName: "E-School",
       roleLabel: "Formateur",
       url: "https://exemple.sn/lien",
       validDays: 7,

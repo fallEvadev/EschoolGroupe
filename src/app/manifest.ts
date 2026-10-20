@@ -7,10 +7,10 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "E-School Groupe",
+    name: "E-School",
     short_name: "E-School",
     description:
-      "Suivi pédagogique, maintenance du parc informatique et gestion RH d'E-School Groupe.",
+      "Suivi pédagogique, maintenance du parc informatique et gestion RH d'E-School.",
     lang: "fr",
     dir: "ltr",
     start_url: "/",

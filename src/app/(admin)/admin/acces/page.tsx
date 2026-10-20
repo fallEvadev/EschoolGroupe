@@ -50,7 +50,7 @@ async function loadPendingInvitations(): Promise<{
   };
 }
 
-export const metadata = { title: "Accès & rôles · E-School Groupe" };
+export const metadata = { title: "Accès & rôles · E-School" };
 
 export default async function AccesPage() {
   // Second verrou : l'espace admin ne suffit pas, il faut être Super-Admin.

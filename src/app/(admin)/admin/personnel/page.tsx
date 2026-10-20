@@ -10,7 +10,7 @@ import { requireStaffManager } from "./access";
 import { FILTERS, type FilterKey, loadProfiles } from "./directory";
 
 import { PersonnelContent } from "./directory-content";
-export const metadata = { title: "Personnel · E-School Groupe" };
+export const metadata = { title: "Personnel · E-School" };
 
 export default async function PersonnelPage({
   searchParams,

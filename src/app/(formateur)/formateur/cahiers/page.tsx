@@ -13,7 +13,7 @@ import {
 import { loadReportList } from "@/lib/reports-data";
 import { formatTime } from "@/lib/schools";
 
-export const metadata = { title: "Cahiers · E-School Groupe" };
+export const metadata = { title: "Cahiers · E-School" };
 
 function ReportRow({ item }: { item: ReportListItem }) {
   const variant = item.report ? REPORT_BADGE[item.report.status] : "warning";

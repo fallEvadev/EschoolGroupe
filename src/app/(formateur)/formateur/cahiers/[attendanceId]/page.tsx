@@ -26,7 +26,7 @@ import { formatTime } from "@/lib/schools";
 
 import { ReportForm } from "../report-form";
 
-export const metadata = { title: "Rapport · E-School Groupe" };
+export const metadata = { title: "Rapport · E-School" };
 
 export default async function ReportPage({
   params,

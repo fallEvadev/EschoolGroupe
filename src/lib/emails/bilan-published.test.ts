@@ -14,7 +14,7 @@ const input: BilanEmailInput = {
   title: "Bilan hebdomadaire",
   periodLabel: "Semaine du 05/10/2026 au 11/10/2026",
   portalUrl: "https://plateforme.exemple.sn/partenaire/bilans",
-  organizationName: "E-School Groupe",
+  organizationName: "E-School",
 };
 
 describe("escapeHtml", () => {

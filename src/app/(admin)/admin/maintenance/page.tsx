@@ -10,7 +10,7 @@ import { requireMaintenanceManager } from "../parc/access";
 import { CONFIG_ERROR, loadTeam, loadTickets } from "./tickets-data";
 
 import { TicketsContent } from "./tickets-content";
-export const metadata = { title: "Maintenance · E-School Groupe" };
+export const metadata = { title: "Maintenance · E-School" };
 
 export default async function MaintenancePage({
   searchParams,

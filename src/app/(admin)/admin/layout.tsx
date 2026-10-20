@@ -33,7 +33,7 @@ export default async function AdminLayout({
     <AdminShell
       role={role}
       userName={userName}
-      organizationName={settings?.organizationName ?? "E-School Groupe"}
+      organizationName={settings?.organizationName ?? "E-School"}
       period={settings}
       today={formatLongDate(new Date())}
       unreadCount={unreadCount}

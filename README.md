@@ -1,6 +1,6 @@
-# Plateforme numérique E-School Groupe
+# Plateforme numérique E-School
 
-Plateforme web d'E-School Groupe pour automatiser le suivi pédagogique des formateurs, la maintenance du parc informatique, la gestion RH et la diffusion des rapports aux écoles partenaires.
+Plateforme web d'E-School pour automatiser le suivi pédagogique des formateurs, la maintenance du parc informatique, la gestion RH et la diffusion des rapports aux écoles partenaires.
 
 > Spécifications complètes : [CAHIER_DES_CHARGES.md](./CAHIER_DES_CHARGES.md) (v3.0)
 
@@ -91,7 +91,7 @@ SUPABASE_SERVICE_ROLE_KEY=        # serveur uniquement
 
 # Emails (bilans publiés : avertissement des directeurs partenaires)
 RESEND_API_KEY=
-RESEND_FROM_EMAIL=               # ex. « E-School Groupe <bilans@exemple.sn> » (domaine vérifié chez Resend)
+RESEND_FROM_EMAIL=               # ex. « E-School <bilans@exemple.sn> » (domaine vérifié chez Resend)
 
 # (WhatsApp : aucune clé. Les messages sont des liens « wa.me » pré-remplis, sans API.)
 
@@ -189,4 +189,4 @@ Une case cochée signifie « code terminé, vérifié par les tests automatiques
 
 ## Licence
 
-Projet propriétaire — © E-School Groupe. Tous droits réservés.
+Projet propriétaire — © E-School. Tous droits réservés.

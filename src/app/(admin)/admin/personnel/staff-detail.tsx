@@ -43,6 +43,9 @@ export async function StaffDetail({
   backHref: string;
 }) {
   const status = statusOf(profile);
+  // Un directeur d'école partenaire n'a ni dossier administratif (CV, CNI,
+  // photo), ni spécialité, ni contrat : on ne les charge ni ne les affiche.
+  const hasDossier = profile.role !== "directeur_partenaire";
   const supabase = await createServerSupabase();
   // Le dossier et la note d'un administrateur ne sont pas chargés pour un
   // Admin RH : ils restent gérés par le Super-Admin (`canManage` faux).
@@ -54,7 +57,7 @@ export async function StaffDetail({
           .eq("profile_id", profile.id)
           .maybeSingle()
       : null,
-    canManage
+    canManage && hasDossier
       ? supabase
           .from("staff_documents")
           .select(
@@ -107,13 +110,17 @@ export async function StaffDetail({
       value: profile.phone ? formatPhone(profile.phone) : "Non renseigné",
     },
     { label: "Rôle", value: ROLE_LABELS[profile.role] },
-    { label: "Contrat", value: contract ?? "Non renseigné" },
-    {
-      label: "Date d'arrivée",
-      value: profile.hire_date
-        ? formatDate(profile.hire_date)
-        : "Non renseignée",
-    },
+    ...(hasDossier
+      ? [
+          { label: "Contrat", value: contract ?? "Non renseigné" },
+          {
+            label: "Date d'arrivée",
+            value: profile.hire_date
+              ? formatDate(profile.hire_date)
+              : "Non renseignée",
+          },
+        ]
+      : []),
     { label: "Fiche créée le", value: formatDate(profile.created_at) },
   ];
 
@@ -144,11 +151,13 @@ export async function StaffDetail({
           )}
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <h2 className="truncate text-2xl font-bold">{profile.full_name}</h2>
-            <p className="text-muted-foreground">
-              {[profile.job_title ?? "Spécialité non renseignée", contract]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
+            {hasDossier && (
+              <p className="text-muted-foreground">
+                {[profile.job_title ?? "Spécialité non renseignée", contract]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            )}
             <div className="flex flex-wrap gap-2 pt-1">
               <Badge>{ROLE_LABELS[profile.role]}</Badge>
               <Badge variant={STATUS_BADGE[status]}>
@@ -241,7 +250,9 @@ export async function StaffDetail({
 
         {canManage ? (
           <>
-            <DocumentsPanel profileId={profile.id} documents={documents} />
+            {hasDossier && (
+              <DocumentsPanel profileId={profile.id} documents={documents} />
+            )}
 
             <section className="border-t pt-6">
               <NoteForm profileId={profile.id} initial={note?.content ?? ""} />

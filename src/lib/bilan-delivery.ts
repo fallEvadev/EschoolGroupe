@@ -119,7 +119,7 @@ export async function sendBilanEmails({
     periodLabel: periodLabel(bilan.period_kind, bilan.period_start),
     portalUrl: `${origin}/partenaire/bilans`,
     organizationName:
-      settingsResult.data?.organization_name ?? "E-School Groupe",
+      settingsResult.data?.organization_name ?? "E-School",
   };
 
   let sent = 0;

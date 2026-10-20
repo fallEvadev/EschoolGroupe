@@ -40,7 +40,7 @@ function report(patch: Partial<BilanDocReport> = {}): BilanDocReport {
 }
 
 const data: BilanDocData = {
-  organizationName: "E-School Groupe",
+  organizationName: "E-School",
   academicYear: "2026-2027",
   schoolName: "École Les Cèdres",
   kind: "semaine",

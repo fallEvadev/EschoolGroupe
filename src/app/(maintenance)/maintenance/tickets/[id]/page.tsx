@@ -12,7 +12,7 @@ import { isTicketStatus, TICKET_BADGE, TICKET_LABELS } from "@/lib/tickets";
 
 import { TicketWorkForm } from "./ticket-work-form";
 
-export const metadata = { title: "Ticket · E-School Groupe" };
+export const metadata = { title: "Ticket · E-School" };
 
 export default async function TicketPage({
   params,

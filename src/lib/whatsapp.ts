@@ -36,7 +36,7 @@ export function programMessage({
   url: string;
 }): string {
   return [
-    `Le programme de ${monthLabel} est disponible sur la plateforme E-School Groupe.`,
+    `Le programme de ${monthLabel} est disponible sur la plateforme E-School.`,
     "Connectez-vous pour le consulter :",
     url,
   ].join("\n");

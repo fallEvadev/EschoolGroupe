@@ -11,7 +11,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { requireStaffManager } from "../../access";
 import { StaffForm } from "../../staff-form";
 
-export const metadata = { title: "Modifier une fiche · E-School Groupe" };
+export const metadata = { title: "Modifier une fiche · E-School" };
 
 export default async function ModifierPersonnePage({
   params,

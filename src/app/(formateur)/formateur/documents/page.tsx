@@ -16,7 +16,7 @@ import {
 import { splitPrograms, type ProgramItem } from "@/lib/programs";
 import { loadPrograms } from "@/lib/programs-data";
 
-export const metadata = { title: "Documents · E-School Groupe" };
+export const metadata = { title: "Documents · E-School" };
 
 /** Une ligne de la liste des programmes (mois, titre, bouton d'ouverture). */
 function ProgramRow({ program }: { program: ProgramItem }) {

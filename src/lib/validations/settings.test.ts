@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { organizationSettingsSchema } from "./settings";
 
 const valid = {
-  organizationName: "E-School Groupe",
+  organizationName: "E-School",
   academicYear: "2025-2026",
   currentSemester: 1,
 };

@@ -6,7 +6,7 @@ import { assignableRoles } from "@/lib/auth/roles";
 import { requireStaffManager } from "../access";
 import { StaffForm } from "../staff-form";
 
-export const metadata = { title: "Ajouter une personne · E-School Groupe" };
+export const metadata = { title: "Ajouter une personne · E-School" };
 
 export default async function NouvellePersonnePage() {
   const role = await requireStaffManager();

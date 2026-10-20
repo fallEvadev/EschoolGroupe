@@ -14,7 +14,7 @@ import { formatFileSize } from "@/lib/staff-documents";
 import { requirePedagogyManager } from "../ecoles/access";
 import { PublishProgramForm } from "./publish-program-form";
 
-export const metadata = { title: "Programme mensuel · E-School Groupe" };
+export const metadata = { title: "Programme mensuel · E-School" };
 
 export default async function ProgrammesPage() {
   await requirePedagogyManager();

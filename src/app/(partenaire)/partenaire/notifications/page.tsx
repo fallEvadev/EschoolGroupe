@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { requireSpace } from "@/lib/auth/guards";
 import { loadNotifications } from "@/lib/notifications-data";
 
-export const metadata = { title: "Notifications · E-School Groupe" };
+export const metadata = { title: "Notifications · E-School" };
 
 export default async function PartnerNotificationsPage() {
   await requireSpace("partenaire");

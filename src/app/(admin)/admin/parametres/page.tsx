@@ -23,7 +23,7 @@ import { AssetsCard, type AssetUrls } from "./assets-card";
 import { AuditLogList } from "./audit-log-list";
 import { OrganizationForm } from "./organization-form";
 
-export const metadata = { title: "Paramètres · E-School Groupe" };
+export const metadata = { title: "Paramètres · E-School" };
 
 /** Configuration Supabase absente (variables d'environnement). */
 const CONFIG_MESSAGE =

@@ -25,7 +25,7 @@ import { formatTime } from "@/lib/schools";
 import { loadAgenda } from "@/lib/formateur-agenda";
 import { splitFullName } from "@/lib/staff";
 
-export const metadata = { title: "Accueil · E-School Groupe" };
+export const metadata = { title: "Accueil · E-School" };
 
 export default async function FormateurPage() {
   await requireSpace("formateur");

@@ -20,7 +20,7 @@ import { requirePedagogyManager } from "../ecoles/access";
 import { DayView } from "./day-view";
 import { MonthView } from "./month-view";
 import { href, STATUS_FILTERS, type View } from "./view";
-export const metadata = { title: "Pointages · E-School Groupe" };
+export const metadata = { title: "Pointages · E-School" };
 
 const one = (value: string | string[] | undefined) =>
   typeof value === "string" ? value : "";
