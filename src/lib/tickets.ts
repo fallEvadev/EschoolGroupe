@@ -100,3 +100,37 @@ export function sortTickets<T extends SortableTicket>(tickets: T[]): T[] {
       : b.openedAt.localeCompare(a.openedAt);
   });
 }
+
+/** Les pannes d'une école, pour la page du maintenancier. */
+export type SchoolGroup<T> = {
+  schoolId: string;
+  schoolName: string;
+  tickets: T[];
+};
+
+/**
+ * Regroupe les tickets par école. Les écoles qui ont le plus de pannes à
+ * traiter passent d'abord (à égalité : l'ordre alphabétique) ; dans chaque
+ * école, les plus anciens en premier.
+ */
+export function groupBySchool<
+  T extends SortableTicket & { schoolId: string; schoolName: string },
+>(tickets: readonly T[]): SchoolGroup<T>[] {
+  const groups = new Map<string, SchoolGroup<T>>();
+  for (const ticket of tickets) {
+    const group = groups.get(ticket.schoolId) ?? {
+      schoolId: ticket.schoolId,
+      schoolName: ticket.schoolName,
+      tickets: [],
+    };
+    group.tickets.push(ticket);
+    groups.set(ticket.schoolId, group);
+  }
+  return [...groups.values()]
+    .map((group) => ({ ...group, tickets: sortTickets(group.tickets) }))
+    .sort(
+      (a, b) =>
+        b.tickets.length - a.tickets.length ||
+        a.schoolName.localeCompare(b.schoolName, "fr"),
+    );
+}

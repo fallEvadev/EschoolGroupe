@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   canArchive,
   canAssign,
+  groupBySchool,
   matchesFilter,
   parseTicketFilter,
   sortTickets,
@@ -151,5 +152,54 @@ describe("linkTicketSchema", () => {
     expect(
       linkTicketSchema.safeParse({ ticketId: ID, machineId: null }).success,
     ).toBe(false);
+  });
+});
+
+describe("groupBySchool", () => {
+  const ticket = (
+    id: string,
+    schoolId: string,
+    schoolName: string,
+    openedAt: string,
+    status = "ouvert",
+  ) => ({ id, schoolId, schoolName, openedAt, status });
+
+  it("regroupe par école, l'école la plus touchée d'abord", () => {
+    const groups = groupBySchool([
+      ticket("a", "s1", "Daroul Imane", "2026-10-02"),
+      ticket("b", "s2", "Keur Xaley", "2026-10-01"),
+      ticket("c", "s2", "Keur Xaley", "2026-10-03"),
+    ]);
+    expect(groups.map((g) => g.schoolName)).toEqual([
+      "Keur Xaley",
+      "Daroul Imane",
+    ]);
+    expect(groups[0]?.tickets).toHaveLength(2);
+  });
+
+  it("classe les écoles à égalité par ordre alphabétique", () => {
+    const groups = groupBySchool([
+      ticket("a", "s1", "Zéro", "2026-10-01"),
+      ticket("b", "s2", "Abdou", "2026-10-02"),
+    ]);
+    expect(groups.map((g) => g.schoolName)).toEqual(["Abdou", "Zéro"]);
+  });
+
+  it("met dans chaque école les pannes les plus anciennes en premier", () => {
+    const [group] = groupBySchool([
+      ticket("récent", "s1", "École", "2026-10-05"),
+      ticket("ancien", "s1", "École", "2026-10-01"),
+    ]);
+    expect(group?.tickets.map((x) => x.id)).toEqual(["ancien", "récent"]);
+  });
+
+  it("renvoie une liste vide sans ticket, sans modifier la liste d'origine", () => {
+    expect(groupBySchool([])).toEqual([]);
+    const original = [
+      ticket("b", "s1", "É", "2026-10-02"),
+      ticket("a", "s1", "É", "2026-10-01"),
+    ];
+    groupBySchool(original);
+    expect(original.map((x) => x.id)).toEqual(["b", "a"]);
   });
 });

@@ -11,7 +11,7 @@ import { resolveTicketSchema } from "@/lib/validations/tickets";
 import { resolveTicket, startTicket } from "../../actions";
 
 /**
- * Actions du maintenancier sur un ticket : prendre en charge, puis marquer
+ * Actions du maintenancier sur un ticket : « Bien reçu » (prise en charge), puis marquer
  * résolu avec une note d'intervention. Le serveur et la base revérifient tout
  * (ticket affecté à l'appelant, statut, longueur de la note).
  */
@@ -59,7 +59,7 @@ export function TicketWorkForm({
           disabled={pending}
           onClick={start}
         >
-          {pending ? "Enregistrement…" : "Prendre en charge"}
+          {pending ? "Enregistrement…" : "Bien reçu"}
         </Button>
       )}
 

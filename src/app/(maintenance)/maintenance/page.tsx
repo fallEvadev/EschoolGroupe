@@ -1,10 +1,9 @@
 import { PageHeader } from "@/components/layout/page-header";
-import { TicketList } from "@/components/ticket-list";
+import { PanneList } from "@/components/panne-list";
 import { requireSpace } from "@/lib/auth/guards";
 import { loadMyTickets } from "@/lib/maintenance-data";
-import { sortTickets } from "@/lib/tickets";
 
-export const metadata = { title: "Mes tickets · E-School" };
+export const metadata = { title: "Pannes · E-School" };
 
 export default async function MaintenancePage() {
   await requireSpace("maintenance");
@@ -14,8 +13,8 @@ export default async function MaintenancePage() {
     <main className="flex w-full flex-col gap-6 p-4 sm:p-8">
       <PageHeader
         eyebrow="Maintenance"
-        title="Mes tickets"
-        description="Les pannes qui vous sont confiées, les plus anciennes en premier."
+        title="Pannes signalées"
+        description="Les pannes de toutes les écoles, classées par école. Appuyez sur « Bien reçu » pour dire que vous vous en occupez : le formateur est prévenu."
       />
 
       {"error" in loaded ? (
@@ -23,9 +22,9 @@ export default async function MaintenancePage() {
           {loaded.error}
         </p>
       ) : (
-        <TicketList
-          tickets={sortTickets(loaded.tickets)}
-          empty="Aucun ticket à traiter pour le moment. L'Admin Maintenance vous en affecte dès qu'une panne est signalée."
+        <PanneList
+          tickets={loaded.tickets}
+          empty="Aucune panne à traiter pour le moment. Vous serez prévenu dès qu'un formateur en signale une."
         />
       )}
     </main>

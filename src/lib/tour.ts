@@ -94,12 +94,12 @@ export const TOUR_STEPS: Record<TourSpace, readonly TourStep[]> = {
       id: "menu",
       target: "menu",
       title: "Votre menu",
-      text: "Ces boutons vous mènent à vos tickets, vos interventions, les équipements et votre profil.",
+      text: "Ces boutons vous mènent aux pannes signalées, vos interventions, les équipements et votre profil.",
     },
     nav(
       "/maintenance",
-      "Tickets",
-      "Les pannes qui vous sont confiées, les plus anciennes en premier.",
+      "Pannes",
+      "Les pannes signalées dans les écoles. Appuyez sur « Bien reçu » : le formateur est prévenu que vous vous en occupez.",
     ),
     nav(
       "/maintenance/interventions",

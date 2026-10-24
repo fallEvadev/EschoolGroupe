@@ -58,7 +58,11 @@ function refresh(ticketId: string) {
   revalidatePath("/admin/maintenance");
 }
 
-/** Prend un ticket en charge. La base vérifie qu'il est affecté à l'appelant. */
+/**
+ * « Bien reçu » : prend un ticket en charge (il est affecté à l'appelant s'il ne
+ * l'était pas) et prévient le formateur qui a signalé la panne. La base vérifie
+ * que le ticket n'est pas confié à quelqu'un d'autre.
+ */
 export async function startTicket(input: unknown): Promise<TicketResult> {
   const caller = await requireActionRole(WORK_ROLES);
   if (!caller.ok) return { ok: false, message: caller.message };
@@ -82,7 +86,10 @@ export async function startTicket(input: unknown): Promise<TicketResult> {
       details: {},
     });
     refresh(ticketId);
-    return { ok: true, message: "Ticket pris en charge." };
+    return {
+      ok: true,
+      message: "Bien reçu. Le formateur est prévenu.",
+    };
   } catch (error) {
     console.error("startTicket :", error);
     return ERREUR_GENERIQUE;

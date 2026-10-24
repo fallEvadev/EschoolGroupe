@@ -222,10 +222,10 @@ export const FORMATEUR_NAV: NavItem[] = [
   },
 ];
 
-/** Barre du bas du maintenancier (maquette « Mes tickets »). */
+/** Barre du bas du maintenancier. */
 export const MAINTENANCE_NAV: NavItem[] = [
   {
-    label: "Tickets",
+    label: "Pannes",
     href: "/maintenance",
     icon: Ticket,
     lot: 5,

@@ -12,6 +12,7 @@ const CONFIG_ERROR =
 /** Un ticket tel que le maintenancier le voit dans ses listes. */
 export type MyTicket = {
   id: string;
+  schoolId: string;
   schoolName: string;
   equipmentLabel: string;
   status: string;
@@ -37,7 +38,8 @@ async function schoolNames(
 
 /**
  * Tickets visibles par l'appelant dans ces statuts. Lu avec SON jeton : la RLS
- * ne montre à un maintenancier que les tickets qui lui sont affectés.
+ * montre à un maintenancier toutes les pannes ouvertes ou en cours, et
+ * l'historique des tickets qui lui ont été affectés.
  */
 export async function loadMyTickets(
   statuses: string[],
@@ -85,6 +87,7 @@ export async function loadMyTickets(
   return {
     tickets: ticketsResult.data.map((t) => ({
       id: t.id,
+      schoolId: t.school_id,
       schoolName: schools.get(t.school_id) ?? "École",
       equipmentLabel: t.equipment_label,
       status: t.status,
@@ -160,6 +163,7 @@ export async function loadTicketDetail(
 
   return {
     id: ticket.id,
+    schoolId: ticket.school_id,
     schoolName: schools.get(ticket.school_id) ?? "École",
     equipmentLabel: ticket.equipment_label,
     status: ticket.status,
