@@ -365,15 +365,20 @@ export async function validateDeparture(
 
   const parsed = validateDepartureSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
-  const { attendanceId, reason } = parsed.data;
+  const { attendanceId, reason, departedTime } = parsed.data;
 
   try {
     const supabase = await createServerSupabase();
     const { error } = await supabase.rpc("set_departure_by_direction", {
       p_attendance_id: attendanceId,
       p_reason: reason,
+      p_departed_time: departedTime || undefined,
     });
     if (error) {
+      // Heure de départ refusée : le message de la base est écrit en français.
+      if (error.code === "22023") {
+        return { ok: false, message: error.message };
+      }
       if (error.code === CHECK_VIOLATION) {
         return {
           ok: false,

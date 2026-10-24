@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SELECT_CLASS } from "@/components/ui/select";
@@ -240,6 +241,7 @@ export function DepartureAction({
   formateurName: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [time, setTime] = useState("");
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
@@ -249,12 +251,32 @@ export function DepartureAction({
         open={open}
         onOpenChange={setOpen}
         title={`Valider la descente de ${formateurName} ?`}
-        description="L'heure de descente retenue est la fin du créneau. Le motif reste consultable."
+        description="Sans heure réelle de départ, l'heure retenue est la fin du créneau. Le motif reste consultable."
         label="Motif (obligatoire)"
-        placeholder="Directeur absent, code non donné…"
+        placeholder="Directeur absent, code non donné, parti plus tôt avec accord…"
         confirmLabel="Valider la descente"
-        onConfirm={(reason) => validateDeparture({ attendanceId, reason })}
-      />
+        onConfirm={async (reason) => {
+          const result = await validateDeparture({
+            attendanceId,
+            reason,
+            departedTime: time,
+          });
+          if (result.ok) setTime("");
+          return result;
+        }}
+      >
+        <Field
+          id="departed-time"
+          label="Heure réelle de départ (facultatif)"
+          hint="À remplir si le formateur est parti avant la fin du créneau. Laissez vide pour retenir la fin du créneau."
+        >
+          <Input
+            type="time"
+            value={time}
+            onChange={(event) => setTime(event.target.value)}
+          />
+        </Field>
+      </ReasonDialog>
     </>
   );
 }

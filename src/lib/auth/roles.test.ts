@@ -66,7 +66,11 @@ describe("canAccess", () => {
 });
 
 describe("canAccessPath", () => {
-  for (const path of ["/admin/acces", "/admin/parametres"]) {
+  for (const path of [
+    "/admin/acces",
+    "/admin/parametres",
+    "/admin/aujourdhui",
+  ]) {
     it(`réserve ${path} au Super-Admin`, () => {
       expect(canAccessPath("super_admin", path)).toBe(true);
       for (const role of ROLES.filter((r) => r !== "super_admin")) {

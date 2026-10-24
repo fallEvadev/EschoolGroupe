@@ -1489,7 +1489,11 @@ export type Database = {
         Returns: number
       }
       set_departure_by_direction: {
-        Args: { p_attendance_id: string; p_reason: string }
+        Args: {
+          p_attendance_id: string
+          p_reason: string
+          p_departed_time?: string
+        }
         Returns: undefined
       }
       set_my_phone: { Args: { p_phone: string }; Returns: undefined }

@@ -1,4 +1,5 @@
 import {
+  CalendarClock,
   CalendarDays,
   ChartColumn,
   FileText,
@@ -67,6 +68,14 @@ export const ADMIN_NAV: NavSection[] = [
         lot: 3,
         available: true,
         roles: ADMIN_PEDAGOGIE,
+      },
+      {
+        label: "Aujourd'hui",
+        href: "/admin/aujourdhui",
+        icon: CalendarClock,
+        lot: 3,
+        available: true,
+        roles: ["super_admin"],
       },
       {
         label: "Cahiers & rapports",

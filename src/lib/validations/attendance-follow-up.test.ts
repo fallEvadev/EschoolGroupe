@@ -4,6 +4,7 @@ import {
   closeDaySchema,
   excuseAbsenceSchema,
   reviewAttendanceSchema,
+  validateDepartureSchema,
 } from "./attendance-follow-up";
 
 const id = "5f0c2c1e-6c1f-4a43-9a5b-3d1b2f6e8a10";
@@ -98,5 +99,39 @@ describe("closeDaySchema", () => {
     expect(closeDaySchema.safeParse({ ...valid, ...override }).success).toBe(
       false,
     );
+  });
+});
+
+describe("validateDepartureSchema", () => {
+  const valid = { attendanceId: id, reason: "Parti plus tôt avec accord" };
+
+  it("accepte une descente sans heure réelle", () => {
+    expect(validateDepartureSchema.safeParse(valid).success).toBe(true);
+    expect(
+      validateDepartureSchema.safeParse({ ...valid, departedTime: "" }).success,
+    ).toBe(true);
+  });
+
+  it("accepte une heure réelle de départ valide", () => {
+    for (const departedTime of ["12:00", "08:05", "23:59", " 12:00 "]) {
+      expect(
+        validateDepartureSchema.safeParse({ ...valid, departedTime }).success,
+      ).toBe(true);
+    }
+  });
+
+  it.each(["12h", "24:00", "12:60", "1:00", "midi", "12:00:00"])(
+    "refuse l'heure %j",
+    (departedTime) => {
+      expect(
+        validateDepartureSchema.safeParse({ ...valid, departedTime }).success,
+      ).toBe(false);
+    },
+  );
+
+  it("garde le motif obligatoire", () => {
+    expect(
+      validateDepartureSchema.safeParse({ ...valid, reason: "ab" }).success,
+    ).toBe(false);
   });
 });

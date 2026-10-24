@@ -81,6 +81,7 @@ const RESTRICTED_PATHS: { prefix: string; roles: readonly Role[] }[] = [
   { prefix: "/admin/ecoles", roles: ["admin_pedagogie", "super_admin"] },
   { prefix: "/admin/codes", roles: ["admin_pedagogie", "super_admin"] },
   { prefix: "/admin/pointages", roles: ["admin_pedagogie", "super_admin"] },
+  { prefix: "/admin/aujourdhui", roles: ["super_admin"] },
   { prefix: "/admin/programmes", roles: ["admin_pedagogie", "super_admin"] },
   { prefix: "/admin/rapports", roles: ["admin_pedagogie", "super_admin"] },
   { prefix: "/admin/bilans", roles: ["admin_pedagogie", "super_admin"] },

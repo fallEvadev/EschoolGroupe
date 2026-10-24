@@ -41,6 +41,17 @@ export const validateDepartureSchema = z.object({
     .trim()
     .min(3, "Le motif est obligatoire (3 caractères minimum).")
     .max(300, "Le motif ne doit pas dépasser 300 caractères."),
+  /**
+   * Heure réelle de départ (« HH:MM », heure de Dakar), facultative : vide, la
+   * descente retenue est la fin du créneau. La base vérifie qu'elle est après
+   * l'arrivée, avant la fin du créneau et pas dans le futur.
+   */
+  departedTime: z
+    .string()
+    .trim()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Heure de départ invalide (HH:MM).")
+    .or(z.literal(""))
+    .optional(),
 });
 
 export const excuseIdSchema = z.object({
