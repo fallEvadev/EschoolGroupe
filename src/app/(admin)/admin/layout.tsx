@@ -13,16 +13,13 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const role = await requireSpace("admin");
-  const [user, settings] = await Promise.all([
+  // La Direction pédagogique (rapports envoyés) et l'Admin Maintenance (nouvelles
+  // pannes) reçoivent des notifications. Tout est lu en même temps.
+  const [user, settings, unreadCount] = await Promise.all([
     currentUser(),
     getOrganizationSettings(),
+    NOTIFIED_ROLES.includes(role) ? countUnread() : Promise.resolve(undefined),
   ]);
-
-  // La Direction pédagogique (rapports envoyés) et l'Admin Maintenance (nouvelles
-  // pannes) reçoivent des notifications.
-  const unreadCount = NOTIFIED_ROLES.includes(role)
-    ? await countUnread()
-    : undefined;
 
   const userName =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||

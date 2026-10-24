@@ -113,7 +113,9 @@ export async function hasAcceptedRules(rulesId: string): Promise<boolean> {
 export async function requireRulesAccepted(role: Role): Promise<void> {
   if (!mustAcceptRules(role)) return;
 
-  const rules = await getCurrentRules();
+  // Le règlement et la fiche de l'utilisateur se lisent en même temps ; la fiche
+  // est mise en cache pour la vérification qui suit.
+  const [rules] = await Promise.all([getCurrentRules(), getOwnProfileId()]);
   if (!rules) return;
 
   if (!(await hasAcceptedRules(rules.id))) redirect("/reglement");

@@ -10,14 +10,16 @@ export default async function MaintenanceLayout({
   children: React.ReactNode;
 }) {
   const role = await requireSpace("maintenance");
-  // Tant que le règlement en vigueur n'est pas accepté : page d'acceptation.
-  await requireRulesAccepted(role);
   // Le maintenancier reçoit ses tickets affectés ; les administrateurs qui
   // passent par cet espace ont leur propre cloche dans l'espace admin.
-  const unreadCount =
+  // Les lectures partent ensemble ; tant que le règlement en vigueur n'est pas
+  // accepté : page d'acceptation.
+  const [, unreadCount] = await Promise.all([
+    requireRulesAccepted(role),
     role === "maintenancier" && NOTIFIED_ROLES.includes(role)
-      ? await countUnread()
-      : undefined;
+      ? countUnread()
+      : Promise.resolve(undefined),
+  ]);
   return (
     <MobileShell space="maintenance" unreadCount={unreadCount}>
       {children}

@@ -62,69 +62,42 @@ export async function loadAgenda(): Promise<Agenda | { error: string }> {
   }
 
   const slotIds = (assignmentsResult.data ?? []).map((row) => row.slot_id);
-  let slots: AgendaSlot[] = [];
-  if (slotIds.length > 0) {
-    const slotsResult = await supabase
-      .from("time_slots")
-      .select("id, school_id, weekday, starts_at, ends_at, label")
-      .in("id", slotIds)
-      .eq("status", "actif");
-    if (slotsResult.error) {
-      return {
-        error: describeSupabaseError("time_slots", slotsResult.error).message,
-      };
-    }
+  const attendanceRows = attendancesResult.data ?? [];
 
-    const schoolIds = [...new Set(slotsResult.data.map((s) => s.school_id))];
-    const schoolsResult = await supabase
-      .from("schools")
-      .select("id, name")
-      .in("id", schoolIds);
-    if (schoolsResult.error) {
-      return {
-        error: describeSupabaseError("schools", schoolsResult.error).message,
-      };
-    }
-    const names = new Map(schoolsResult.data.map((s) => [s.id, s.name]));
-
-    slots = slotsResult.data.map((slot) => ({
-      id: slot.id,
-      schoolId: slot.school_id,
-      schoolName: names.get(slot.school_id) ?? "École",
-      weekday: slot.weekday,
-      startsAt: slot.starts_at,
-      endsAt: slot.ends_at,
-      label: slot.label,
-    }));
+  // Les créneaux (puis leurs écoles) et les décisions de la Direction sur les
+  // pointages du jour n'ont rien à voir entre eux : on les lit en même temps.
+  // La base est distante, chaque attente en moins se voit à l'écran. La RLS ne
+  // montre au formateur que les décisions qui le concernent.
+  const [slotsOutcome, reviewsResult] = await Promise.all([
+    loadSlots(supabase, slotIds),
+    attendanceRows.length > 0
+      ? supabase
+          .from("attendance_reviews")
+          .select("attendance_id, decision, comment")
+          .in(
+            "attendance_id",
+            attendanceRows.map((row) => row.id),
+          )
+      : Promise.resolve(null),
+  ]);
+  if ("error" in slotsOutcome) return { error: slotsOutcome.error };
+  const slots = slotsOutcome.slots;
+  if (reviewsResult?.error) {
+    return {
+      error: describeSupabaseError("attendance_reviews", reviewsResult.error)
+        .message,
+    };
   }
 
-  // Décisions de la Direction sur les pointages du jour (la RLS ne montre au
-  // formateur que celles qui le concernent).
-  const attendanceRows = attendancesResult.data ?? [];
   const reviews = new Map<
     string,
     { decision: "valide" | "refuse"; comment: string | null }
   >();
-  if (attendanceRows.length > 0) {
-    const reviewsResult = await supabase
-      .from("attendance_reviews")
-      .select("attendance_id, decision, comment")
-      .in(
-        "attendance_id",
-        attendanceRows.map((row) => row.id),
-      );
-    if (reviewsResult.error) {
-      return {
-        error: describeSupabaseError("attendance_reviews", reviewsResult.error)
-          .message,
-      };
-    }
-    for (const row of reviewsResult.data) {
-      reviews.set(row.attendance_id, {
-        decision: row.decision === "valide" ? "valide" : "refuse",
-        comment: row.comment,
-      });
-    }
+  for (const row of reviewsResult?.data ?? []) {
+    reviews.set(row.attendance_id, {
+      decision: row.decision === "valide" ? "valide" : "refuse",
+      comment: row.comment,
+    });
   }
 
   const todayAttendances = new Map<string, SlotAttendance>();
@@ -147,5 +120,48 @@ export async function loadAgenda(): Promise<Agenda | { error: string }> {
     fullName: profileResult.data?.full_name ?? null,
     slots,
     todayAttendances,
+  };
+}
+
+/** Créneaux actifs parmi ceux de l'utilisateur, avec le nom de leur école. */
+async function loadSlots(
+  supabase: Awaited<ReturnType<typeof createServerSupabase>>,
+  slotIds: string[],
+): Promise<{ slots: AgendaSlot[] } | { error: string }> {
+  if (slotIds.length === 0) return { slots: [] };
+
+  const slotsResult = await supabase
+    .from("time_slots")
+    .select("id, school_id, weekday, starts_at, ends_at, label")
+    .in("id", slotIds)
+    .eq("status", "actif");
+  if (slotsResult.error) {
+    return {
+      error: describeSupabaseError("time_slots", slotsResult.error).message,
+    };
+  }
+
+  const schoolIds = [...new Set(slotsResult.data.map((s) => s.school_id))];
+  const schoolsResult = await supabase
+    .from("schools")
+    .select("id, name")
+    .in("id", schoolIds);
+  if (schoolsResult.error) {
+    return {
+      error: describeSupabaseError("schools", schoolsResult.error).message,
+    };
+  }
+  const names = new Map(schoolsResult.data.map((s) => [s.id, s.name]));
+
+  return {
+    slots: slotsResult.data.map((slot) => ({
+      id: slot.id,
+      schoolId: slot.school_id,
+      schoolName: names.get(slot.school_id) ?? "École",
+      weekday: slot.weekday,
+      startsAt: slot.starts_at,
+      endsAt: slot.ends_at,
+      label: slot.label,
+    })),
   };
 }
