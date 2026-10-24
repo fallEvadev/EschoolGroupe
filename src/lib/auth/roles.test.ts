@@ -70,6 +70,7 @@ describe("canAccessPath", () => {
     "/admin/acces",
     "/admin/parametres",
     "/admin/aujourdhui",
+    "/admin/incidents",
   ]) {
     it(`réserve ${path} au Super-Admin`, () => {
       expect(canAccessPath("super_admin", path)).toBe(true);

@@ -3,6 +3,7 @@ import {
   CalendarDays,
   ChartColumn,
   FileText,
+  Siren,
   FolderOpen,
   House,
   KeyRound,
@@ -153,6 +154,14 @@ export const ADMIN_NAV: NavSection[] = [
         lot: 2,
         available: true,
         roles: ["admin_pedagogie", "admin_rh", "super_admin"],
+      },
+      {
+        label: "Incidents",
+        href: "/admin/incidents",
+        icon: Siren,
+        lot: 1,
+        available: true,
+        roles: ["super_admin"],
       },
       {
         label: "Accès & rôles",

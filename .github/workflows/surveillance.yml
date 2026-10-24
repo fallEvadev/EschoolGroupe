@@ -1,0 +1,87 @@
+# Robot de surveillance : toutes les 15 minutes, il visite le site en ligne.
+#
+# Si un contrôle échoue (site qui ne répond pas, base injoignable, page
+# protégée ouverte sans connexion), le workflow passe au rouge et GitHub envoie
+# un e-mail à la personne qui a modifié ce fichier en dernier. Pour être sûr de
+# le recevoir : GitHub, Settings, Notifications, Actions, cocher « Send
+# notifications for failed workflows only ».
+#
+# Il ne lit aucune donnée : il n'appelle que des adresses publiques. Aucune clé
+# n'est nécessaire. Test manuel : onglet Actions, « Surveillance », « Run workflow ».
+
+name: Surveillance
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: surveillance
+  cancel-in-progress: true
+
+jobs:
+  surveillance:
+    name: Le site répond-il ?
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # Adresse du site (modifiable dans Settings, Variables, sans toucher au code).
+      SITE_URL: ${{ vars.SITE_URL || 'https://eschool-groupe.vercel.app' }}
+      # Une réponse plus lente que cela est signalée comme un échec.
+      LENT_SECONDES: "10"
+    steps:
+      # Chaque contrôle réessaie 3 fois : une panne passagère (démarrage à froid,
+      # réseau) ne doit pas déclencher de fausse alerte.
+      - name: La base de données répond
+        run: |
+          for essai in 1 2 3; do
+            code=$(curl -s -o sante.json -w '%{http_code}' --max-time 20 "$SITE_URL/api/health" || true)
+            if [ "$code" = "200" ] && grep -q '"ok":true' sante.json; then
+              echo "Base joignable : $(cat sante.json)"
+              exit 0
+            fi
+            echo "Essai $essai : code $code"
+            sleep 15
+          done
+          echo "::error title=Base de données injoignable::/api/health ne répond pas correctement (dernier code : $code)."
+          exit 1
+
+      - name: La page de connexion s'affiche
+        run: |
+          for essai in 1 2 3; do
+            resultat=$(curl -s -o page.html -w '%{http_code} %{time_total}' --max-time 20 "$SITE_URL/connexion" || true)
+            code=${resultat%% *}
+            duree=${resultat##* }
+            if [ "$code" = "200" ] && grep -q 'E-School' page.html; then
+              echo "Connexion : code $code en ${duree} s"
+              lent=$(awk -v d="$duree" -v max="$LENT_SECONDES" 'BEGIN { print (d > max) ? "oui" : "non" }')
+              if [ "$lent" = "oui" ]; then
+                echo "::error title=Site très lent::La page de connexion a mis ${duree} s (limite ${LENT_SECONDES} s)."
+                exit 1
+              fi
+              exit 0
+            fi
+            echo "Essai $essai : code $code"
+            sleep 15
+          done
+          echo "::error title=Site inaccessible::La page de connexion ne s'affiche pas (dernier code : $code)."
+          exit 1
+
+      - name: Les pages protégées exigent la connexion
+        run: |
+          probleme=0
+          for chemin in /admin /formateur /partenaire /maintenance; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$SITE_URL$chemin" || true)
+            case "$code" in
+              307|302|303)
+                echo "$chemin : redirigé vers la connexion ($code)" ;;
+              *)
+                echo "::error title=Page protégée anormale::$chemin répond $code sans connexion (attendu : une redirection vers la connexion)."
+                probleme=1 ;;
+            esac
+          done
+          exit $probleme

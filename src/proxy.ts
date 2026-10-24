@@ -16,6 +16,7 @@ const isPublicRoute = createRouteMatcher([
   "/hors-ligne", // page affichée sans réseau (service worker)
   "/charte", // aperçu temporaire de la charte graphique
   "/api/webhooks(.*)", // webhooks signés (Clerk, WhatsApp)
+  "/api/health", // contrôle de santé du robot de surveillance (ok / pas ok seulement)
 ]);
 
 /**

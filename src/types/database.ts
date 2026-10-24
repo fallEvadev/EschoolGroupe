@@ -629,6 +629,55 @@ export type Database = {
           },
         ]
       }
+      incident_reports: {
+        Row: {
+          digest: string | null
+          fingerprint: string
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          message: string
+          note: string | null
+          occurrences: number
+          request_path: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          route_path: string
+          route_type: string | null
+          source: string
+          stack: string | null
+          status: string
+          user_agent: string | null
+          user_role: string | null
+        }
+        Insert: {
+          digest?: string | null
+          fingerprint: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          message: string
+          note?: string | null
+          occurrences?: number
+          request_path?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          route_path: string
+          route_type?: string | null
+          source: string
+          stack?: string | null
+          status?: string
+          user_agent?: string | null
+          user_role?: string | null
+        }
+        Update: {
+          note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       internal_rules: {
         Row: {
           content: string
@@ -1448,6 +1497,21 @@ export type Database = {
         }[]
       }
       publish_bilan: { Args: { p_bilan_id: string }; Returns: undefined }
+      record_incident: {
+        Args: {
+          p_digest?: string
+          p_fingerprint: string
+          p_message: string
+          p_request_path?: string
+          p_route_path: string
+          p_route_type?: string
+          p_source: string
+          p_stack?: string
+          p_user_agent?: string
+          p_user_role?: string
+        }
+        Returns: string
+      }
       record_departure: {
         Args: { p_attendance_id: string; p_code: string; p_profile_id: string }
         Returns: {

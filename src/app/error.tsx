@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
+import { reportClientError } from "@/app/incidents/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +28,14 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error(error);
+    // Une erreur du serveur a un code (digest) et Next.js la transmet déjà au
+    // Super-Admin. Sans code, elle est née dans le navigateur : on la signale.
+    if (!error.digest) {
+      void reportClientError({
+        message: error.message,
+        pathname: window.location.pathname,
+      }).catch(() => undefined);
+    }
   }, [error]);
 
   return (
