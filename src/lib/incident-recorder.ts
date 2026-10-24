@@ -60,13 +60,16 @@ export async function recordIncident({
         }),
         p_source: source,
         p_route_path: route,
-        p_request_path: stripQuery(requestPath) ?? undefined,
-        p_route_type: type ?? undefined,
+        // La fonction SQL exige les 10 paramètres : une valeur absente part en
+        // `null` (et non `undefined`, que le client omettrait, ce qui ferait
+        // introuvable la fonction côté PostgREST).
+        p_request_path: stripQuery(requestPath),
+        p_route_type: type,
         p_message: message,
-        p_digest: digest ?? undefined,
-        p_stack: cleanStack(error) ?? undefined,
-        p_user_role: userRole ?? undefined,
-        p_user_agent: userAgent?.slice(0, 300) ?? undefined,
+        p_digest: digest,
+        p_stack: cleanStack(error),
+        p_user_role: userRole ?? null,
+        p_user_agent: userAgent?.slice(0, 300) ?? null,
       },
     );
     if (rpcError) {

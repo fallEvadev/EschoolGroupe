@@ -1499,16 +1499,16 @@ export type Database = {
       publish_bilan: { Args: { p_bilan_id: string }; Returns: undefined }
       record_incident: {
         Args: {
-          p_digest?: string
+          p_digest: string | null
           p_fingerprint: string
           p_message: string
-          p_request_path?: string
+          p_request_path: string | null
           p_route_path: string
-          p_route_type?: string
+          p_route_type: string | null
           p_source: string
-          p_stack?: string
-          p_user_agent?: string
-          p_user_role?: string
+          p_stack: string | null
+          p_user_agent: string | null
+          p_user_role: string | null
         }
         Returns: string
       }
