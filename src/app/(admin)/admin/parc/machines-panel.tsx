@@ -6,7 +6,6 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SELECT_CLASS } from "@/components/ui/select";
 import { Field, FormError } from "@/components/ui/form";
@@ -37,36 +36,27 @@ function notify(result: MachineResult) {
   else toast.error(result.message);
 }
 
-/** Inventaire d'une école : liste, ajout, modification, archivage. */
+/**
+ * Machines d'une école : la liste, puis une ligne d'ajout toujours visible (nom,
+ * type, « Ajouter »). Le numéro de série est facultatif et ne se saisit qu'en
+ * modifiant une machine : beaucoup de machines n'en ont pas.
+ */
 export function MachinesPanel({
   schoolId,
-  schoolName,
   machines,
   schoolArchived,
 }: {
   schoolId: string;
-  schoolName: string;
   machines: MachineView[];
   /** École archivée : l'inventaire reste consultable, sans ajout. */
   schoolArchived: boolean;
 }) {
-  const active = machines.filter((m) => !m.archived).length;
-
   return (
-    <Card className="flex flex-col gap-5 p-4 sm:p-6">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-bold break-words">{schoolName}</h2>
-        <p className="text-muted-foreground text-sm">
-          {active} machine{active > 1 ? "s" : ""} active{active > 1 ? "s" : ""}
-          {machines.length > active &&
-            ` · ${machines.length - active} archivée(s)`}
-        </p>
-      </div>
-
+    <div className="flex flex-col gap-4">
       {machines.length === 0 ? (
         <p className="text-muted-foreground text-sm">
-          Aucune machine pour cette école. Ajoutez la première ci-dessous : les
-          formateurs la choisiront dans leur rapport pour signaler une panne.
+          Aucune machine enregistrée. Ce n&apos;est pas obligatoire : sans liste,
+          le formateur écrit lui-même le nom du matériel en panne.
         </p>
       ) : (
         <ul className="divide-border divide-y rounded-xl border">
@@ -76,8 +66,8 @@ export function MachinesPanel({
         </ul>
       )}
 
-      {!schoolArchived && <AddMachineForm schoolId={schoolId} />}
-    </Card>
+      {!schoolArchived && <QuickAddMachine schoolId={schoolId} />}
+    </div>
   );
 }
 
@@ -100,6 +90,7 @@ function MachineRow({ machine }: { machine: MachineView }) {
     return (
       <li className="p-3 sm:p-4">
         <MachineFields
+          idPrefix={machine.id}
           initial={{
             label: machine.label,
             kind: machine.kind,
@@ -163,58 +154,52 @@ function MachineRow({ machine }: { machine: MachineView }) {
   );
 }
 
-function AddMachineForm({ schoolId }: { schoolId: string }) {
-  const [open, setOpen] = useState(false);
-
-  if (!open) {
-    return (
-      <div>
-        <Button className="w-full sm:w-auto" onClick={() => setOpen(true)}>
-          <Plus aria-hidden />
-          Ajouter une machine
-        </Button>
-      </div>
-    );
-  }
-
+/** Ajout en une ligne : on écrit le nom, on choisit le type, on appuie sur « Ajouter ». */
+function QuickAddMachine({ schoolId }: { schoolId: string }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border p-3 sm:p-4">
-      <h3 className="font-semibold">Nouvelle machine</h3>
-      <MachineFields
-        initial={{ label: "", kind: "ordinateur", serialNumber: "" }}
-        submitLabel="Ajouter"
-        clearOnSuccess
-        onCancel={() => setOpen(false)}
-        onSubmit={async (values) => {
-          const parsed = machineSchema.safeParse({ schoolId, ...values });
-          if (!parsed.success) {
-            return {
-              ok: false,
-              message: parsed.error.issues[0]?.message ?? "Données invalides.",
-            };
-          }
-          return addMachine(parsed.data);
-        }}
-      />
-    </div>
+    <MachineFields
+      idPrefix={`new-${schoolId}`}
+      compact
+      initial={{ label: "", kind: "ordinateur", serialNumber: "" }}
+      submitLabel="Ajouter"
+      clearOnSuccess
+      onSubmit={async (values) => {
+        const parsed = machineSchema.safeParse({ schoolId, ...values });
+        if (!parsed.success) {
+          return {
+            ok: false,
+            message: parsed.error.issues[0]?.message ?? "Données invalides.",
+          };
+        }
+        return addMachine(parsed.data);
+      }}
+    />
   );
 }
 
 type FieldValues = { label: string; kind: string; serialNumber: string };
 
-/** Champs communs à l'ajout et à la modification. Le serveur revérifie tout. */
+/**
+ * Champs communs à l'ajout (version compacte, sans numéro de série) et à la
+ * modification. Le serveur revérifie tout.
+ */
 function MachineFields({
+  idPrefix,
   initial,
   submitLabel,
+  compact,
   clearOnSuccess,
   onSubmit,
   onCancel,
 }: {
+  /** Garde les identifiants uniques quand plusieurs formulaires sont affichés. */
+  idPrefix: string;
   initial: FieldValues;
   submitLabel: string;
+  compact?: boolean;
   clearOnSuccess?: boolean;
   onSubmit: (values: FieldValues) => Promise<MachineResult>;
-  onCancel: () => void;
+  onCancel?: () => void;
 }) {
   const [values, setValues] = useState<FieldValues>(initial);
   const [error, setError] = useState<string | null>(null);
@@ -234,17 +219,23 @@ function MachineFields({
     });
   }
 
-  const id = (name: string) => `machine-${initial.label || "new"}-${name}`;
+  const id = (name: string) => `machine-${idPrefix}-${name}`;
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3" noValidate>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Field id={id("label")} label="Nom">
+      <div
+        className={
+          compact
+            ? "grid gap-3 sm:grid-cols-[minmax(0,1fr)_14rem_auto] sm:items-end"
+            : "grid gap-3 sm:grid-cols-3"
+        }
+      >
+        <Field id={id("label")} label={compact ? "Nouvelle machine" : "Nom"}>
           <Input
             id={id("label")}
             value={values.label}
             maxLength={60}
-            placeholder="Ex. : PC 4"
+            placeholder="Ex. : Salle 1 – Poste 3"
             disabled={pending}
             onChange={(event) =>
               setValues({ ...values, label: event.target.value })
@@ -268,34 +259,45 @@ function MachineFields({
             ))}
           </select>
         </Field>
-        <Field id={id("serial")} label="N° de série (facultatif)">
-          <Input
-            id={id("serial")}
-            value={values.serialNumber}
-            maxLength={80}
-            disabled={pending}
-            onChange={(event) =>
-              setValues({ ...values, serialNumber: event.target.value })
-            }
-          />
-        </Field>
+        {compact ? (
+          <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+            <Plus aria-hidden />
+            {pending ? "Ajout…" : submitLabel}
+          </Button>
+        ) : (
+          <Field id={id("serial")} label="N° de série (facultatif)">
+            <Input
+              id={id("serial")}
+              value={values.serialNumber}
+              maxLength={80}
+              disabled={pending}
+              onChange={(event) =>
+                setValues({ ...values, serialNumber: event.target.value })
+              }
+            />
+          </Field>
+        )}
       </div>
 
       <FormError>{error}</FormError>
 
-      <div className="flex gap-2">
-        <Button type="submit" disabled={pending}>
-          {pending ? "Enregistrement…" : submitLabel}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={pending}
-          onClick={onCancel}
-        >
-          Annuler
-        </Button>
-      </div>
+      {!compact && (
+        <div className="flex gap-2">
+          <Button type="submit" disabled={pending}>
+            {pending ? "Enregistrement…" : submitLabel}
+          </Button>
+          {onCancel && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={onCancel}
+            >
+              Annuler
+            </Button>
+          )}
+        </div>
+      )}
     </form>
   );
 }

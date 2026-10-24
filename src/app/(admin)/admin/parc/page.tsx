@@ -1,37 +1,36 @@
-import { School } from "lucide-react";
+import { ChevronDown, School, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
-import { BackLink } from "@/components/layout/back-link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { sortMachines } from "@/lib/machines";
 import { describeSupabaseError } from "@/lib/supabase/errors";
 import {
   createServerSupabase,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
 
 import { requireMaintenanceManager } from "./access";
 import { MachinesPanel, type MachineView } from "./machines-panel";
 
 export const metadata = { title: "Parc informatique · E-School" };
 
+type ServerSupabase = Awaited<ReturnType<typeof createServerSupabase>>;
 type SchoolItem = { id: string; name: string; archived: boolean };
 
 const CONFIG_ERROR =
   "Le service n'est pas encore configuré. Contactez l'administrateur technique.";
 
+/** Supabase renvoie au plus 1 000 lignes par lecture : on lit par pages. */
+const PAGE_SIZE = 1000;
+
 /**
  * Écoles via la fonction `maintenance_schools` (nom et statut seulement) : la
  * maintenance ne lit pas la table `schools` (adresse, position GPS).
  */
-async function loadSchools(): Promise<
-  { schools: SchoolItem[] } | { error: string }
-> {
-  if (!isSupabaseConfigured()) return { error: CONFIG_ERROR };
-  const supabase = await createServerSupabase();
+async function loadSchools(
+  supabase: ServerSupabase,
+): Promise<{ schools: SchoolItem[] } | { error: string }> {
   const { data, error } = await supabase.rpc("maintenance_schools");
   if (error) {
     return {
@@ -53,131 +52,182 @@ async function loadSchools(): Promise<
   };
 }
 
+/** Toutes les machines, rangées par école. */
 async function loadMachines(
-  schoolId: string,
-): Promise<{ machines: MachineView[] } | { error: string }> {
-  const supabase = await createServerSupabase();
-  const { data, error } = await supabase
-    .from("machines")
-    .select("id, label, kind, serial_number, status")
-    .eq("school_id", schoolId)
-    .limit(1000);
-  if (error) return { error: describeSupabaseError("machines", error).message };
-  return {
-    machines: sortMachines(data).map((m) => ({
-      id: m.id,
-      label: m.label,
-      kind: m.kind,
-      serialNumber: m.serial_number,
-      archived: m.status === "archive",
-    })),
-  };
+  supabase: ServerSupabase,
+): Promise<{ bySchool: Map<string, MachineView[]> } | { error: string }> {
+  const bySchool = new Map<string, MachineView[]>();
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("machines")
+      .select("id, school_id, label, kind, serial_number, status")
+      .order("id")
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      return { error: describeSupabaseError("machines", error).message };
+    }
+    for (const row of data) {
+      const list = bySchool.get(row.school_id) ?? [];
+      list.push({
+        id: row.id,
+        label: row.label,
+        kind: row.kind,
+        serialNumber: row.serial_number,
+        archived: row.status === "archive",
+      });
+      bySchool.set(row.school_id, list);
+    }
+    if (data.length < PAGE_SIZE) break;
+  }
+  for (const [schoolId, list] of bySchool) {
+    // `sortMachines` attend les champs de la base ; on trie sur le nom et l'état.
+    bySchool.set(
+      schoolId,
+      [...list].sort(
+        (a, b) =>
+          Number(a.archived) - Number(b.archived) ||
+          a.label.localeCompare(b.label, "fr", { numeric: true }),
+      ),
+    );
+  }
+  return { bySchool };
 }
 
-export default async function ParcPage({
-  searchParams,
-}: PageProps<"/admin/parc">) {
-  await requireMaintenanceManager();
-  const params = await searchParams;
-  const ecoleId = typeof params.ecole === "string" ? params.ecole : undefined;
+/** Nombre de pannes en cours (ouvertes ou en cours de traitement) par école. */
+async function loadPanneCounts(
+  supabase: ServerSupabase,
+): Promise<Map<string, number>> {
+  const { data, error } = await supabase
+    .from("maintenance_tickets")
+    .select("school_id")
+    .in("status", ["ouvert", "en_cours"])
+    .limit(PAGE_SIZE);
+  const counts = new Map<string, number>();
+  // Le nombre de pannes est un confort : une erreur ne bloque pas la page.
+  if (error) return counts;
+  for (const row of data) {
+    counts.set(row.school_id, (counts.get(row.school_id) ?? 0) + 1);
+  }
+  return counts;
+}
 
-  const loaded = await loadSchools();
-  const selected =
-    "schools" in loaded
-      ? loaded.schools.find((s) => s.id === ecoleId)
-      : undefined;
-  const machinesResult = selected ? await loadMachines(selected.id) : undefined;
+/**
+ * Parc informatique : toutes les écoles sur une seule page, sans rien à
+ * « afficher ». Chaque école montre combien de pannes sont en cours (lien vers
+ * les tickets), sa liste de machines et une ligne d'ajout. L'inventaire est
+ * facultatif : sans lui, le formateur écrit le nom du matériel en panne.
+ */
+export default async function ParcPage() {
+  await requireMaintenanceManager();
+
+  let content: React.ReactNode;
+  if (!isSupabaseConfigured()) {
+    content = <Warning>{CONFIG_ERROR}</Warning>;
+  } else {
+    const supabase = await createServerSupabase();
+    const [schools, machines, panneCounts] = await Promise.all([
+      loadSchools(supabase),
+      loadMachines(supabase),
+      loadPanneCounts(supabase),
+    ]);
+
+    if ("error" in schools) {
+      content = <Warning>{schools.error}</Warning>;
+    } else if ("error" in machines) {
+      content = <Warning>{machines.error}</Warning>;
+    } else if (schools.schools.length === 0) {
+      content = (
+        <Card className="text-muted-foreground p-6 text-center text-sm">
+          Aucune école pour le moment. La Direction pédagogique les crée dans
+          « Écoles ».
+        </Card>
+      );
+    } else {
+      const few = schools.schools.length <= 2;
+      content = (
+        <ul className="flex flex-col gap-3">
+          {schools.schools.map((school) => {
+            const list = machines.bySchool.get(school.id) ?? [];
+            const active = list.filter((m) => !m.archived).length;
+            const pannes = panneCounts.get(school.id) ?? 0;
+            return (
+              <li key={school.id}>
+                <Card className="p-0">
+                  <details className="group" open={few || pannes > 0}>
+                    <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
+                      <School
+                        className="text-accent-foreground size-5 shrink-0"
+                        aria-hidden
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold">
+                          {school.name}
+                        </span>
+                        <span className="text-muted-foreground block text-sm">
+                          {active === 0
+                            ? "Aucune machine enregistrée"
+                            : `${active} machine${active > 1 ? "s" : ""}`}
+                        </span>
+                      </span>
+                      {school.archived && (
+                        <Badge variant="neutral">Archivée</Badge>
+                      )}
+                      {pannes > 0 && (
+                        <Badge variant="warning">
+                          <TriangleAlert className="size-3" aria-hidden />
+                          {pannes} panne{pannes > 1 ? "s" : ""}
+                        </Badge>
+                      )}
+                      <ChevronDown
+                        className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-180"
+                        aria-hidden
+                      />
+                    </summary>
+                    <div className="flex flex-col gap-4 border-t p-4">
+                      {pannes > 0 && (
+                        <p className="bg-warning-soft text-warning rounded-lg p-3 text-sm">
+                          {pannes} panne{pannes > 1 ? "s" : ""} en cours dans
+                          cette école.{" "}
+                          <Link
+                            href={`/admin/maintenance?ecole=${school.id}`}
+                            className="font-semibold underline"
+                          >
+                            Voir les tickets
+                          </Link>
+                        </p>
+                      )}
+                      <MachinesPanel
+                        schoolId={school.id}
+                        machines={list}
+                        schoolArchived={school.archived}
+                      />
+                    </div>
+                  </details>
+                </Card>
+              </li>
+            );
+          })}
+        </ul>
+      );
+    }
+  }
 
   return (
-    <main className="flex w-full flex-col gap-6 p-4 sm:p-8">
+    <main className="flex w-full max-w-4xl flex-col gap-6 p-4 sm:p-8">
       <PageHeader
         eyebrow="Maintenance"
         title="Parc informatique"
-        description="Inventaire des machines de chaque école. Les formateurs les choisissent dans leur rapport pour signaler une panne."
+        description="Les machines de chaque école. C'est facultatif : avec une liste, le formateur choisit la machine en panne dans son rapport ; sans liste, il écrit le nom du matériel. Les pannes signalées se suivent dans « Tickets de pannes »."
       />
-
-      {"error" in loaded ? (
-        <p className="bg-warning-soft text-warning rounded-lg p-3 text-sm">
-          {loaded.error}
-        </p>
-      ) : (
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:items-start">
-          {/* Liste des écoles : cachée sur téléphone quand une école est ouverte */}
-          <Card
-            className={cn(
-              "flex flex-col gap-3 p-4 lg:p-5",
-              selected && "hidden lg:flex",
-            )}
-          >
-            <h2 className="text-lg font-semibold">
-              Écoles ({loaded.schools.length})
-            </h2>
-            {loaded.schools.length === 0 ? (
-              <p className="text-muted-foreground py-6 text-center text-sm">
-                Aucune école pour le moment. La Direction pédagogique les crée
-                dans « Écoles ».
-              </p>
-            ) : (
-              <ul className="-mx-1 flex flex-col gap-1">
-                {loaded.schools.map((school) => {
-                  const active = school.id === selected?.id;
-                  return (
-                    <li key={school.id}>
-                      <Link
-                        href={`/admin/parc?ecole=${school.id}`}
-                        aria-current={active ? "true" : undefined}
-                        className={cn(
-                          "flex items-center gap-3 rounded-xl border p-3 transition-colors",
-                          active
-                            ? "border-primary bg-accent"
-                            : "hover:bg-muted border-transparent",
-                        )}
-                      >
-                        <School
-                          className="text-accent-foreground size-5 shrink-0"
-                          aria-hidden
-                        />
-                        <span className="min-w-0 flex-1 truncate font-semibold">
-                          {school.name}
-                        </span>
-                        {school.archived && (
-                          <Badge variant="neutral">Archivée</Badge>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </Card>
-
-          {selected && machinesResult ? (
-            <div className="flex flex-col gap-3">
-              <BackLink href="/admin/parc" className="lg:hidden">
-                Retour aux écoles
-              </BackLink>
-              {"error" in machinesResult ? (
-                <p className="bg-warning-soft text-warning rounded-lg p-3 text-sm">
-                  {machinesResult.error}
-                </p>
-              ) : (
-                <MachinesPanel
-                  schoolId={selected.id}
-                  schoolName={selected.name}
-                  machines={machinesResult.machines}
-                  schoolArchived={selected.archived}
-                />
-              )}
-            </div>
-          ) : (
-            <Card className="text-muted-foreground hidden items-center justify-center p-10 text-center lg:flex">
-              {ecoleId
-                ? "Cette école est introuvable."
-                : "Sélectionnez une école pour afficher son parc."}
-            </Card>
-          )}
-        </div>
-      )}
+      {content}
     </main>
+  );
+}
+
+function Warning({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="bg-warning-soft text-warning rounded-lg p-3 text-sm">
+      {children}
+    </p>
   );
 }
