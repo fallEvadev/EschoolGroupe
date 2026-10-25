@@ -6,49 +6,51 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FormError } from "@/components/ui/form";
-import { parseCoordinatePair } from "@/lib/schools";
+import { mapsUrl, parseCoordinatePair } from "@/lib/schools";
 import { schoolPositionSchema } from "@/lib/validations/schools";
 
 import { setSchoolPositionManual } from "./actions";
 
 /**
- * Saisie manuelle de la position d'une école : un SECOURS, replié par défaut.
- * Le cas normal est que le directeur de l'école l'enregistre sur place depuis
- * son téléphone. Coller « 14.6928, -17.4467 » (format Google Maps) dans
- * Latitude remplit les deux champs.
+ * Enregistrement de la position d'une école par la Direction : on copie les
+ * coordonnées dans Google Maps (« 14.6928, -17.4467 ») et on les colle dans un
+ * seul champ. Un lien permet de contrôler sur la carte avant d'enregistrer.
+ * Ouvert tant que l'école n'a pas de position, replié ensuite (pour la corriger).
  */
-export function SchoolPositionPanel({ schoolId }: { schoolId: string }) {
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+export function SchoolPositionPanel({
+  schoolId,
+  hasPosition,
+}: {
+  schoolId: string;
+  hasPosition: boolean;
+}) {
+  const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function changeLatitude(value: string) {
-    const pair = parseCoordinatePair(value);
-    if (pair) {
-      setLatitude(pair.latitude);
-      setLongitude(pair.longitude);
-    } else {
-      setLatitude(value);
-    }
-  }
+  const pair = parseCoordinatePair(text);
+  const checked = pair
+    ? schoolPositionSchema.safeParse({ schoolId, ...pair })
+    : null;
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
-    const input = { schoolId, latitude, longitude };
-    // Contrôle immédiat (bornes, champs vides) avant l'envoi.
-    const checked = schoolPositionSchema.safeParse(input);
+    if (!pair || !checked) {
+      setError(
+        "Collez les deux nombres copiés dans Google Maps, par exemple : 14.6928, -17.4467",
+      );
+      return;
+    }
     if (!checked.success) {
       setError(checked.error.issues[0]?.message ?? "Coordonnées invalides.");
       return;
     }
     startTransition(async () => {
-      const result = await setSchoolPositionManual(input);
+      const result = await setSchoolPositionManual({ schoolId, ...pair });
       if (result.ok) {
         toast.success(result.message);
-        setLatitude("");
-        setLongitude("");
+        setText("");
       } else {
         setError(result.message);
       }
@@ -56,52 +58,61 @@ export function SchoolPositionPanel({ schoolId }: { schoolId: string }) {
   }
 
   return (
-    <details className="rounded-xl border p-3">
+    <details className="rounded-xl border p-3" open={!hasPosition}>
       <summary className="cursor-pointer text-sm font-medium">
-        Saisir la position à la main (secours)
+        {hasPosition
+          ? "Corriger la position de l'école"
+          : "Enregistrer la position de l'école"}
       </summary>
       <form onSubmit={submit} className="mt-3 flex flex-col gap-3" noValidate>
-        <p className="text-muted-foreground text-sm">
-          À utiliser seulement si le directeur ne peut pas l&apos;enregistrer
-          lui-même. Dans{" "}
-          <a
-            href="https://www.google.com/maps"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary font-medium hover:underline"
-          >
-            Google Maps
-          </a>
-          , faites un clic droit sur l&apos;école puis cliquez sur les chiffres
-          pour les copier, et collez-les dans le champ Latitude.
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field id="manual-latitude" label="Latitude">
-            <Input
-              inputMode="decimal"
-              placeholder="14.692800"
-              value={latitude}
-              disabled={pending}
-              onChange={(event) => changeLatitude(event.target.value)}
-            />
-          </Field>
-          <Field id="manual-longitude" label="Longitude">
-            <Input
-              inputMode="decimal"
-              placeholder="-17.446700"
-              value={longitude}
-              disabled={pending}
-              onChange={(event) => setLongitude(event.target.value)}
-            />
-          </Field>
-        </div>
+        <ol className="text-muted-foreground list-decimal space-y-1 pl-5 text-sm">
+          <li>
+            Ouvrez{" "}
+            <a
+              href="https://www.google.com/maps"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary font-medium hover:underline"
+            >
+              Google Maps
+            </a>{" "}
+            et trouvez l&apos;école.
+          </li>
+          <li>
+            Appuyez longtemps (ou clic droit) sur le bâtiment : des chiffres
+            apparaissent. Touchez-les pour les copier.
+          </li>
+          <li>Collez-les ci-dessous, puis contrôlez sur la carte.</li>
+        </ol>
+        <Field id="manual-coordinates" label="Coordonnées">
+          <Input
+            inputMode="text"
+            placeholder="14.692800, -17.446700"
+            value={text}
+            disabled={pending}
+            onChange={(event) => setText(event.target.value)}
+          />
+        </Field>
+        {checked?.success && (
+          <p className="text-sm">
+            Latitude {checked.data.latitude}, longitude {checked.data.longitude}
+            .{" "}
+            <a
+              href={mapsUrl(checked.data.latitude, checked.data.longitude)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary font-medium hover:underline"
+            >
+              Contrôler sur la carte
+            </a>
+          </p>
+        )}
         <FormError>{error}</FormError>
         <div>
           <Button
             className="w-full sm:w-auto"
             type="submit"
-            variant="outline"
-            disabled={pending}
+            disabled={pending || !checked?.success}
           >
             {pending ? "Enregistrement…" : "Enregistrer la position"}
           </Button>

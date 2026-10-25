@@ -17,7 +17,7 @@ export default async function NouvelleEcolePage() {
       <PageHeader
         eyebrow="Pilotage pédagogique"
         title="Ajouter une école"
-        description="Renseignez le nom et l'adresse de l'école. Vous ajouterez ensuite son directeur, ses créneaux et ses formateurs ; le directeur enregistrera lui-même la position de l'école."
+        description="Renseignez le nom et l'adresse de l'école. Vous ajouterez ensuite son directeur, ses créneaux et ses formateurs, puis vous enregistrerez la position de l'école."
       />
       <Card className="p-4 sm:p-6">
         <SchoolForm

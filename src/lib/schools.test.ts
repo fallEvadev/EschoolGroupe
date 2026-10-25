@@ -177,6 +177,10 @@ describe("parseCoordinatePair", () => {
       latitude: "14.6928",
       longitude: "-17.4467",
     });
+    expect(parseCoordinatePair("14.6928,-17.4467")).toEqual({
+      latitude: "14.6928",
+      longitude: "-17.4467",
+    });
   });
 
   it("ne coupe jamais un nombre à virgule décimale", () => {

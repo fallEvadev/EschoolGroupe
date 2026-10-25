@@ -111,7 +111,7 @@ export function parseCoordinatePair(
   text: string,
 ): { latitude: string; longitude: string } | null {
   const match =
-    /^\s*(-?\d{1,3}(?:[.,]\d+)?)\s*(?:;|,\s)\s*(-?\d{1,3}(?:[.,]\d+)?)\s*$/.exec(
+    /^\s*(-?\d{1,3}(?:[.,]\d+)?)\s*(?:;|,\s|,(?=-?\d+\.))\s*(-?\d{1,3}(?:[.,]\d+)?)\s*$/.exec(
       text,
     );
   if (!match) return null;

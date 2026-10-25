@@ -108,11 +108,10 @@ export function SchoolForm({ schoolId, initial }: SchoolFormProps) {
       </div>
 
       <p className="bg-muted text-muted-foreground rounded-lg p-3 text-sm">
-        <strong>Position de l&apos;école :</strong> vous n&apos;avez rien à
-        saisir ici. Une fois l&apos;école créée et son directeur rattaché, le
-        directeur enregistre la position depuis son espace, quand il est à
-        l&apos;école. Au pointage, la position du téléphone du formateur est
-        relevée automatiquement et comparée à celle-ci.
+        <strong>Position de l&apos;école :</strong> à enregistrer sur la fiche
+        de l&apos;école, une fois celle-ci créée. Au pointage, la position du
+        téléphone du formateur est relevée automatiquement et comparée à
+        celle-ci.
       </p>
 
       <FormStatus ok={false}>

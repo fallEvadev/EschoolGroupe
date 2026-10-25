@@ -301,9 +301,8 @@ async function SchoolDetail({
         </>
       ) : (
         <span className="text-warning">
-          Pas encore enregistrée : le directeur de l&apos;école
-          l&apos;enregistre depuis son espace, quand il est sur place.
-          D&apos;ici là, les pointages des formateurs seront à vérifier.
+          Pas encore enregistrée : enregistrez-la ci-dessous. Tant qu&apos;elle
+          manque, les pointages des formateurs seront à vérifier.
         </span>
       ),
     },
@@ -362,7 +361,12 @@ async function SchoolDetail({
               </div>
             ))}
           </dl>
-          {!archived && <SchoolPositionPanel schoolId={school.id} />}
+          {!archived && (
+            <SchoolPositionPanel
+              schoolId={school.id}
+              hasPosition={hasPosition}
+            />
+          )}
         </section>
 
         {"error" in directory ? (
