@@ -225,10 +225,7 @@ function MaintenanceSection({
     <section aria-label="Maintenance" className="flex flex-col gap-4">
       <SectionHeader
         title="Maintenance"
-        links={[
-          { href: "/admin/maintenance", label: "Tickets" },
-          { href: "/admin/parc", label: "Parc informatique" },
-        ]}
+        links={[{ href: "/admin/maintenance", label: "Tickets" }]}
       />
       {"error" in data ? (
         <SectionError message={data.error} />

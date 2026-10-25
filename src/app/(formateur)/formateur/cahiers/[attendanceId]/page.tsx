@@ -119,7 +119,6 @@ export default async function ReportPage({
             initial={
               report?.content ?? emptyContent(detail.startsAt, detail.endsAt)
             }
-            machines={detail.machines}
           />
         ) : report ? (
           <ReadOnlyReport

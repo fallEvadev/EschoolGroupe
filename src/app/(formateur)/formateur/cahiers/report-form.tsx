@@ -12,8 +12,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { SELECT_CLASS } from "@/components/ui/select";
 import { FormError } from "@/components/ui/form";
+import { EQUIPMENT_TYPES, equipmentTypeOf } from "@/lib/equipment-types";
 import {
   shouldOfferDraft,
   shouldSaveDraft,
@@ -34,11 +34,8 @@ import {
 
 import { saveReport } from "./actions";
 
-/** Valeur de la liste pour « Autre équipement (non listé) ». */
+/** Valeur du bouton « Autre » (matériel non listé, nom saisi à la main). */
 const OTHER = "__autre__";
-
-/** Une machine de l'inventaire de l'école, proposée dans la liste. */
-export type MachineOption = { id: string; label: string };
 
 /** Pause après la dernière frappe avant d'écrire la copie locale. */
 const AUTOSAVE_DELAY_MS = 800;
@@ -74,12 +71,9 @@ function useOnline(): boolean {
 export function ReportForm({
   attendanceId,
   initial,
-  machines,
 }: {
   attendanceId: string;
   initial: ReportContent;
-  /** Machines actives de l'école du pointage. */
-  machines: MachineOption[];
 }) {
   const router = useRouter();
   const { userId } = useAuth();
@@ -177,18 +171,27 @@ export function ReportForm({
     });
   }
 
+  /** « Autre » : choisi à la main, ou nom enregistré qui n'est pas un type proposé. */
+  function isOtherRow(index: number): boolean {
+    const equipment = content.issues[index]?.equipment ?? "";
+    return (
+      otherRows.has(index) || (equipment !== "" && !equipmentTypeOf(equipment))
+    );
+  }
+
   function chooseEquipment(index: number, value: string) {
     const rows = new Set(otherRows);
     if (value === OTHER) {
       rows.add(index);
-      updateIssue(index, { machineId: null });
+      // On repart d'un nom vide, sauf si le nom saisi est déjà un nom libre.
+      const current = content.issues[index]?.equipment ?? "";
+      updateIssue(index, {
+        machineId: null,
+        equipment: equipmentTypeOf(current) ? "" : current,
+      });
     } else {
       rows.delete(index);
-      const machine = machines.find((m) => m.id === value);
-      updateIssue(index, {
-        machineId: machine ? machine.id : null,
-        equipment: machine ? machine.label : "",
-      });
+      updateIssue(index, { machineId: null, equipment: value });
     }
     setOtherRows(rows);
   }
@@ -363,71 +366,55 @@ export function ReportForm({
                   key={index}
                   className="border-input flex flex-col gap-2 rounded-lg border p-3"
                 >
-                  <Label htmlFor={`equipment-${index}`}>
-                    Équipement concerné
-                  </Label>
-                  {machines.length > 0 && (
-                    <select
-                      id={`equipment-${index}`}
-                      className={SELECT_CLASS}
-                      disabled={busy}
-                      value={
-                        issue.machineId ??
-                        (otherRows.has(index) || issue.equipment !== ""
-                          ? OTHER
-                          : "")
-                      }
-                      onChange={(event) =>
-                        chooseEquipment(index, event.target.value)
-                      }
-                    >
-                      <option value="">Choisir une machine…</option>
-                      {machines
-                        // Une machine déjà signalée sur une autre ligne n'est plus proposée.
-                        .filter(
-                          (m) =>
-                            m.id === issue.machineId ||
-                            !content.issues.some((i) => i.machineId === m.id),
-                        )
-                        .map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.label}
-                          </option>
-                        ))}
-                      <option value={OTHER}>
-                        Autre équipement (non listé)
-                      </option>
-                    </select>
-                  )}
-                  {(machines.length === 0 ||
-                    (issue.machineId === null &&
-                      (otherRows.has(index) || issue.equipment !== ""))) && (
+                  <span
+                    id={`equipment-${index}`}
+                    className="text-sm leading-none font-medium"
+                  >
+                    Qu&apos;est-ce qui est en panne ?
+                  </span>
+                  <div
+                    role="group"
+                    aria-labelledby={`equipment-${index}`}
+                    className="flex flex-wrap gap-2"
+                  >
+                    {[...EQUIPMENT_TYPES, OTHER].map((choice) => {
+                      const selected =
+                        choice === OTHER
+                          ? isOtherRow(index)
+                          : issue.equipment === choice;
+                      return (
+                        <Button
+                          key={choice}
+                          type="button"
+                          size="sm"
+                          variant={selected ? "default" : "outline"}
+                          aria-pressed={selected}
+                          disabled={busy}
+                          onClick={() => chooseEquipment(index, choice)}
+                        >
+                          {choice === OTHER ? "Autre" : choice}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  {isOtherRow(index) && (
                     <Input
-                      id={
-                        machines.length === 0 ? `equipment-${index}` : undefined
-                      }
-                      aria-label="Nom de l'équipement"
+                      aria-label="Nom du matériel en panne"
                       value={issue.equipment}
                       maxLength={80}
-                      placeholder="Ex. : vidéoprojecteur de la salle 2"
+                      placeholder="Ex. : prise de la salle 2"
                       disabled={busy}
                       onChange={(event) =>
                         updateIssue(index, { equipment: event.target.value })
                       }
                     />
                   )}
-                  {machines.length === 0 && (
-                    <p className="text-muted-foreground text-xs">
-                      Le parc de cette école n&apos;est pas encore enregistré :
-                      indiquez le nom de l&apos;équipement.
-                    </p>
-                  )}
                   <Label htmlFor={`issue-${index}`}>Description</Label>
                   <Textarea
                     id={`issue-${index}`}
                     value={issue.description}
                     maxLength={300}
-                    placeholder="Ce qui ne marche pas ou le problème rencontré"
+                    placeholder="Combien et ce qui ne marche pas (ex. : 3 souris, deux ne s'allument plus)"
                     className="min-h-16"
                     disabled={busy}
                     onChange={(event) =>

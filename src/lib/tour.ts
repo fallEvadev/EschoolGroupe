@@ -94,7 +94,7 @@ export const TOUR_STEPS: Record<TourSpace, readonly TourStep[]> = {
       id: "menu",
       target: "menu",
       title: "Votre menu",
-      text: "Ces boutons vous mènent aux pannes signalées, vos interventions, les équipements et votre profil.",
+      text: "Ces boutons vous mènent aux pannes signalées, vos interventions et votre profil.",
     },
     nav(
       "/maintenance",
@@ -105,11 +105,6 @@ export const TOUR_STEPS: Record<TourSpace, readonly TourStep[]> = {
       "/maintenance/interventions",
       "Interventions",
       "L'historique des tickets que vous avez résolus.",
-    ),
-    nav(
-      "/maintenance/equipements",
-      "Équipements",
-      "Les machines de chaque école.",
     ),
     nav(
       "/maintenance/profil",
@@ -187,12 +182,6 @@ export const TOUR_STEPS: Record<TourSpace, readonly TourStep[]> = {
       "/admin/personnel",
       "Personnel",
       "Les fiches du personnel, leurs documents et leur état.",
-      { optional: true },
-    ),
-    nav(
-      "/admin/parc",
-      "Parc informatique",
-      "L'inventaire des machines de chaque école.",
       { optional: true },
     ),
     nav(
