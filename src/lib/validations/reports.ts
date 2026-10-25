@@ -71,6 +71,16 @@ const coursesSchema = z
   .min(1, "Ajoutez au moins un cours.")
   .max(MAX_COURSES, `Au plus ${MAX_COURSES} cours par rapport.`);
 
+/** Vrai si un même matériel (hors inventaire) est signalé deux fois. */
+function hasDuplicateEquipment(
+  issues: { machineId: string | null; equipment: string }[],
+): boolean {
+  const names = issues
+    .filter((i) => i.machineId === null)
+    .map((i) => i.equipment.toLowerCase());
+  return new Set(names).size !== names.length;
+}
+
 /** Vrai si une même machine de l'inventaire est signalée deux fois. */
 function hasDuplicateMachine(issues: { machineId: string | null }[]): boolean {
   const ids = issues.flatMap((i) => (i.machineId ? [i.machineId] : []));
@@ -113,6 +123,14 @@ export const reportSchema = z
         code: "custom",
         path: ["issues"],
         message: "Une même machine ne peut être signalée qu'une fois.",
+      });
+    }
+    if (hasDuplicateEquipment(value.issues)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["issues"],
+        message:
+          "Ce matériel est signalé deux fois : regroupez-le en une seule difficulté.",
       });
     }
     if (!value.submit) return;
@@ -200,6 +218,14 @@ export const reviewReportSchema = z
         code: "custom",
         path: ["corrections", "issues"],
         message: "Ajoutez au moins une difficulté.",
+      });
+    }
+    if (c && hasDuplicateEquipment(c.issues)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["corrections", "issues"],
+        message:
+          "Ce matériel est signalé deux fois : regroupez-le en une seule difficulté.",
       });
     }
     if (c && hasDuplicateMachine(c.issues)) {
