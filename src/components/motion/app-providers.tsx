@@ -14,7 +14,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <MotionConfig reducedMotion="user">
       <TooltipProvider delayDuration={200}>
         {children}
-        <Toaster position="bottom-right" richColors closeButton />
+        <Toaster position="top-center" duration={4500} richColors closeButton />
       </TooltipProvider>
     </MotionConfig>
   );

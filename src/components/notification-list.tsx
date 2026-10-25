@@ -4,6 +4,7 @@ import { CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,9 @@ export function NotificationList({ items }: { items: NotificationItem[] }) {
             onClick={() =>
               startTransition(async () => {
                 await markAllNotificationsRead();
+                toast.success(
+                  "Toutes les notifications sont marquées comme lues.",
+                );
                 router.refresh();
               })
             }

@@ -13,6 +13,7 @@ import {
   PROGRAM_MIME_TYPE,
   PROGRAMS_BUCKET,
 } from "@/lib/programs";
+import { notify } from "@/lib/notify";
 import { useSupabase } from "@/lib/supabase/client";
 import { programUploadSchema } from "@/lib/validations/programs";
 
@@ -92,6 +93,7 @@ export function PublishProgramForm({ defaultMonth }: { defaultMonth: string }) {
       if (confirmed.ok) {
         setPublished(confirmed);
         setFile(null);
+        notify(confirmed);
       } else {
         setError(confirmed.message);
       }

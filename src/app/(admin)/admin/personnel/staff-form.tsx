@@ -13,6 +13,7 @@ import { Field, FormActions, FormStatus } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { SELECT_CLASS } from "@/components/ui/select";
 import { ROLE_LABELS, type Role } from "@/lib/auth/roles";
+import { notify } from "@/lib/notify";
 import { CONTRACT_LABELS, CONTRACT_TYPES } from "@/lib/staff";
 import {
   staffSchema,
@@ -61,6 +62,7 @@ export function StaffForm({ profileId, initial, roles }: StaffFormProps) {
       ? await updateStaffMember(profileId, values)
       : await createStaffMember(values);
     setResult(response);
+    if (response.ok) notify(response);
     // Nouvelle recrue avec lien : on reste ici pour l'envoyer par WhatsApp.
     if (response.share) return;
     // Sinon (modification, ou invitation en échec), on ouvre la fiche.

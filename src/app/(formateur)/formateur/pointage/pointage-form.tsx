@@ -4,6 +4,7 @@ import { CheckCircle2, Clock, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ export function PointageForm({
 
     if (response.ok) {
       setConfirmed(response);
+      toast.success("Pointage enregistré avec succès.");
       router.refresh();
     } else {
       setError(response.message);

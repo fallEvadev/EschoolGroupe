@@ -7,6 +7,7 @@ import { InvitationShare } from "@/components/invitation-share";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ROLE_LABELS, type Role } from "@/lib/auth/roles";
+import { notify } from "@/lib/notify";
 import type { StaffResult } from "@/lib/validations/staff";
 
 import { resendAccess } from "./actions";
@@ -53,9 +54,11 @@ export function PendingInvitationRow({
             disabled={pending}
             onClick={() =>
               startTransition(async () => {
-                setResult(
-                  await resendAccess({ profileId: invitation.profileId }),
-                );
+                const response = await resendAccess({
+                  profileId: invitation.profileId,
+                });
+                setResult(response);
+                if (response.ok) notify(response);
               })
             }
           >

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/ui/form";
 import { CODE_LENGTH, isCodeFormat } from "@/lib/daily-codes";
+import { notify } from "@/lib/notify";
 
 /**
  * Saisie du code donné par le directeur après le cours. Le serveur décide de
@@ -35,6 +36,7 @@ export function DepartureForm({ attendanceId }: { attendanceId: string }) {
       const result = await submitDeparture({ attendanceId, code });
       if (result.ok) {
         setDone(result.message);
+        notify(result);
         router.refresh();
       } else {
         setError(result.message);

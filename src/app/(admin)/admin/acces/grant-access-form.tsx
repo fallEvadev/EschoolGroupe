@@ -12,6 +12,7 @@ import { Field, FormActions, FormStatus } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { ROLES, ROLE_LABELS } from "@/lib/auth/roles";
+import { notify } from "@/lib/notify";
 import {
   grantAccessSchema,
   type GrantAccessData,
@@ -48,7 +49,9 @@ export function GrantAccessForm() {
 
   async function onSubmit() {
     // Valeurs saisies : le serveur les revérifie et les nettoie lui-même.
-    setResult(await grantAccess(getValues()));
+    const response = await grantAccess(getValues());
+    setResult(response);
+    if (response.ok) notify(response);
   }
 
   function restart() {

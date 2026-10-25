@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 
 import { InvitationShare } from "@/components/invitation-share";
 import { Button } from "@/components/ui/button";
+import { notify } from "@/lib/notify";
 import type { StaffResult } from "@/lib/validations/staff";
 
 import { resendInvitation } from "./actions";
@@ -22,7 +23,9 @@ export function ResendInvitationButton({ profileId }: { profileId: string }) {
           disabled={pending}
           onClick={() =>
             startTransition(async () => {
-              setResult(await resendInvitation({ profileId }));
+              const response = await resendInvitation({ profileId });
+              setResult(response);
+              if (response.ok) notify(response);
             })
           }
         >
