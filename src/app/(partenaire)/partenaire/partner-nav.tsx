@@ -8,10 +8,11 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/partenaire", label: "Code de descente" },
+  { href: "/partenaire/rapports", label: "Rapports" },
   { href: "/partenaire/bilans", label: "Bilans" },
 ] as const;
 
-/** Menu du portail partenaire : deux pages, la page courante est soulignée. */
+/** Menu du portail partenaire : trois pages, la page courante est soulignée. */
 export function PartnerNav() {
   const pathname = usePathname();
 

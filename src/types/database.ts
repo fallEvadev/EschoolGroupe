@@ -1498,6 +1498,21 @@ export type Database = {
         Args: { p_profile_id: string; p_school_id: string }
         Returns: string
       }
+      partner_reports: {
+        Args: never
+        Returns: {
+          out_classes: string
+          out_course_theme: string
+          out_courses: Json
+          out_formateur: string
+          out_id: string
+          out_report_date: string
+          out_school_id: string
+          out_school_name: string
+          out_slot_ends: string
+          out_slot_starts: string
+        }[]
+      }
       partner_codes_today: {
         Args: never
         Returns: {

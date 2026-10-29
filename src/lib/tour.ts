@@ -121,6 +121,11 @@ export const TOUR_STEPS: Record<TourSpace, readonly TourStep[]> = {
       "Le code s'affiche à la fin du premier cours. Donnez-le aux formateurs une fois leur cours terminé, pas avant.",
     ),
     nav(
+      "/partenaire/rapports",
+      "Rapports",
+      "Les rapports des formateurs de votre école, dès que la Direction pédagogique les a validés.",
+    ),
+    nav(
       "/partenaire/bilans",
       "Bilans",
       "Les bilans publiés pour votre école, à télécharger en PDF.",
