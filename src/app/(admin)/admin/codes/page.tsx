@@ -143,10 +143,11 @@ export default async function CodesPage() {
         title="Codes du jour"
         description={
           <>
-            Codes de descente de <strong>{dateLabel}</strong>, un par école.
-            Générez-les le matin : le directeur ne les voit sur son espace
-            qu&apos;à la fin du premier cours, et les donne aux formateurs une
-            fois leur cours terminé.
+            Codes de descente de <strong>{dateLabel}</strong>, un par école. Un
+            seul clic les génère pour toutes les écoles et prévient les
+            directeurs rattachés. Le directeur ne voit le code qu&apos;à la fin
+            du premier cours, et le donne aux formateurs une fois leur cours
+            terminé.
           </>
         }
         actions={

@@ -11,7 +11,7 @@ import { dakarIsoDate } from "@/lib/dates";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { schoolIdSchema, type SchoolResult } from "@/lib/validations/schools";
 
-import { PEDAGOGY_ROLES } from "../ecoles/access";
+import { loadStaffDirectory, PEDAGOGY_ROLES } from "../ecoles/access";
 
 /** Code PostgreSQL d'une valeur en double. */
 const UNIQUE_VIOLATION = "23505";
@@ -59,6 +59,42 @@ async function insertCode(
   return "failed";
 }
 
+/**
+ * Directeurs prévenus (par la base, à la création du code) pour les écoles qui
+ * viennent d'avoir leur code, et écoles sans directeur actif. Un échec de
+ * lecture donne `null` : le message de confirmation omet alors ce détail.
+ */
+async function directorsReached(
+  supabase: Supabase,
+  schoolIds: string[],
+): Promise<{ directors: number; schoolsWithout: number } | null> {
+  if (schoolIds.length === 0) return { directors: 0, schoolsWithout: 0 };
+  const [links, directory] = await Promise.all([
+    supabase
+      .from("school_directors")
+      .select("school_id, profile_id")
+      .eq("status", "actif")
+      .in("school_id", schoolIds),
+    loadStaffDirectory(supabase),
+  ]);
+  if (links.error || "error" in directory) return null;
+
+  const active = new Set(
+    directory.staff
+      .filter(
+        (person) =>
+          person.role === "directeur_partenaire" && person.status === "actif",
+      )
+      .map((person) => person.id),
+  );
+  const reached = links.data.filter((link) => active.has(link.profile_id));
+  const covered = new Set(reached.map((link) => link.school_id));
+  return {
+    directors: new Set(reached.map((link) => link.profile_id)).size,
+    schoolsWithout: schoolIds.filter((id) => !covered.has(id)).length,
+  };
+}
+
 /** Génère le code du jour de chaque école active qui n'en a pas encore. */
 export async function generateTodayCodes(): Promise<SchoolResult> {
   const caller = await requireActionRole(PEDAGOGY_ROLES);
@@ -101,6 +137,7 @@ export async function generateTodayCodes(): Promise<SchoolResult> {
 
     let created = 0;
     let failed = 0;
+    const createdSchoolIds: string[] = [];
     for (const school of missing) {
       const outcome = await insertCode(
         supabase,
@@ -108,7 +145,10 @@ export async function generateTodayCodes(): Promise<SchoolResult> {
         today,
         caller.actorId,
       );
-      if (outcome === "created") created++;
+      if (outcome === "created") {
+        created++;
+        createdSchoolIds.push(school.id);
+      }
       if (outcome === "failed") failed++;
     }
 
@@ -130,9 +170,27 @@ export async function generateTodayCodes(): Promise<SchoolResult> {
         message: `${created} code(s) généré(s), mais ${failed} école(s) n'ont pas pu être traitées. Relancez la génération.`,
       };
     }
+    const codesLabel =
+      created === 1 ? "1 code généré" : `${created} codes générés`;
+    // Les directeurs sont prévenus par la base, à la création de chaque code.
+    const reached = await directorsReached(supabase, createdSchoolIds);
+    if (!reached) return { ok: true, message: `${codesLabel}.` };
+
+    const directorsLabel =
+      reached.directors === 0
+        ? "aucun directeur à prévenir"
+        : reached.directors === 1
+          ? "1 directeur prévenu"
+          : `${reached.directors} directeurs prévenus`;
+    const withoutLabel =
+      reached.schoolsWithout === 0
+        ? ""
+        : reached.schoolsWithout === 1
+          ? " 1 école n'a aucun directeur rattaché."
+          : ` ${reached.schoolsWithout} écoles n'ont aucun directeur rattaché.`;
     return {
       ok: true,
-      message: created === 1 ? "1 code généré." : `${created} codes générés.`,
+      message: `${codesLabel}, ${directorsLabel}.${withoutLabel}`,
     };
   } catch (error) {
     console.error("generateTodayCodes :", error);
