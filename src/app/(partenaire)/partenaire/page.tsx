@@ -17,6 +17,7 @@ import {
 } from "@/lib/supabase/server";
 import { buildWhatsAppUrl, trainersCodeMessage } from "@/lib/whatsapp";
 
+import { DeputiesCard, type DeputyView } from "./deputies-card";
 import {
   SchoolPositionCard,
   type SchoolPositionInfo,
@@ -35,6 +36,10 @@ type PartnerSchool = {
   /** Fin du premier cours d'aujourd'hui (« HH:MM »), `null` s'il n'y a aucun cours. */
   firstEnd: string | null;
   position: SchoolPositionInfo;
+  /** Adjoint : il voit le code mais n'invite personne ni ne fixe la position. */
+  isDeputy: boolean;
+  /** Adjoints de l'école (vide pour un adjoint). */
+  deputies: DeputyView[];
 };
 
 /**
@@ -59,7 +64,7 @@ async function loadMySchools(): Promise<
   const supabase = await createServerSupabase();
   const links = await supabase
     .from("school_directors")
-    .select("school_id")
+    .select("school_id, is_deputy")
     .eq("profile_id", profileId)
     .eq("status", "actif");
   if (links.error) {
@@ -69,8 +74,11 @@ async function loadMySchools(): Promise<
   }
   const schoolIds = links.data.map((link) => link.school_id);
   if (schoolIds.length === 0) return { schools: [] };
+  const deputyOf = new Map(
+    links.data.map((link) => [link.school_id, link.is_deputy]),
+  );
 
-  const [schoolsResult, codesResult] = await Promise.all([
+  const [schoolsResult, codesResult, deputiesResult] = await Promise.all([
     supabase
       .from("schools")
       .select(
@@ -80,6 +88,8 @@ async function loadMySchools(): Promise<
       .eq("status", "actif")
       .order("name"),
     supabase.rpc("partner_codes_today"),
+    // Les adjoints de SES écoles seulement : la base filtre sur l'appelant.
+    supabase.rpc("my_deputies"),
   ]);
   if (schoolsResult.error) {
     return {
@@ -93,6 +103,8 @@ async function loadMySchools(): Promise<
     };
   }
 
+  // Les adjoints sont un plus : si leur liste est indisponible, le code reste affiché.
+  const deputies = deputiesResult.error ? [] : deputiesResult.data;
   const codes = new Map(
     codesResult.data.map((row) => [row.out_school_id, row]),
   );
@@ -104,6 +116,14 @@ async function loadMySchools(): Promise<
       code: codes.get(school.id)?.out_code ?? null,
       hasCode: codes.get(school.id)?.out_has_code ?? false,
       firstEnd: codes.get(school.id)?.out_first_end ?? null,
+      isDeputy: deputyOf.get(school.id) ?? false,
+      deputies: deputies
+        .filter((row) => row.school_id === school.id)
+        .map((row) => ({
+          profileId: row.profile_id,
+          fullName: row.full_name,
+          status: row.profile_status,
+        })),
       position: {
         defined: school.latitude !== null && school.longitude !== null,
         setOn: school.position_set_at
@@ -164,13 +184,18 @@ export default async function PartenairePage() {
                       {school.address ?? "Adresse non renseignée"}
                     </p>
                   </div>
-                  <Badge variant={school.code ? "success" : "warning"}>
-                    {school.code
-                      ? "Code de descente"
-                      : school.hasCode
-                        ? "Pas encore"
-                        : "Pas de code"}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge variant={school.code ? "success" : "warning"}>
+                      {school.code
+                        ? "Code de descente"
+                        : school.hasCode
+                          ? "Pas encore"
+                          : "Pas de code"}
+                    </Badge>
+                    {school.isDeputy && (
+                      <Badge variant="neutral">Adjoint</Badge>
+                    )}
+                  </div>
                 </div>
 
                 {school.code ? (
@@ -222,11 +247,19 @@ export default async function PartenairePage() {
                   </p>
                 )}
 
-                <SchoolPositionCard
-                  schoolId={school.id}
-                  schoolName={school.name}
-                  position={school.position}
-                />
+                {!school.isDeputy && (
+                  <>
+                    <SchoolPositionCard
+                      schoolId={school.id}
+                      schoolName={school.name}
+                      position={school.position}
+                    />
+                    <DeputiesCard
+                      schoolId={school.id}
+                      deputies={school.deputies}
+                    />
+                  </>
+                )}
               </Card>
             </li>
           ))}

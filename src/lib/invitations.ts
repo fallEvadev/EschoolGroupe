@@ -8,6 +8,7 @@ import { writeAudit } from "@/lib/audit";
 import { ROLE_LABELS, type Role } from "@/lib/auth/roles";
 import { getOrganizationSettings } from "@/lib/organization";
 import { splitFullName } from "@/lib/staff";
+import { createAdminSupabase } from "@/lib/supabase/admin";
 import { createServerSupabase } from "@/lib/supabase/server";
 import type {
   ShareInfo,
@@ -67,12 +68,17 @@ export async function clerkAccountExists(email: string): Promise<boolean> {
  * Envoie (ou renvoie) l'invitation Clerk par e-mail et l'enregistre sur la
  * fiche. Le rôle voyage dans l'invitation : Clerk le copie dans le compte
  * créé. Renvoie le lien d'activation, à partager aussi par WhatsApp.
+ *
+ * `asService` : l'appelant n'a pas le droit d'écrire sur `profiles` (un
+ * directeur qui invite son adjoint) ; il a déjà été contrôlé par la base, et
+ * seule la fiche encore « invitée » est mise à jour, avec la clé de service.
  */
 export async function sendInvitation(
   profileId: string,
   email: string,
   role: Role,
   previousInvitationId: string | null,
+  options: { asService?: boolean } = {},
 ): Promise<string | null> {
   const client = await clerkClient();
   if (previousInvitationId) {
@@ -88,14 +94,18 @@ export async function sendInvitation(
     expiresInDays: INVITATION_VALID_DAYS,
   });
 
-  const supabase = await createServerSupabase();
-  const { error } = await supabase
+  const supabase = options.asService
+    ? createAdminSupabase()
+    : await createServerSupabase();
+  let update = supabase
     .from("profiles")
     .update({
       invitation_id: invitation.id,
       invited_at: new Date().toISOString(),
     })
     .eq("id", profileId);
+  if (options.asService) update = update.eq("status", "invite");
+  const { error } = await update;
   if (error) throw new Error(error.message);
 
   return invitation.url ?? null;

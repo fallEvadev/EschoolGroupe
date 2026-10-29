@@ -1039,23 +1039,36 @@ export type Database = {
       school_directors: {
         Row: {
           created_at: string
+          invited_by: string | null
+          is_deputy: boolean
           profile_id: string
           school_id: string
           status: string
         }
         Insert: {
           created_at?: string
+          invited_by?: string | null
+          is_deputy?: boolean
           profile_id: string
           school_id: string
           status?: string
         }
         Update: {
           created_at?: string
+          invited_by?: string | null
+          is_deputy?: boolean
           profile_id?: string
           school_id?: string
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "school_directors_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "school_directors_profile_id_fkey"
             columns: ["profile_id"]
@@ -1461,6 +1474,29 @@ export type Database = {
           out_file_name: string
           out_path: string
         }[]
+      }
+      invite_deputy: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_phone: string
+          p_school_id: string
+        }
+        Returns: string
+      }
+      my_deputies: {
+        Args: never
+        Returns: {
+          created_at: string
+          full_name: string
+          profile_id: string
+          profile_status: string
+          school_id: string
+        }[]
+      }
+      remove_deputy: {
+        Args: { p_profile_id: string; p_school_id: string }
+        Returns: string
       }
       partner_codes_today: {
         Args: never

@@ -4,6 +4,7 @@ import { UserMinus, UserPlus } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { SELECT_CLASS } from "@/components/ui/select";
@@ -11,7 +12,7 @@ import type { SchoolResult } from "@/lib/validations/schools";
 
 import { addDirector, removeDirector } from "./actions";
 
-export type PersonOption = { id: string; name: string };
+export type PersonOption = { id: string; name: string; deputy?: boolean };
 
 /** Directeurs partenaires rattachés à l'école : ils verront ses codes du jour. */
 export function DirectorsPanel({
@@ -68,7 +69,10 @@ export function DirectorsPanel({
               key={director.id}
               className="flex items-center justify-between gap-3 p-3"
             >
-              <span className="font-medium">{director.name}</span>
+              <span className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{director.name}</span>
+                {director.deputy && <Badge variant="neutral">Adjoint</Badge>}
+              </span>
               {!disabled && (
                 <Button
                   variant="outline"

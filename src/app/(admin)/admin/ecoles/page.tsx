@@ -211,7 +211,7 @@ async function SchoolDetail({
     loadStaffDirectory(supabase),
     supabase
       .from("school_directors")
-      .select("profile_id")
+      .select("profile_id, is_deputy")
       .eq("school_id", school.id)
       .eq("status", "actif"),
     supabase
@@ -248,9 +248,15 @@ async function SchoolDetail({
     const linked = new Set(
       (directorsResult.data ?? []).map((row) => row.profile_id),
     );
+    const deputyIds = new Set(
+      (directorsResult.data ?? [])
+        .filter((row) => row.is_deputy)
+        .map((row) => row.profile_id),
+    );
     directors = [...linked].map((id) => ({
       id,
       name: names.get(id) ?? "Compte inconnu",
+      deputy: deputyIds.has(id),
     }));
     candidates = directory.staff
       .filter(
