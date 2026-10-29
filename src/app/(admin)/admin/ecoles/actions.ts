@@ -15,6 +15,7 @@ import {
   schoolSchema,
   schoolStatusSchema,
   slotIdSchema,
+  slotUpdateSchema,
   slotSchema,
   type SchoolResult,
 } from "@/lib/validations/schools";
@@ -426,6 +427,169 @@ export async function addSlot(input: unknown): Promise<SchoolResult> {
     return { ok: true, id: created.id, message: "Créneau ajouté." };
   } catch (error) {
     console.error("addSlot :", error);
+    return ERREUR_GENERIQUE;
+  }
+}
+
+/**
+ * Corrige un créneau mal saisi (jour, heures, libellé). Les heures se modifient
+ * toujours ; le jour seulement tant qu'aucun pointage n'existe sur ce créneau,
+ * car les absences se reconstruisent depuis le jour du créneau. Les pointages
+ * déjà enregistrés gardent leur statut.
+ */
+export async function updateSlot(input: unknown): Promise<SchoolResult> {
+  const caller = await requireActionRole(PEDAGOGY_ROLES);
+  if (!caller.ok) return { ok: false, message: caller.message };
+
+  const parsed = slotUpdateSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const { slotId, weekday, startsAt, endsAt, label } = parsed.data;
+
+  try {
+    const supabase = await createServerSupabase();
+    const { data: slot } = await supabase
+      .from("time_slots")
+      .select("school_id, weekday, starts_at, ends_at, label, status")
+      .eq("id", slotId)
+      .maybeSingle();
+    if (!slot || slot.status !== "actif") {
+      return { ok: false, message: "Créneau introuvable." };
+    }
+
+    if (weekday !== slot.weekday) {
+      const { count, error: countError } = await supabase
+        .from("attendances")
+        .select("id", { count: "exact", head: true })
+        .eq("slot_id", slotId);
+      if (countError) {
+        console.error("attendances :", countError.message);
+        return ERREUR_GENERIQUE;
+      }
+      if ((count ?? 0) > 0) {
+        return {
+          ok: false,
+          message:
+            "Des pointages existent déjà sur ce créneau : le jour ne peut plus changer. Modifiez seulement les heures, ou archivez ce créneau et créez-en un nouveau.",
+        };
+      }
+    }
+
+    const candidate = { weekday, startsAt, endsAt };
+
+    // Pas de chevauchement avec les autres créneaux de l'école.
+    const { data: siblings, error: siblingsError } = await supabase
+      .from("time_slots")
+      .select("weekday, starts_at, ends_at, label")
+      .eq("school_id", slot.school_id)
+      .eq("weekday", weekday)
+      .eq("status", "actif")
+      .neq("id", slotId);
+    if (siblingsError) {
+      console.error("time_slots :", siblingsError.message);
+      return ERREUR_GENERIQUE;
+    }
+    const schoolClash = findOverlap(
+      candidate,
+      siblings.map((other) => ({
+        weekday: other.weekday,
+        startsAt: other.starts_at,
+        endsAt: other.ends_at,
+        label: other.label,
+      })),
+    );
+    if (schoolClash) {
+      return {
+        ok: false,
+        message: `Ce créneau chevauche un créneau existant : ${formatSlot(schoolClash)}.`,
+      };
+    }
+
+    // Un formateur affecté ne peut pas se retrouver à deux endroits à la fois.
+    const { data: assigned } = await supabase
+      .from("slot_assignments")
+      .select("profile_id")
+      .eq("slot_id", slotId)
+      .eq("status", "actif");
+    const profileIds = (assigned ?? []).map((row) => row.profile_id);
+    if (profileIds.length > 0) {
+      const { data: theirLinks } = await supabase
+        .from("slot_assignments")
+        .select("slot_id")
+        .in("profile_id", profileIds)
+        .eq("status", "actif")
+        .neq("slot_id", slotId);
+      const otherIds = [
+        ...new Set((theirLinks ?? []).map((row) => row.slot_id)),
+      ];
+      if (otherIds.length > 0) {
+        const { data: others } = await supabase
+          .from("time_slots")
+          .select("weekday, starts_at, ends_at, label")
+          .in("id", otherIds)
+          .eq("status", "actif");
+        const personClash = findOverlap(
+          candidate,
+          (others ?? []).map((other) => ({
+            weekday: other.weekday,
+            startsAt: other.starts_at,
+            endsAt: other.ends_at,
+            label: other.label,
+          })),
+        );
+        if (personClash) {
+          return {
+            ok: false,
+            message: `Un formateur affecté à ce créneau a déjà un créneau à ce moment-là : ${formatSlot(personClash)}.`,
+          };
+        }
+      }
+    }
+
+    const { data: school } = await supabase
+      .from("schools")
+      .select("name")
+      .eq("id", slot.school_id)
+      .maybeSingle();
+
+    const { data: updated, error } = await supabase
+      .from("time_slots")
+      .update({
+        weekday,
+        starts_at: startsAt,
+        ends_at: endsAt,
+        label,
+      })
+      .eq("id", slotId)
+      .eq("status", "actif")
+      .select("id");
+    if (error) {
+      console.error("time_slots :", error.message);
+      return ERREUR_GENERIQUE;
+    }
+    if (updated.length === 0) {
+      return { ok: false, message: "Ce créneau n'existe plus." };
+    }
+
+    await writeAudit({
+      actorId: caller.actorId,
+      action: "slot_updated",
+      entity: "time_slots",
+      entityId: slotId,
+      details: {
+        school: school?.name ?? "",
+        before: formatSlot({
+          weekday: slot.weekday,
+          startsAt: slot.starts_at,
+          endsAt: slot.ends_at,
+          label: slot.label,
+        }),
+        slot: formatSlot({ weekday, startsAt, endsAt, label }),
+      },
+    });
+    refresh();
+    return { ok: true, message: "Créneau modifié." };
+  } catch (error) {
+    console.error("updateSlot :", error);
     return ERREUR_GENERIQUE;
   }
 }

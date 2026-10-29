@@ -90,26 +90,41 @@ export const directorPositionSchema = z.object({
 
 export type DirectorPositionInput = z.input<typeof directorPositionSchema>;
 
-/** Créneau hebdomadaire d'une école. */
-export const slotSchema = z
-  .object({
-    schoolId: z.uuid("École invalide."),
-    weekday: z
-      .number({ message: "Jour invalide." })
-      .int("Jour invalide.")
-      .min(1, "Jour invalide.")
-      .max(7, "Jour invalide."),
-    startsAt: z.string().regex(TIME_PATTERN, "Heure de début invalide."),
-    endsAt: z.string().regex(TIME_PATTERN, "Heure de fin invalide."),
-    label: optionalText(60, "Le libellé ne doit pas dépasser 60 caractères."),
-  })
-  .refine((value) => value.endsAt > value.startsAt, {
+/** Jour, heures et libellé d'un créneau (créneau neuf ou corrigé). */
+const slotFields = {
+  weekday: z
+    .number({ message: "Jour invalide." })
+    .int("Jour invalide.")
+    .min(1, "Jour invalide.")
+    .max(7, "Jour invalide."),
+  startsAt: z.string().regex(TIME_PATTERN, "Heure de début invalide."),
+  endsAt: z.string().regex(TIME_PATTERN, "Heure de fin invalide."),
+  label: optionalText(60, "Le libellé ne doit pas dépasser 60 caractères."),
+};
+
+const endsAfterStart = {
+  check: (value: { startsAt: string; endsAt: string }) =>
+    value.endsAt > value.startsAt,
+  options: {
     message: "L'heure de fin doit être après l'heure de début.",
     path: ["endsAt"],
-  });
+  },
+};
+
+/** Créneau hebdomadaire d'une école. */
+export const slotSchema = z
+  .object({ schoolId: z.uuid("École invalide."), ...slotFields })
+  .refine(endsAfterStart.check, endsAfterStart.options);
+
+/** Correction d'un créneau existant (l'école ne change jamais). */
+export const slotUpdateSchema = z
+  .object({ slotId: z.uuid("Créneau invalide."), ...slotFields })
+  .refine(endsAfterStart.check, endsAfterStart.options);
 
 export type SlotFormValues = z.input<typeof slotSchema>;
 export type SlotData = z.output<typeof slotSchema>;
+export type SlotUpdateFormValues = z.input<typeof slotUpdateSchema>;
+export type SlotUpdateData = z.output<typeof slotUpdateSchema>;
 
 /** Affectation d'un formateur à un créneau. */
 export const assignmentSchema = z.object({

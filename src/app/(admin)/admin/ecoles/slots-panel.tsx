@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarPlus, UserPlus, X } from "lucide-react";
+import { CalendarPlus, Pencil, UserPlus, X } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -30,8 +30,11 @@ import {
 } from "@/lib/schools";
 import {
   slotSchema,
+  slotUpdateSchema,
   type SlotData,
   type SlotFormValues,
+  type SlotUpdateData,
+  type SlotUpdateFormValues,
   type SchoolResult,
 } from "@/lib/validations/schools";
 
@@ -40,6 +43,7 @@ import {
   archiveSlot,
   assignFormateur,
   unassignFormateur,
+  updateSlot,
 } from "./actions";
 import type { PersonOption } from "./directors-panel";
 
@@ -125,6 +129,7 @@ function SlotRow({
 }) {
   const [selected, setSelected] = useState("");
   const [archiving, setArchiving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const assignedIds = new Set(slot.assignments.map((a) => a.profileId));
@@ -169,17 +174,30 @@ function SlotRow({
             </span>
           )}
         </p>
-        {!disabled && (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={pending}
-            onClick={() => setArchiving(true)}
-          >
-            Archiver le créneau
-          </Button>
+        {!disabled && !editing && (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              onClick={() => setEditing(true)}
+            >
+              <Pencil aria-hidden />
+              Modifier
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              onClick={() => setArchiving(true)}
+            >
+              Archiver le créneau
+            </Button>
+          </div>
         )}
       </div>
+
+      {editing && <EditSlotForm slot={slot} onDone={() => setEditing(false)} />}
 
       {slot.assignments.length === 0 ? (
         <p className="text-muted-foreground text-sm">
@@ -278,6 +296,107 @@ function SlotRow({
         </AlertDialogContent>
       </AlertDialog>
     </li>
+  );
+}
+
+/** Correction d'un créneau mal saisi (jour, heures, libellé facultatif). */
+function EditSlotForm({
+  slot,
+  onDone,
+}: {
+  slot: SlotView;
+  onDone: () => void;
+}) {
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState: { errors, isSubmitting },
+  } = useForm<SlotUpdateFormValues, unknown, SlotUpdateData>({
+    resolver: zodResolver(slotUpdateSchema),
+    defaultValues: {
+      slotId: slot.id,
+      weekday: slot.weekday,
+      startsAt: formatTime(slot.startsAt),
+      endsAt: formatTime(slot.endsAt),
+      label: slot.label ?? "",
+    },
+  });
+
+  async function onSubmit() {
+    const result = await updateSlot(getValues());
+    notify(result);
+    if (result.ok) onDone();
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="bg-muted/40 flex flex-col gap-4 rounded-xl border p-3 sm:p-4"
+      noValidate
+    >
+      <input type="hidden" {...register("slotId")} />
+      <div className="grid gap-4 sm:grid-cols-4">
+        <Field
+          id={`edit-weekday-${slot.id}`}
+          label="Jour"
+          error={errors.weekday?.message}
+        >
+          <Select
+            disabled={isSubmitting}
+            {...register("weekday", { valueAsNumber: true })}
+          >
+            {WEEKDAYS.map((day) => (
+              <option key={day} value={day}>
+                {WEEKDAY_LABELS[day]}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field
+          id={`edit-start-${slot.id}`}
+          label="Début"
+          error={errors.startsAt?.message}
+        >
+          <Input
+            type="time"
+            disabled={isSubmitting}
+            {...register("startsAt")}
+          />
+        </Field>
+        <Field
+          id={`edit-end-${slot.id}`}
+          label="Fin"
+          error={errors.endsAt?.message}
+        >
+          <Input type="time" disabled={isSubmitting} {...register("endsAt")} />
+        </Field>
+        <Field
+          id={`edit-label-${slot.id}`}
+          label="Libellé (facultatif)"
+          error={errors.label?.message}
+        >
+          <Input disabled={isSubmitting} {...register("label")} />
+        </Field>
+      </div>
+      <p className="text-muted-foreground text-sm">
+        Les pointages déjà enregistrés gardent leur statut. Si des pointages
+        existent, seules les heures peuvent changer.
+      </p>
+      <FormActions>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Enregistrement…" : "Enregistrer les changements"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isSubmitting}
+          onClick={onDone}
+        >
+          Annuler
+        </Button>
+      </FormActions>
+    </form>
   );
 }
 

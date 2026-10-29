@@ -40,6 +40,7 @@ const ACTION_LABELS: Record<string, string> = {
   director_unlinked: "Directeur retiré",
   slot_created: "Créneau ajouté",
   slot_archived: "Créneau archivé",
+  slot_updated: "Créneau modifié",
   slot_assigned: "Formateur affecté",
   slot_unassigned: "Formateur retiré",
   codes_generated: "Codes du jour générés",
@@ -158,6 +159,9 @@ function describe(action: string, details: Json): string | null {
     return `${details.school} · ${formatDate(String(details.date))}`;
   }
   if (action === "director_linked") return `${details.director}`;
+  if (action === "slot_updated") {
+    return `${details.school} · ${details.before} → ${details.slot}`;
+  }
   if (action === "slot_created" || action === "slot_archived") {
     return details.school
       ? `${details.school} · ${details.slot}`

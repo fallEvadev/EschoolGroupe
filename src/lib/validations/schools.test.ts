@@ -6,6 +6,7 @@ import {
   schoolPositionSchema,
   schoolSchema,
   slotSchema,
+  slotUpdateSchema,
 } from "./schools";
 
 const valid = {
@@ -159,6 +160,39 @@ describe("assignmentSchema", () => {
     ).toBe(true);
     expect(
       assignmentSchema.safeParse({ slotId: "x", profileId: id }).success,
+    ).toBe(false);
+  });
+});
+
+describe("slotUpdateSchema", () => {
+  const edit = {
+    slotId: "5f0c2c1e-6c1f-4a43-9a5b-3d1b2f6e8a10",
+    weekday: 2,
+    startsAt: "21:00",
+    endsAt: "21:30",
+    label: " Soir ",
+  };
+
+  it("accepte une correction et nettoie le libellé", () => {
+    expect(slotUpdateSchema.parse(edit).label).toBe("Soir");
+    expect(slotUpdateSchema.parse({ ...edit, label: "" }).label).toBeNull();
+  });
+
+  it("refuse une fin qui n'est pas après le début", () => {
+    expect(
+      slotUpdateSchema.safeParse({ ...edit, endsAt: "21:00" }).success,
+    ).toBe(false);
+  });
+
+  it.each([
+    ["slotId", "abc"],
+    ["weekday", 0],
+    ["weekday", 8],
+    ["startsAt", "9:00"],
+    ["endsAt", "25:00"],
+  ])("refuse %s = %s", (field, value) => {
+    expect(
+      slotUpdateSchema.safeParse({ ...edit, [field]: value }).success,
     ).toBe(false);
   });
 });
